@@ -243,7 +243,7 @@ const ICO_H='<svg viewBox="0 0 24 24"><path d="M4.5 19.5C4.5 10.5 10.5 4 20 4c0 
 
 /* ================= STATE ================= */
 const LEVELS=[null,{half:3.2,cap:4,cost:0,zoom:8.5},{half:5,cap:8,cost:120,zoom:12.5},{half:7.5,cap:14,cost:300,zoom:17.5},{half:11,cap:24,cost:700,zoom:25}];
-const W={started:false,paused:false,time:0,money:40,food:10,level:1,cats:[],tool:'hand',laser:false,ribbons:0,wins:0,streak:0,bestStreak:0,showTier:0,earned:0,aidT:0,
+const W={started:false,paused:false,time:0,money:40,food:10,premium:0,level:1,cats:[],tool:'hand',laser:false,ribbons:0,wins:0,streak:0,bestStreak:0,showTier:0,earned:0,aidT:0,
   stars:1,homes:[],tier:{tree:1,bed:1,ball:1,bowl:1,litter:1,shelter:1,wand:1,laser:1},achT:{},goals:[],lastInput:0,maxCats:3,tagShows:0,family:null,pickHome:false,runaway:null,postQ:[],boops:[],
   hints:store.get('wm_hints')!==false,ach:{},stat:{good:0,fills:0,drops:0,cleaned:0,pounces:0,brush:0,shows:0,showsBack:0,buys:0,belly:0,kittens:0,laserP:0,blinkBack:0,gazes:0,scratches:0,rescues:0,pairs:0,patient:0,found:0,upgrades:0,rare:0,coatsMax:0,butt:0,quick:0}};
 const STAT0=JSON.parse(JSON.stringify(W.stat));
@@ -450,7 +450,7 @@ function buildItem(it){
   if(kind==='bowl'){ const b=new THREE.Group(); g.add(b); const lift=T>=2?0.16:0; b.position.y=lift;
     if(T>=2) g.add(mesh(G.cyl,0xc99a6b,{p:[0,0.08,0],s:[0.2,0.16,0.2]}));
     b.add(mesh(new THREE.CylinderGeometry(0.32,0.25,0.16,20),0x5aa9e6,{p:[0,0.08,0]})); b.add(mesh(new THREE.CylinderGeometry(0.27,0.27,0.02,20),0x3f88c4,{p:[0,0.155,0],cast:false}));
-    it.foodMesh=mesh(G.sphLo,0xb5743c,{p:[0,0.14,0],s:[0.24,0.08,0.24],cast:false}); b.add(it.foodMesh); it.water=null;
+    it.foodMesh=mesh(G.sphLo,0xb5743c,{p:[0,0.14,0],s:[0.24,0.08,0.24],cast:false}); it.foodMesh.material=it.foodMesh.material.clone(); b.add(it.foodMesh); it.water=null;
     if(T>=3){ const f=new THREE.Group(); f.position.set(0.6,0,0); g.add(f); f.add(mesh(G.cyl,0x9fd0ea,{p:[0,0.12,0],s:[0.3,0.24,0.3]})); f.add(mesh(G.cyl,0xcfeefc,{p:[0,0.245,0],s:[0.26,0.01,0.26],cast:false})); f.add(mesh(G.cyl,0x7fb2e5,{p:[0,0.36,0],s:[0.04,0.22,0.04]})); it.water=mesh(G.sphLo,0xbfe8f7,{p:[0,0.48,0],s:[0.07,0.05,0.07],cast:false}); f.add(it.water); }
     it.cap=[6,8,10][T-1]; if(it.portions===undefined)it.portions=0; updateBowl(it); }
   else if(kind==='litter'){ const sx=T>=2?1.25:1; g.add(mesh(G.box,0x7ec8c8,{p:[0,0.12,0],s:[0.95*sx,0.24,0.7*sx]})); it.sandMat=new THREE.MeshToonMaterial({color:0xeadcb4,gradientMap:gradTex});
@@ -485,14 +485,15 @@ function buildItem(it){
     if(T>=3){ const gm=new THREE.MeshBasicMaterial({color:0xcfeefc,transparent:true,opacity:0.25,depthWrite:false}); for(const [x,z,w,d] of [[-1.1,0,0.04,2.2],[1.1,0,0.04,2.2],[0,-1.1,2.2,0.04]]){ const wl=new THREE.Mesh(G.box,gm); wl.position.set(x,0.85,z); wl.scale.set(w,1.7,d); wl.userData.pass=true; g.add(wl); } } }
   g.traverse(o=>{ if(o.isMesh)o.userData.item=it; });
 }
-function updateBowl(b){ b.foodMesh.visible=b.portions>0; b.foodMesh.scale.y=0.03+0.07*b.portions/b.cap; b.foodMesh.position.y=0.12+0.04*b.portions/b.cap; }
+function updateBowl(b){ b.foodMesh.visible=b.portions>0; b.foodMesh.material.color.set(b.prem>0?0xe9b949:0xb5743c); b.foodMesh.scale.y=0.03+0.07*b.portions/b.cap; b.foodMesh.position.y=0.12+0.04*b.portions/b.cap; }
 function updateLitter(l){ l.sandMat.color.set(0xeadcb4).lerp(new THREE.Color(0xa58f68),Math.min(1,l.dirt/l.cap)); l.icon.visible=l.dirt>=l.cap/2; }
 function avgDirt(){ const ls=items.filter(i=>i.kind==='litter'); return ls.length?ls.reduce((a,b)=>a+b.dirt,0)/ls.length:0; }
 function countItems(k){ return items.filter(i=>i.kind===k).length; }
-function fillBowl(b){ if(b.portions>=b.cap||W.food<=0)return false; const n=Math.min(b.cap-b.portions,W.food); b.portions+=n; W.food-=n; updateBowl(b); return true; }
+function fillBowl(b){ const room=b.cap-b.portions; if(room<=0)return false; const fp=Math.min(room,W.premium||0), fr=Math.min(room-fp,W.food); if(fp+fr<=0)return false;
+  W.premium-=fp; W.food-=fr; b.prem=(b.prem||0)+fp; b.portions+=fp+fr; updateBowl(b); return true; }
 function useItem(it){
   if(it.kind==='bowl'){ if(it.portions>=it.cap){ floatWorld(it.pos.clone().setY(.5),'Full'); return; }
-    if(W.food<=0){ floatWorld(it.pos.clone().setY(.5),'No food!'); openShop(); return; }
+    if(W.food<=0&&!(W.premium>0)){ floatWorld(it.pos.clone().setY(.5),'No food!'); openShop(); return; }
     fillBowl(it); W.stat.fills++; Snd.pop(); spawnFx('spark',it.pos.clone().setY(.3),4,.3); hud(); }
   else if(it.kind==='litter'){ if(it.dirt<0.5){ floatWorld(it.pos.clone().setY(.5),'Clean'); return; }
     it.dirt=0; updateLitter(it); W.stat.cleaned++; Snd.scoop(); spawnFx('spark',it.pos.clone().setY(.4),5,.4); if(W.stat.cleaned>=10)unlock('spotless'); }
@@ -682,7 +683,8 @@ function updateCat(c,dt){
   s.groom=Math.max(0,s.groom-dt*0.04);
   if(s.aff>30)s.aff-=dt*0.015;
   const ct=clamp(100-avgDirt()*14-(crowded?20:0),0,100); s.clean+=(ct-s.clean)*dt*0.03;
-  const ht=s.full*0.35+s.fun*0.25+s.groom*0.2+s.clean*0.2+(W.tier.bowl>=3?6:0); s.health=clamp(s.health+(ht-s.health)*dt*0.04,0,100);
+  if(c.nourT>0)c.nourT-=dt;
+  const ht=s.full*0.35+s.fun*0.25+s.groom*0.2+s.clean*0.2+(W.tier.bowl>=3?6:0)+(c.nourT>0?6:0); s.health=clamp(s.health+(ht-s.health)*dt*0.04,0,100);
   if(!adult){ c.age=Math.min(1,c.age+dt/200); applyAge(c); if(c.age>=1)floatWorld(c.g.position.clone().setY(1.2),'Grown up!'); }
   c.litterNeed+=dt; c.breedCD-=dt; c.showCD-=dt; c.pounceT-=dt; c.hbCD-=dt; c.over=Math.max(0,c.over-dt*(c.trait==='calm'?0.6:0.35)); c.boopCD-=dt; c.blinkBackT-=dt; c.leaveT=(c.leaveT||0)-dt;
   if(c.hopT>0){ c.hopT-=dt; c.jump=Math.sin(clamp(1-c.hopT/c.hopDur,0,1)*Math.PI)*c.hopH; } else c.jump=0;
@@ -736,7 +738,8 @@ function updateCat(c,dt){
       if(d<1.4&&c.pounceT<=0&&c.hopT<=0){ c.heading=Math.atan2(laser.pos.x-c.g.position.x,laser.pos.z-c.g.position.z); hop(c,(0.25+d*0.18)*c.g.scale.x,0.45); c.lunge=0.45; c.lungeSp=d/0.45; c.reach=0.2; c.pounceT=0.9; s.fun=Math.min(100,s.fun+3.5); W.stat.laserP++;
         if(W.tier.laser>=2&&W.stat.laserP%8===0){ s.trust=Math.min(100,s.trust+1.5); s.full=Math.min(100,s.full+5); spawnFx('h',c.g.position.clone().setY(.8),2); floatWorld(c.g.position.clone().setY(1),'Treat!'); } }
       if(c.hopT<=0)moveToward(c,dt,4.6,0.3); break; }
-    case 'eat': if(c.stT<=0){ const b=c.useItem; if(b&&b.portions>0){ b.portions--; updateBowl(b); s.full=Math.min(100,s.full+45); s.trust=Math.min(100,s.trust+1.5); spawnFx('h',c.g.position.clone().setY(.9),1); } setState(c,'idle',rand(2,4)); } break;
+    case 'eat': if(c.stT<=0){ const b=c.useItem; if(b&&b.portions>0){ const prem=b.prem>0; b.portions--; if(prem)b.prem--; updateBowl(b); s.full=Math.min(100,s.full+45); s.trust=Math.min(100,s.trust+1.5); spawnFx('h',c.g.position.clone().setY(.9),1);
+        if(prem){ s.health=Math.min(100,s.health+3); s.aff=Math.min(100,s.aff+2); c.nourT=150; spawnFx('spark',c.g.position.clone().setY(.8),3,.3); } } setState(c,'idle',rand(2,4)); } break;
     case 'litter': if(c.stT<=0){ const l=c.useItem; if(l){ l.dirt=Math.min(l.cap,l.dirt+1); updateLitter(l); } c.litterNeed=0; setState(c,'idle',rand(1,3)); } break;
     case 'perch': s.fun=Math.min(100,s.fun+dt*0.5); if(c.stT<=0)setState(c,'idle',1); break;
     default: if(c.watchBird){ const bp=c.watchBird.g.position; c.heading=angLerp(c.heading,Math.atan2(bp.x-c.g.position.x,bp.z-c.g.position.z),dt*3); if(c.stT<=0)c.watchBird=null; }
@@ -1182,7 +1185,7 @@ function pickGoals(){ const idx=[...GOALS.keys()].sort(()=>Math.random()-0.5).sl
 function updateGoals(){ for(const g of W.goals){ if(g.done)continue; const [n,f,tg]=GOALS[g.i]; if(f()-g.base>=tg){ g.done=true; W.money+=15; hud(); toast(`✓ ${n} +$15`,'badge',3000); Snd.coin(); } } }
 
 /* ================= UI ================= */
-function hud(){ $('#hMoney').textContent=Math.floor(W.money); $('#hFood').textContent=W.food; const away=W.cats.filter(c=>c.away>0).length; $('#hCats').textContent=`${W.cats.length}/${LV().cap}`; $('#hAway').hidden=!away; $('#hAwayN').textContent=away; $('#hRib').textContent=W.ribbons; $('#hStars').textContent=W.stars; }
+function hud(){ $('#hMoney').textContent=Math.floor(W.money); $('#hFood').textContent=W.food+(W.premium>0?` +${W.premium}★`:''); const away=W.cats.filter(c=>c.away>0).length; $('#hCats').textContent=`${W.cats.length}/${LV().cap}`; $('#hAway').hidden=!away; $('#hAwayN').textContent=away; $('#hRib').textContent=W.ribbons; $('#hStars').textContent=W.stars; }
 function setTool(t){ if(t==='laser'&&!W.laser){ openShop(); return; } W.tool=t; document.querySelectorAll('.tool').forEach(b=>b.classList.toggle('on',b.dataset.tool===t));
   if(t==='wand'){ wand.tip.copy(cam.target).setY(0.5); wand.anchor.copy(cam.target).setY(0); wand.feather.copy(wand.tip).setY(0.1); wand.lastAct=W.time; }
   if(t==='laser'){ laser.pos.copy(cam.target).setY(0); laser.lastMove=W.time; } handVis(); }
@@ -1216,7 +1219,7 @@ $('#tStay').onclick=()=>{ const c=tag.c; if(!c)return; c.forever=!c.forever; flo
 function openModal(html,noX){ $('#mbox').innerHTML=(noX?'':'<button class="x" aria-label="Close">&times;</button>')+html; $('#modal').hidden=false; const x=$('#mbox .x'); if(x)x.onclick=closeModal; }
 function closeModal(){ $('#modal').hidden=true; }
 $('#modal').addEventListener('pointerdown',e=>{ if(e.target.id==='modal')closeModal(); });
-const IC={food:'<path d="M2.5 12c3-5.2 9.3-6.3 13.4-3.1L21 5.8v12.4l-5.1-3.1C11.8 18.3 5.5 17.2 2.5 12z" fill="#7fc4e8"/><circle cx="8" cy="11" r="1.4" fill="#24415a"/>',
+const IC={premium:'<path d="M2.5 12c3-5.2 9.3-6.3 13.4-3.1L21 5.8v12.4l-5.1-3.1C11.8 18.3 5.5 17.2 2.5 12z" fill="#e9b949"/><circle cx="8" cy="11" r="1.4" fill="#5a3d00"/><path d="M19 2l.9 2.1L22 5l-2.1.9L19 8l-.9-2.1L16 5l2.1-.9z" fill="#ff7aa2"/>',food:'<path d="M2.5 12c3-5.2 9.3-6.3 13.4-3.1L21 5.8v12.4l-5.1-3.1C11.8 18.3 5.5 17.2 2.5 12z" fill="#7fc4e8"/><circle cx="8" cy="11" r="1.4" fill="#24415a"/>',
   ball:'<circle cx="12" cy="12" r="8" fill="#ff6f91"/><path d="M4.5 10.5c5 2 10 2 15 0" stroke="#fff" stroke-width="2" fill="none"/>',
   bed:'<ellipse cx="12" cy="15" rx="10" ry="5" fill="#f4a6b8"/><ellipse cx="12" cy="14" rx="7" ry="3" fill="#fcd3dc"/>',
   laser:'<rect x="2.5" y="13" width="11" height="5" rx="2.5" transform="rotate(-35 8 15.5)" fill="#8c7666"/><path d="M13 10l5-3.5" stroke="#e2574c" stroke-width="2"/><circle cx="20" cy="5.5" r="2.4" fill="#e2574c"/>',
@@ -1234,6 +1237,7 @@ function upCost(k,n){ return Math.round([0,0,60,160][n]*(k==='tree'||k==='shelte
 function starsFor(n){ return n===2?2:4; }
 const SHOP=[
   {id:'food',name:()=>'Kibble',desc:'+12 meals',cost:()=>8,buy(){W.food+=12;}},
+  {id:'premium',name:()=>'Premium food',desc:'+12 meals · healthier, cuddlier cats',cost:()=>22,buy(){W.premium=(W.premium||0)+12;}},
   {id:'ball',name:()=>TIERS.ball[W.tier.ball-1],desc:'Bat & chase',cost:()=>12,max:()=>2+W.level*2,buy(){addItem('ball');}},
   {id:'bed',name:()=>TIERS.bed[W.tier.bed-1],desc:'Cozy naps',cost:()=>15,max:()=>1+W.level,buy(){addItem('bed');}},
   {id:'laser',name:()=>'Laser pointer',desc:'Zoomies!',cost:()=>25,avail:()=>!W.laser,buy(){W.laser=true;refreshDock();}},
@@ -1532,15 +1536,15 @@ function portrait(c){ try{
 // ---- saving ----
 const SAVE='wm_save_v3';
 function saveGame(){ if(!W.started)return; try{
-  const data={v:3,W:{time:W.time,money:W.money,food:W.food,level:W.level,laser:W.laser,ribbons:W.ribbons,wins:W.wins,streak:W.streak,bestStreak:W.bestStreak,showTier:W.showTier,earned:W.earned,stars:W.stars,tier:W.tier,achT:W.achT,stat:W.stat,maxCats:W.maxCats,tagShows:W.tagShows,lastRun:W.lastRun},
+  const data={v:3,W:{time:W.time,money:W.money,food:W.food,premium:W.premium||0,level:W.level,laser:W.laser,ribbons:W.ribbons,wins:W.wins,streak:W.streak,bestStreak:W.bestStreak,showTier:W.showTier,earned:W.earned,stars:W.stars,tier:W.tier,achT:W.achT,stat:W.stat,maxCats:W.maxCats,tagShows:W.tagShows,lastRun:W.lastRun},
     homes:W.homes,cats:W.cats.filter(c=>!c.leaving).map(c=>({id:c.id,name:c.name,sex:c.sex,coat:c.coat,age:c.age,parents:c.parents,mother:c.mother,s:c.s,trait:c.trait,fixed:c.fixed,litters:c.litters,origin:c.origin,arrivedAt:c.arrivedAt,trust0:c.trust0,forever:c.forever,wins:c.wins,pace:c.pace,buttLike:c.buttLike,buttKnown:c.buttKnown,x:c.outside?0:c.g.position.x,z:c.outside?-LV().half+1:c.g.position.z})),
-    items:items.map(i=>({kind:i.kind,x:i.pos.x,z:i.pos.z,portions:i.portions,dirt:i.dirt})),bonds,helpers:helpers.length,catId,used:[...used]};
+    items:items.map(i=>({kind:i.kind,x:i.pos.x,z:i.pos.z,portions:i.portions,prem:i.prem||0,dirt:i.dirt})),bonds,helpers:helpers.length,catId,used:[...used]};
   try{ localStorage.setItem(SAVE,JSON.stringify(data)); }catch(e){ data.homes=data.homes.map((hm,i)=>i<data.homes.length-6?Object.assign({},hm,{img:null}):hm); localStorage.setItem(SAVE,JSON.stringify(data)); } }catch(e){} }
 function loadGame(d){
   for(const c of W.cats)scene.remove(c.g); W.cats=[]; for(const it of items)scene.remove(it.mesh); items.length=0; for(const hp of helpers)scene.remove(hp.g); helpers.length=0; used.clear();
   Object.assign(W,d.W); W.stat=Object.assign({},STAT0,d.W.stat||{}); W.homes=d.homes||[]; W.tier=Object.assign({tree:1,bed:1,ball:1,bowl:1,litter:1,shelter:1,wand:1,laser:1},d.W.tier||{});
   buildEnclosure(); buildDecor(); cam.want=cam.dist=LV().zoom;
-  for(const i of d.items){ const it=addItem(i.kind,new V3(i.x,0,i.z)); if(i.portions!=null){ it.portions=i.portions; updateBowl(it); } if(i.dirt!=null){ it.dirt=i.dirt; updateLitter(it); } }
+  for(const i of d.items){ const it=addItem(i.kind,new V3(i.x,0,i.z)); if(i.portions!=null){ it.portions=i.portions; it.prem=Math.min(i.prem||0,i.portions); updateBowl(it); } if(i.dirt!=null){ it.dirt=i.dirt; updateLitter(it); } }
   for(const s of d.cats){ const c=makeCat({loading:true,name:s.name,sex:s.sex,coat:s.coat,age:s.age,parents:s.parents,mother:s.mother,s:s.s,trait:s.trait,fixed:s.fixed,origin:s.origin,buttLike:s.buttLike,x:s.x,z:s.z});
     Object.assign(c,{id:s.id,litters:s.litters||0,arrivedAt:s.arrivedAt||0,trust0:s.trust0??c.s.trust,forever:!!s.forever,wins:s.wins||0,pace:s.pace||c.pace,buttKnown:!!s.buttKnown}); }
   catId=d.catId||W.cats.length; (d.used||[]).forEach(n=>used.add(n)); Object.assign(bonds,d.bonds||{}); for(let i=0;i<(d.helpers||0);i++)makeHelper();

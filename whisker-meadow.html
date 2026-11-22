@@ -782,6 +782,10 @@ function moveToward(c,dt,speed,stop=0.15){
   p.x+=Math.sin(c.heading)*c.speed*dt; p.z+=Math.cos(c.heading)*c.speed*dt; return false;
 }
 function walkAway(c,run=true){ const p=c.g.position; const away=Math.atan2(p.x-camera.position.x,p.z-camera.position.z)+rand(-1.2,1.2); goTo(c,p.x+Math.sin(away)*2.6,p.z+Math.cos(away)*2.6,null); c.run=run; c.flick=0.8; c.over=0; c.purr=0; c.leaveT=2.2; c.petT=0; }
+// cats spread out between roofs: distance counts, but so does how many cats are already under (or heading to) each one
+function shelterLoad(sh,me){ return W.cats.filter(o=>o!==me&&!o.outside&&o.away<=0&&(shelterOf(o.g.position)===sh||(o.state==='walk'&&o.afterData===sh)||(o.state==='shelter'&&o.shelterAt===sh))).length; }
+function shelterPick(c){ const sh=items.filter(i=>i.kind==='shelter'); if(!sh.length)return null; const p=c.g.position;
+  return sh.map(s=>({s,score:Math.hypot(s.pos.x-p.x,s.pos.z-p.z)+shelterLoad(s,c)*2.2+(shelterLoad(s,c)>=4?8:0)})).sort((a,b)=>a.score-b.score)[0].s; }
 function shelterOf(p){ return items.find(i=>i.kind==='shelter'&&Math.abs(p.x-i.pos.x)<1.0&&Math.abs(p.z-i.pos.z)<1.0); }
 
 function decide(c){
@@ -789,7 +793,7 @@ function decide(c){
   if(c.age<0.7&&c.mother){ const mum=W.cats.find(m=>m.id===c.mother&&m.away<=0&&!m.outside&&!m.leaving); if(mum&&Math.random()<0.5){ const mp=mum.g.position; goTo(c,mp.x+rand(-0.7,0.7),mp.z+rand(-0.7,0.7),null); return; } }
   if((W.night||0)>0.3&&s.fun<95&&!weather.raining&&Math.random()<(c.age<1?0.45:0.28)){ const ff=flies.filter(f=>f.sp.visible&&f.home.y<1.6&&dist2(f.sp.position,p)<5).sort((a,b)=>dist2(a.sp.position,p)-dist2(b.sp.position,p))[0]; if(ff){ c.watch=ff; setState(c,'watch',rand(5,8)); return; } }
   if((W.night||0)>0.5&&c.age>0.2&&Math.random()<0.6&&!weather.raining){ const b=pick(items.filter(i=>i.kind==='bed'&&!i.occupant)); if(b){ goTo(c,b.pos.x,b.pos.z,'bed',b); return; } setState(c,'sleep',rand(16,30)); return; }
-  if(weather.raining){ const sh=nearest(items.filter(i=>i.kind==='shelter'),c); if(sh){ if(!shelterOf(p)){ goTo(c,sh.pos.x+rand(-.75,.75),sh.pos.z+rand(-.75,.75),'shelter',sh); c.run=true; return; } setState(c,'shelter',rand(4,8)); return; } }
+  if(weather.raining){ const sh=shelterPick(c), here=shelterOf(p); if(sh){ if(!here||(here!==sh&&shelterLoad(here,c)>=4&&Math.random()<0.5)){ goTo(c,sh.pos.x+rand(-.75,.75),sh.pos.z+rand(-.75,.75),'shelter',sh); c.run=true; return; } setState(c,'shelter',rand(4,8)); return; } }
   if(s.full<58){ const b=nearest(items.filter(i=>i.kind==='bowl'&&i.portions>0),c); if(b){ const [x,z]=approach(c,b,0.74); goTo(c,x,z,'eat',b); return; } if(Math.random()<0.5)showIcon(c,'hungry',2.5); }
   if(c.litterNeed>rand(70,100)){ const L=nearest(items.filter(i=>i.kind==='litter'&&i.dirt<i.cap-0.5&&!i.occupant),c); if(L){ goTo(c,L.pos.x,L.pos.z,'litter',L); return; } c.litterNeed=45; showIcon(c,'smell',3); }
   if(laser.active&&s.fun<98&&dist2(p,laser.pos)<9){ setState(c,'laser',8); return; }
@@ -817,7 +821,7 @@ function arrive(c){
   if(a==='play'){ c.ball=it; c.heading=Math.atan2(it.pos.x-c.g.position.x,it.pos.z-c.g.position.z); setState(c,'stalk',rand(0.5,1)); return; }
   if(a==='perch'&&freeSpot(it)>=0){ const k=freeSpot(it), sp=it.spots[k]; setState(c,'perch',rand(10,18)); c.g.position.set(it.pos.x+sp[0],0,it.pos.z+sp[2]); c.perchY=sp[1]; c.useItem=it; it.occ[k]=c; return; }
   if(a==='bed'&&!it.occupant){ setState(c,'sleep',rand(12,20)*((W.night||0)>0.5?1.6:1)); c.g.position.set(it.pos.x,0,it.pos.z); c.useItem=it; it.occupant=c; return; }
-  if(a==='shelter'){ setState(c,'shelter',rand(5,9)); return; }
+  if(a==='shelter'){ c.shelterAt=it; setState(c,'shelter',rand(5,9)); return; }
   if(a==='pond'&&it){ c.pondAt=it; c.lure=null; c.swipeT=rand(1.5,3); setState(c,'pondwatch',rand(8,14)); c.heading=Math.atan2(it.px-c.g.position.x,it.pz-c.g.position.z); return; }
   setState(c,'idle',rand(2,5));
 }

@@ -852,7 +852,9 @@ function dropCat(c){ if(!c.carried)return; c.carried=false; setState(c,'idle',ra
 function hopFree(c){ c.carried=false; if(P.cat===c&&P.mode==='carry')P.mode='none'; c.s.trust=Math.max(0,c.s.trust-3); hop(c,0.3,0.45); showIcon(c,'huff',1.5); walkAway(c); W.stat.drops++; handVis(); }
 
 /* ---------- collisions ---------- */
-function catCircles(c){ const p=c.g.position, s=c.g.scale.x, fx=Math.sin(c.heading)*0.27*s, fz=Math.cos(c.heading)*0.27*s; return [[p.x+fx,p.z+fz,0.3*s],[p.x-fx,p.z-fz,0.3*s]]; }
+// body = two circles along the spine, plus one for the head (kittens have bigger heads)
+function catCircles(c){ const p=c.g.position, s=c.g.scale.x, sh=Math.sin(c.heading), ch=Math.cos(c.heading), fx=sh*0.27*s, fz=ch*0.27*s, hr=0.24*s*(1+0.28*(1-c.age));
+  return [[p.x+fx,p.z+fz,0.3*s],[p.x-fx,p.z-fz,0.3*s],[p.x+sh*0.58*s,p.z+ch*0.58*s,hr]]; }
 function solid(c){ return c.away<=0&&!c.carried&&!c.outside&&!c.leaving&&!['litter','perch'].includes(c.state)&&!(c.state==='sleep'&&c.useItem)&&c.jump<0.15; }
 function collide(){
   const cs=active().filter(solid);

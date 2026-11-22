@@ -108,6 +108,12 @@ body.intro .dock,body.intro #hud,body.intro .top{opacity:.25;pointer-events:none
 #toasts{position:fixed;top:calc(62px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;z-index:7;pointer-events:none}
 .toast{background:rgba(74,52,38,.86);color:#fff;padding:7px 16px;border-radius:999px;font:600 16px var(--display);white-space:nowrap;animation:pop .3s ease-out}
 .toast.badge{background:linear-gradient(#ffe48a,#f6c443);color:#5a3d00}
+.float.hg svg{width:50px;height:60px;display:block;filter:drop-shadow(0 2px 3px rgba(74,52,38,.35))}
+.float.hg.fast svg{animation:hgShake .35s ease-in-out 2}
+@keyframes hgShake{0%,100%{transform:rotate(0)}25%{transform:rotate(-18deg)}75%{transform:rotate(18deg)}}
+.bigSlow{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:8;pointer-events:none;display:flex;align-items:center;gap:14px;background:rgba(255,250,242,.94);padding:14px 30px;border-radius:26px;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:bigSlow 2.8s ease-in-out forwards}
+.bigSlow svg{width:52px;height:62px}.bigSlow b{font:700 58px var(--display);color:#4a3426;letter-spacing:.04em;text-transform:uppercase}
+@keyframes bigSlow{0%{opacity:0;transform:translate(-50%,-50%) scale(.7)}10%{opacity:1;transform:translate(-50%,-50%) scale(1)}85%{opacity:1}100%{opacity:0}}
 .float{position:fixed;left:0;top:0;transform:translate(-50%,-50%);font:700 22px var(--display);color:#fff;text-shadow:0 2px 0 rgba(74,52,38,.35),0 0 8px rgba(74,52,38,.25);pointer-events:none;z-index:7;animation:rise 1.4s ease-out forwards;white-space:nowrap}
 @keyframes rise{0%{opacity:0;margin-top:0}15%{opacity:1}100%{opacity:0;margin-top:-60px}}
 @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:none;opacity:1}}
@@ -542,6 +548,10 @@ function updateClose(dt){ const k=cam.close; if(!k)return; const c=k.c;
   const busy=P.cat===c&&P.mode&&P.mode!=='none'||S.cat===c||tag.c===c&&W.time-c.lastStroke<2; k.idle=busy?0:k.idle+dt;
   if(k.idle>8){ leaveClose(true); return; } if(!c.carried){ cam.focus=c; cam.focusT=0.3; } }
 function toScreen(v){ pv.copy(v).project(camera); return {x:(pv.x+1)/2*innerWidth,y:(1-pv.y)/2*innerHeight,ok:pv.z<1}; }
+const HOURGLASS='<svg viewBox="0 0 40 48"><path d="M8 4h24M8 44h24" stroke="#4a3426" stroke-width="4" stroke-linecap="round"/><path d="M11 6c0 10 9 13 9 18s-9 8-9 18h18c0-10-9-13-9-18s9-8 9-18z" fill="#fff8ee" stroke="#4a3426" stroke-width="3" stroke-linejoin="round"/><path d="M15 13h10c-1 3-5 5-5 7-0-2-4-4-5-7zM13 40c1-5 7-8 7-10 0 2 6 5 7 10z" fill="#f2b04a"/></svg>';
+const slowNag={n:0,next:0};
+function floatHourglass(x,y,fast){ const d=document.createElement('div'); d.className='float hg'+(fast?' fast':''); d.innerHTML=HOURGLASS; d.style.left=x+'px'; d.style.top=y+'px'; document.body.appendChild(d); setTimeout(()=>d.remove(),1450); }
+function showSlow(){ const d=document.createElement('div'); d.className='bigSlow'; d.innerHTML=HOURGLASS+'<b>Slow</b>'; document.body.appendChild(d); setTimeout(()=>d.remove(),2800); }
 function floatAt(x,y,text,cls=''){ const d=document.createElement('div'); d.className='float '+cls; d.textContent=text; d.style.left=x+'px'; d.style.top=y+'px'; document.body.appendChild(d); setTimeout(()=>d.remove(),1450); }
 function floatWorld(v,text){ const s=toScreen(v); if(s.ok)floatAt(s.x,s.y,text); }
 function toast(html,cls='',ms=2600){ const d=document.createElement('div'); d.className='toast '+cls; d.innerHTML=html; $('#toasts').appendChild(d); setTimeout(()=>d.remove(),ms); const all=$('#toasts').children; if(all.length>3)all[0].remove(); }
@@ -787,7 +797,7 @@ function onStroke(c,zone,frantic){
   let like={head:1,cheek:1.1,chin:1.2,back:0.7,rump:0.6,chest:0.35,leg:0.15}[zone]??0.3;
   if(brush) like=(zone==='back'||zone==='rump')?1.1:(zone==='head'||zone==='cheek')?0.6:0.25;
   const slow=c.trait==='shy'?1.15:1;
-  const rating=frantic||iv<(brush?0.7:1.3)*slow?'fast':(iv>=(brush?1.0:2.0)*slow&&iv<=7)?'good':'neutral';
+  const rating=frantic||iv<(brush?0.55:1.0)*slow?'fast':(iv>=(brush?0.8:1.55)*slow&&iv<=7)?'good':'neutral';
   if(rating==='fast'){ c.over+=brush?0.6:1; c.streak=0; c.purr*=0.6; }
   else if(rating==='good'){
     s.aff=Math.min(100,s.aff+4*like*(1-s.aff/130)*(c.trait==='cuddly'?1.25:1)); s.trust=Math.min(100,s.trust+2*like*(1-s.trust/120)*(c.trait==='shy'?0.85:1)*kt(c)); c.lean=0.9; if(!brush&&Math.random()<0.3)c.turnTo=c.heading+rand(-0.9,0.9);
@@ -805,7 +815,8 @@ function onStroke(c,zone,frantic){
       else { c.bat=0.5; handFx('bump'); } }
   } else { c.purr=Math.max(c.purr,0.25*like); s.aff=Math.min(100,s.aff+0.6*like); }
   { const fx=P.hx, fy=P.hy-(P.type==='mouse'?62:112);
-    if(rating==='fast')floatAt(fx,fy,'Too fast!','bad'); else if(rating==='good')floatAt(fx,fy,c.streak>=2?`Purr! ×${c.streak}`:'Purr!','good'); else if(iv<(brush?1.0:2.0)*slow)floatAt(fx,fy,'A bit slower','bad'); }
+    if(rating==='good'){ slowNag.n=0; floatAt(fx,fy,c.streak>=2?`Purr! ×${c.streak}`:'Purr!','good'); }
+    else if(rating==='fast'||iv<(brush?0.8:1.55)*slow){ floatHourglass(fx,fy,rating==='fast'); slowNag.n++; if(slowNag.n>=4&&W.time>slowNag.next){ slowNag.n=0; slowNag.next=W.time+40; showSlow(); } } }
   if(rating!=='fast'&&!brush&&s.trust>=35&&s.fun<60&&Math.random()<0.2){ c.bat=0.5; handFx('bump'); }
   if(s.trust<30||s.aff<25){ c.patience--; if(c.patience<=0){ c.patience=2+Math.floor(Math.random()*3); showIcon(c,'huff',1.5); walkAway(c,false); } }
 }
@@ -1028,7 +1039,7 @@ function animateCat(c,dt,t){
   const sp=0.075*(c.tailLen||1); let x=0,y=0,z=0;
   c.tail.forEach((m,i)=>{ const f=i/8; const th=tailUp+f*0.9*(tailUp>0.3?1:-0.4); const side=Math.sin(t*swSpd-i*0.45)*swish*f*3;
     x+=Math.sin(side)*sp*0.6; y+=Math.sin(th)*sp; z-=Math.cos(th)*sp; m.position.set(x,y,z); });
-  let gOp=0; if(c.petT>0&&handOn(c)&&!c.carried){ const el=W.time-c.lastStroke, g0=(W.tool==='brush'?1.0:2.0)*(c.trait==='shy'?1.15:1); gOp=el<g0?0.05+0.2*(el/g0):el<=7?0.6+0.15*Math.sin(t*6):0.25; }
+  let gOp=0; if(c.petT>0&&handOn(c)&&!c.carried){ const el=W.time-c.lastStroke, g0=(W.tool==='brush'?0.8:1.55)*(c.trait==='shy'?1.15:1); gOp=el<g0?0.05+0.2*(el/g0):el<=7?0.6+0.15*Math.sin(t*6):0.25; }
   c.glow.material.opacity=lerp(c.glow.material.opacity,gOp,Math.min(1,dt*8)); c.glow.position.y=c.state==='flop'?0.35:0.55;
   if(c.iconT>0){ c.iconT-=dt; if(c.iconT<=0)c.icon.visible=false; }
   else if(W.pickHome&&readyHome(c))showIcon(c,'house',0.4);
@@ -1521,7 +1532,7 @@ function openHelp(){
   <div class="hrow"><span>Pointing hints</span><button id="hTog">${W.hints?'On':'Off'}</button></div>
   ${sec('The goal',`<p>You run a cat sanctuary. Shy rescue cats arrive; you earn their trust, keep them healthy and happy, and help them find loving homes. There is no losing: cats never get hurt, they just get grumpy when ignored.</p>`,true)}
   ${sec(ICO_A+ICO_T+ICO_H+' The three stats',`<ul><li><b>Love</b> (heart): petting, playing, butt taps (for cats who like them), premium food.</li><li><b>Trust</b> (paw in hand): gentle on-beat petting, feeding, play, blinking back. Drops when you scratch the wrong spot, pet too fast, or hold a nervous cat too long. Kittens learn to trust faster.</li><li><b>Health</b> (leaf): full belly, fun, a groomed coat and a clean litter box. Naps on cushions and the water fountain help.</li></ul><p>Tap a cat to see its stats above its head.</p>`)}
-  ${sec('Petting rhythm',`<ul><li>Drag across the cat: one smooth stroke, then <b>wait</b>.</li><li>A ring by your hand fills in about 2 seconds (longer for shy cats). Stroke again when it turns <b>green with a ✓</b>.</li><li>"Purr!" = perfect. "A bit slower" = slightly early. "Too fast!" = frantic.</li><li>Too many fast strokes overstimulate a cat: watch for a twitching tail and sideways ears. Then it walks off, or, if it doesn't trust you yet, it scratches (band-aid!).</li></ul>`)}
+  ${sec('Petting rhythm',`<ul><li>Drag across the cat: one smooth stroke, then <b>wait</b>.</li><li>A ring by your hand fills in about 1.5 seconds (longer for shy cats). Stroke again when it turns <b>green with a ✓</b>.</li><li>"Purr!" = perfect. An hourglass = slow down (a shaking one = way too fast).</li><li>Too many fast strokes overstimulate a cat: watch for a twitching tail and sideways ears. Then it walks off, or, if it doesn't trust you yet, it scratches (band-aid!).</li></ul>`)}
   ${sec('Where to pet',`<ul><li><b>Head, cheeks, chin</b>: favourites.</li><li><b>Back</b>: fine. <b>Tail</b>: no!</li><li><b>Belly</b>: only when a cat rolls over and has trust 75+. Otherwise it's a trap.</li><li><b>Butt taps</b>: tap the rump once. Some cats love it, some don't: find out!</li><li>Happy cats headbutt your hand, knead, lean in and slow-blink. When a cat looks up and slowly blinks at you, <b>tap it to blink back</b>.</li></ul>`)}
   ${sec('Tools',`<ul><li><b>Pet</b>: stroke; press and hold a cat to carry it (relaxed cats flop, nervous ones wiggle free). Drop it next to another cat to introduce them.</li><li><b>Brush</b>: grooms the coat (fair judges notice). Cats also groom themselves a little when happy and fed.</li><li><b>Wand</b>: drag to move, flick to toss, tap to make it jump, hold still to raise it so cats leap.</li><li><b>Laser</b> (shop): cats sprint and pounce. Upgraded, it ends on a treat.</li><li>Bowls and litter boxes can be tapped with any tool.</li></ul>`)}
   ${sec('Daily care',`<ul><li>Tap a bowl to fill it (uses premium food first, then kibble).</li><li>Tap the litter box to scoop it; dirty boxes make the meadow smelly.</li><li>A rain roof keeps cats dry in showers.</li><li>Helpers fill bowls, scoop and pet cats, for $6 a minute. Unpaid helpers rest.</li><li>The donation jar by the gate collects money when your cats are happy.</li></ul>`)}
@@ -1876,7 +1887,7 @@ let camCycle=-1; $('#bCats').onclick=()=>{ const cs=W.cats.filter(c=>c.away<=0&&
 function updateBeat(){ const el=$('#beat'); let c=null;
   if(P.mode==='stroke'&&S.cat)c=S.cat; else if(P.mode==='catPending')c=P.cat; else if(P.type==='mouse'&&!P.mode&&P.hoverCat&&P.hoverCat.petT>0)c=P.hoverCat;
   if(!c||!(W.tool==='hand'||W.tool==='brush')||c.carried||c.leaving||c.outside||!$('#modal').hidden){ el.hidden=true; return; }
-  const slow=c.trait==='shy'?1.15:1, g0=(W.tool==='brush'?1.0:2.0)*slow, t=W.time-c.lastStroke, p=t>7?1:clamp(t/g0,0,1);
+  const slow=c.trait==='shy'?1.15:1, g0=(W.tool==='brush'?0.8:1.55)*slow, t=W.time-c.lastStroke, p=t>7?1:clamp(t/g0,0,1);
   el.hidden=false; el.style.transform=`translate(${P.hx+48}px,${P.hy-(P.type==='mouse'?48:104)}px)`;
   const fg=$('#beatFg'); fg.style.strokeDashoffset=106.8*(1-p); fg.style.stroke=p>=1?'#5fb35a':'#f0a13a'; el.classList.toggle('ready',p>=1); $('#beatTx').textContent=p>=1?'✓':''; }
 const COLLARS=[0xe2574c,0x5b9be6,0xff7aa2,0x5fb35a,0x9a86cf,0xf6c443,0x3d3532];
@@ -2095,6 +2106,6 @@ function begin(){ Snd.init(); $('#start').hidden=true; W.started=true; cam.theta
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); }catch(e){} begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={animateCat,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={animateCat,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>

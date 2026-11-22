@@ -74,6 +74,9 @@ button:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
 #scratch.go path:nth-child(2){animation-delay:.04s}#scratch.go path:nth-child(3){animation-delay:.08s}
 @keyframes scrDraw{to{stroke-dashoffset:0}}
 @keyframes scrFlash{0%{opacity:1;background:rgba(255,40,60,.32)}12%{background:rgba(255,40,60,.08)}22%{background:rgba(255,40,60,.22)}40%{opacity:1;background:transparent}100%{opacity:0}}
+#tapRing{position:fixed;left:0;top:0;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:4px solid #fff;pointer-events:none;z-index:6;opacity:0;box-shadow:0 0 6px rgba(0,0,0,.3)}
+#tapRing.go{animation:tapRing .55s ease-out}
+@keyframes tapRing{0%{opacity:.95;transform:scale(.3)}100%{opacity:0;transform:scale(1.5)}}
 #introSkip{position:fixed;right:14px;bottom:calc(100px + env(safe-area-inset-bottom,0px));z-index:7;width:46px;height:46px;border-radius:50%;background:rgba(255,250,242,.85);font-size:20px;color:#8c7666}
 body.intro .dock,body.intro #hud,body.intro .top{opacity:.25;pointer-events:none}
 .ic3{display:flex;justify-content:space-around;align-items:flex-end;margin-top:4px;height:44px}
@@ -227,7 +230,7 @@ body.intro .dock,body.intro #hud,body.intro .top{opacity:.25;pointer-events:none
   <button class="tool locked" data-tool="laser" aria-label="Laser pointer"><span class="lock">$25</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="13" width="11" height="5" rx="2.5" transform="rotate(-35 8 15.5)" fill="currentColor" fill-opacity=".3"/><path d="M13 10l5-3.5"/><circle cx="20" cy="5.5" r="2.2" fill="#e2574c" stroke="none"/></svg>Laser</button>
 </div>
 
-<div id="tag" hidden></div><div id="intro" hidden></div><div id="ghost" hidden></div><div id="pips" hidden></div><div id="tip" hidden></div><div id="scratch"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><g fill="none" stroke="#d81e3a" stroke-linecap="round" filter="drop-shadow(0 0 1px rgba(120,0,20,.6))"><path pathLength="1" stroke-width="3.6" d="M18 8 Q42 46 74 92"/><path pathLength="1" stroke-width="4.4" d="M30 4 Q54 44 86 90"/><path pathLength="1" stroke-width="3.2" d="M42 2 Q64 40 96 84"/></g></svg></div><button id="introSkip" hidden aria-label="Skip">&#9197;</button>
+<div id="tag" hidden></div><div id="intro" hidden></div><div id="ghost" hidden></div><div id="pips" hidden></div><div id="tip" hidden></div><div id="scratch"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><g fill="none" stroke="#d81e3a" stroke-linecap="round" filter="drop-shadow(0 0 1px rgba(120,0,20,.6))"><path pathLength="1" stroke-width="3.6" d="M18 8 Q42 46 74 92"/><path pathLength="1" stroke-width="4.4" d="M30 4 Q54 44 86 90"/><path pathLength="1" stroke-width="3.2" d="M42 2 Q64 40 96 84"/></g></svg></div><div id="tapRing"></div><button id="introSkip" hidden aria-label="Skip">&#9197;</button>
 
 <div id="hint" hidden><div class="rip"></div><div class="hh"></div><div class="lab"></div></div>
 <div id="ring" hidden></div>
@@ -1979,6 +1982,10 @@ function endBlinkTut(ok){ const c=bt.c; if(!c)return; bt.c=null; cam.want=Math.m
   $('#intro').classList.add('off'); setTimeout(()=>{ if(!intro.c&&!bt.c&&!pl.a)$('#intro').hidden=true; },750); for(const id of ['#ghost','#pips','#introSkip'])$(id).hidden=true; $('#ghost').classList.remove('tap'); c.sbLen=1.9;
   if(ok){ const s=c.s; s.aff=Math.min(100,s.aff+18); s.trust=Math.min(100,s.trust+5); spawnFx('h',c.g.position.clone().setY(1.0*c.g.scale.x+0.2),16,0.9,0.6); Snd.chime(); tagFor(c,6); }
   hintGap=6; }
+function tapGesture(t,x,y){ const cyc=t%1.5, gh=$('#ghost'), press=cyc>0.55&&cyc<0.75, hover=cyc<0.55?14*(1-cyc/0.55):0;
+  gh.style.transform=`translate(${x-18}px,${y-8-(press?0:6+hover)}px) scale(${press?0.86:1})`;
+  const ring=$('#tapRing'); ring.style.transform=''; ring.style.left=x+'px'; ring.style.top=y+'px';
+  if(press&&!tapGesture.on){ ring.classList.remove('go'); void ring.offsetWidth; ring.classList.add('go'); } tapGesture.on=press; }
 function updateBlinkTut(dt){ const c=bt.c; if(!c)return; if(c.away>0||c.outside||c.leaving||c.carried){ endBlinkTut(false); return; }
   if(W.stat.blinkBack>bt.n0){ endBlinkTut(true); return; } bt.t+=dt; tag.c=null;
   const p=c.g.position; cam.target.lerp(new V3(p.x,0.4,p.z),Math.min(1,dt*3));
@@ -1988,8 +1995,7 @@ function updateBlinkTut(dt){ const c=bt.c; if(!c)return; if(c.away>0||c.outside|
   const n=toScreen(c.head.localToWorld(new V3(0,-0.02,0.3))); if(!n.ok)return;
   $('#intro').style.setProperty('--x',n.x+'px'); $('#intro').style.setProperty('--y',n.y+'px');
   // the hand shows up after the first blink: lift, then a gentle tap on the nose
-  const cyc=(bt.t-1.5)%1.8, up=cyc<0?40:cyc<0.9?40*(1-Math.sin(cyc/0.9*Math.PI/2)):cyc<1.1?0:40*((cyc-1.1)/0.7);
-  const gh=$('#ghost'); gh.style.opacity=bt.t<1.5||(P.mode&&P.mode!=='none')?0:''; gh.style.transform=`translate(${n.x-18}px,${n.y-8-up}px)`; }
+  const gh=$('#ghost'); gh.style.opacity=bt.t<1.5||(P.mode&&P.mode!=='none')?0:''; if(bt.t>=1.5)tapGesture(bt.t-1.5,n.x,n.y); }
 // ---- lesson 3: friends. Hold one cat, carry it next to another, watch them boop and play ----
 const pl={a:null,b:null,t:0,stage:'',lastDrop:0};
 const catFace=(x,col)=>`<g transform="translate(${x},25)"><path d="M-13 -3L-12 -18-3 -11zM13 -3L12 -18 3 -11z" fill="${col}"/><circle r="13" fill="${col}"/><circle cx="-4.5" cy="-1" r="2" fill="#4a3426"/><circle cx="4.5" cy="-1" r="2" fill="#4a3426"/><path d="M-2 4h4l-2 2z" fill="#ff8fa3"/></g>`;
@@ -2052,7 +2058,7 @@ function updateTips(dt){ const busy=intro.c||bt.c||pl.a||!W.started||W.paused||!
   if(T.kind==='butt'&&c.state==='idle')c.stT=Math.max(c.stT||0,2);
   const top=toScreen(c.g.position.clone().setY(1.35*c.g.scale.x+0.45)); if(!top.ok)return; const el=$('#tip'), w=el.offsetWidth, hh=el.offsetHeight;
   el.style.transform=`translate(${clamp(top.x-w/2,8,innerWidth-w-8)}px,${clamp(top.y-hh,60,innerHeight-hh-90)}px)`; el.style.opacity=tips.t>T.dur-0.6?0:1;
-  if(T.tap){ const p=c.g.position, s2=c.g.scale.x, r=toScreen(new V3(p.x-Math.sin(c.heading)*0.5*s2,0.55*s2,p.z-Math.cos(c.heading)*0.5*s2)); if(r.ok){ const cyc=tips.t%1.6, up=cyc<0.8?36*(1-Math.sin(cyc/0.8*Math.PI/2)):cyc<1.0?0:36*((cyc-1.0)/0.6); $('#ghost').style.opacity=''; $('#ghost').style.transform=`translate(${r.x-18}px,${r.y-8-up}px)`; } } }
+  if(T.tap){ const p=c.g.position, s2=c.g.scale.x, r=toScreen(new V3(p.x-Math.sin(c.heading)*0.5*s2,0.55*s2,p.z-Math.cos(c.heading)*0.5*s2)); if(r.ok){ $('#ghost').style.opacity=''; tapGesture(tips.t,r.x,r.y); } } }
 function begin(){ Snd.init(); $('#start').hidden=true; W.started=true; cam.theta=0.55; Snd.meow(1.2,0.5); pickGoals(); handVis(); hud(); if((W.stat.good||0)<3)setTimeout(startIntro,700); }
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); }catch(e){} begin(); };

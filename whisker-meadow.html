@@ -646,6 +646,7 @@ function shelterOf(p){ return items.find(i=>i.kind==='shelter'&&Math.abs(p.x-i.p
 function decide(c){
   const s=c.s, p=c.g.position;
   if(c.age<0.7&&c.mother){ const mum=W.cats.find(m=>m.id===c.mother&&m.away<=0&&!m.outside&&!m.leaving); if(mum&&Math.random()<0.5){ const mp=mum.g.position; goTo(c,mp.x+rand(-0.7,0.7),mp.z+rand(-0.7,0.7),null); return; } }
+  if((W.night||0)>0.3&&s.fun<95&&!weather.raining&&Math.random()<(c.age<1?0.45:0.28)){ const ff=flies.filter(f=>f.sp.visible&&f.home.y<1.6&&dist2(f.sp.position,p)<5).sort((a,b)=>dist2(a.sp.position,p)-dist2(b.sp.position,p))[0]; if(ff){ c.watch=ff; setState(c,'watch',rand(5,8)); return; } }
   if((W.night||0)>0.6&&c.age>0.2&&Math.random()<0.35&&!weather.raining){ const b=pick(items.filter(i=>i.kind==='bed'&&!i.occupant)); if(b){ goTo(c,b.pos.x,b.pos.z,'bed',b); return; } setState(c,'sleep',rand(10,18)); return; }
   if(weather.raining){ const sh=nearest(items.filter(i=>i.kind==='shelter'),c); if(sh){ if(!shelterOf(p)){ goTo(c,sh.pos.x+rand(-.75,.75),sh.pos.z+rand(-.75,.75),'shelter',sh); c.run=true; return; } setState(c,'shelter',rand(4,8)); return; } }
   if(s.full<58){ const b=nearest(items.filter(i=>i.kind==='bowl'&&i.portions>0),c); if(b){ const [x,z]=approach(c,b,0.74); goTo(c,x,z,'eat',b); return; } if(Math.random()<0.5)showIcon(c,'hungry',2.5); }
@@ -1119,7 +1120,7 @@ function updateCamera(dt){
   if(cam.shake>0){ cam.shake-=dt; camera.position.x+=rand(-.07,.07); camera.position.y+=rand(-.07,.07); }
   camera.lookAt(t);
 }
-function clampTarget(){ const B=bnd(); cam.target.x=clamp(cam.target.x,B.x0-14,B.x1+14); cam.target.z=clamp(cam.target.z,B.z0-17,B.z1+6); }
+function clampTarget(){ const B=bnd(); cam.target.x=clamp(cam.target.x,B.x0-23,B.x1+23); cam.target.z=clamp(cam.target.z,B.z0-25,B.z1+16); }
 function canRomp(o){ return ['idle','walk','watch'].includes(o.state)&&!o.carried&&!o.outside&&!o.leaving&&o.away<=0&&o.age>0.2&&o.s.fun<97&&o.petT<=0; }
 function startRomp(a,b){ for(const c of [a,b]){ setState(c,'romp',rand(9,15)); c.rompPhase='chase'; c.rompTgt=null; } a.rompP=b; b.rompP=a; a.rompRole='chaser'; b.rompRole='runner'; Snd.chirp(); }
 function zoomBy(f){ cam.want=clamp(cam.want*f,3.2,LV().zoom*1.3); }
@@ -1572,7 +1573,14 @@ function outsideDecor(grp,h){ const BB=bnd(), X0=BB.x0, X1=BB.x1, Z1=BB.z1;
   for(let i=0;i<3;i++)grp.add(mesh(G.sphLo,pick([0x6db657,0x7fc463]),{p:[h*0.5-0.6+i*0.6,0.3,Z1+4+(i%2)*0.3],s:[0.6,0.5,0.55]}));
   W.hideSpots=[{via:[[X1+1.6,-h-1.4]],p:[X1+5.8,h*0.3+0.6]},{via:[[X0-1.4,-h-1.4]],p:[X0-5.2,-h-1.5]},{via:[[X0-1.6,-h-1.4]],p:[X0-4.9,h*0.4+1.7]},{via:[[X1+1.4,-h-1.4]],p:[X1+3.6,-h-3.0]},
     {via:[[X1+1.4,-h-1.4]],p:[X1+6.7,-h-6.7]},{via:[[X0-1.4,-h-1.4]],p:[X0-7.6,-h-4.2]},{via:[[-3,-h-2.4],[-4.4,-h-6.6]],p:[-5.6,-h-7.8]},{via:[[X1+1.6,-h-1.4],[X1+1.8,Z1+2]],p:[h*0.5,Z1+3.4]},
-    {via:[[-3.6,-h-3],[-3.6,-h-9.5]],p:[-10,-h-13.4]},{via:[[-3.6,-h-3],[-3.6,-h-9.5],[6,-h-11.5]],p:[8.6,-h-13.8]},{via:[[X1+1.6,-h-1.4],[X1+9,-h-1]],p:[X1+11.2,h*0.2]},{via:[[X0-1.4,-h-1.4],[X0-9,-h]],p:[X0-11.4,2]}];
+    {via:[[-3.6,-h-3],[-3.6,-h-9.5]],p:[-10,-h-13.4]},{via:[[-3.6,-h-3],[-3.6,-h-9.5],[6,-h-11.5]],p:[8.6,-h-13.8]},{via:[[X1+1.6,-h-1.4],[X1+9,-h-1]],p:[X1+11.2,h*0.2]},{via:[[X0-1.4,-h-1.4],[X0-9,-h]],p:[X0-11.4,2]},
+    {via:[[-3.6,-h-3],[-3.6,-h-9.5],[-6,-h-16]],p:[-4.6,-h-21]},{via:[[X1+1.6,-h-1.4],[X1+12,-h]],p:[X1+19,4]},{via:[[X0-1.4,-h-1.4],[X0-12,-h+2]],p:[X0-19.5,0]},{via:[[X1+1.6,-h-1.4],[X1+2.5,Z1+3]],p:[(X0+X1)/2+3,Z1+13]}];
+  // the far reaches: an old barn across the fields, a big oak to the east, berry brambles to the west, a rock pile far north
+  { const barn=new THREE.Group(); barn.position.set(-4.6,0,-h-23); grp.add(barn); barn.add(mesh(G.box,0xc8553d,{p:[0,1.2,0],s:[4,2.4,3]})); barn.add(mesh(G.box,0x8a3b2a,{p:[0,2.75,0.75],s:[4.4,0.12,1.9],r:[0.55,0,0]})); barn.add(mesh(G.box,0x8a3b2a,{p:[0,2.75,-0.75],s:[4.4,0.12,1.9],r:[-0.55,0,0]})); barn.add(mesh(G.box,0xfff1dc,{p:[0,0.9,1.51],s:[1.4,1.8,0.04]})); for(let i=0;i<3;i++)barn.add(mesh(G.cyl,0xe9cf7a,{p:[-1+i*1,0.3,2.4],s:[0.3,0.6,0.3],r:[Math.PI/2,0,0.2*i]})); }
+  { const oak=treeMesh(2.1); oak.position.set(X1+20.5,0,5.2); grp.add(oak); grp.add(mesh(G.box,0xc99a6b,{p:[X1+18.6,0.4,3.2],s:[1.2,0.08,0.4]})); }
+  for(let i=0;i<7;i++)grp.add(mesh(G.sphLo,0x4f8f3f,{p:[X0-19.5+rand(-1.6,1.6),0.4,rand(-1.6,1.6)],s:[rand(.5,.8),rand(.4,.6),rand(.5,.8)]}));
+  for(let i=0;i<14;i++)grp.add(mesh(G.sphLo,0x7b2d5f,{p:[X0-19.5+rand(-1.8,1.8),rand(0.45,0.75),rand(-1.8,1.8)],s:[0.06,0.06,0.06],cast:false}));
+  for(let i=0;i<9;i++)grp.add(mesh(G.sphLo,pick([0xb9b2a6,0xa59f94]),{p:[(X0+X1)/2+3+rand(-1.3,1.3),rand(0.2,0.6),Z1+14+rand(-1,1)],s:[rand(.4,.8),rand(.3,.6),rand(.4,.7)]}));
   // far-off places a runaway can wander to: haystacks across the road, an orchard to the east, a stone wall to the west
   for(const [x,z] of [[-10.8,-h-14],[-9.2,-h-14.4],[9.4,-h-14.3],[7.8,-h-14.8]]){ grp.add(mesh(G.cyl,0xe9cf7a,{p:[x,0.45,z],s:[0.7,0.9,0.7]})); grp.add(mesh(G.cone,0xdcbf62,{p:[x,1.15,z],s:[0.75,0.5,0.75]})); }
   for(let i=0;i<5;i++){ const t2=treeMesh(rand(0.9,1.1)); const ox=X1+10+(i%3)*1.8, oz=h*0.2-2+Math.floor(i/3)*2.4; t2.position.set(ox,0,oz); grp.add(t2); for(let a=0;a<5;a++)grp.add(mesh(G.sphLo,0xe2574c,{p:[ox+rand(-.7,.7),rand(1.6,2.3),oz+rand(-.7,.7)],s:[0.09,0.09,0.09],cast:false})); }
@@ -1594,10 +1602,8 @@ function runaway(c){ const h=LV().half; const sp=pick(W.hideSpots||[{p:[1.6,-h-2
   const pts=[new V3(0,0,-h+0.5),new V3(0,0,-h-0.7)]; (sp.via||[]).forEach(v=>pts.push(new V3(v[0],0,v[1]))); pts.push(new V3(sp.p[0],0,sp.p[1]));
   c.outside=true; if(tag.c===c)tag.c=null; walkPath(c,pts.map(v=>v.clone()),'hide',1.3); c.flick=1;
   if(!pawMat)pawMat=new THREE.MeshBasicMaterial({map:iconTexture('paw'),transparent:true,depthWrite:false});
-  const trail=[]; let i=0;
-  for(let s=2;s<pts.length;s++){ const a=pts[s-1], b=pts[s], L=a.distanceTo(b), dir=b.clone().sub(a).normalize(), side=new V3(-dir.z,0,dir.x);
-    for(let d=0.25;d<L-0.25;d+=0.4,i++){ const m=new THREE.Mesh(pawGeo,pawMat); m.rotation.x=-Math.PI/2; m.rotation.z=Math.PI-Math.atan2(dir.x,dir.z); const q=a.clone().addScaledVector(dir,d).addScaledVector(side,i%2?0.08:-0.08); m.position.set(q.x,0.015,q.z); scene.add(m); trail.push(m); } }
-  W.runaway={c,t:0,trail,pts,trailMid:pts[1].clone().setY(0.1),looking:false,notified:false}; W.lastRun=W.time; }
+  const trail=[];
+  W.runaway={c,t:0,trail,pawI:0,lastPaw:null,pts,trailMid:pts[1].clone().setY(0.1),looking:false,notified:false}; W.lastRun=W.time; }
 function caughtEarly(c){ W.stat.quick=(W.stat.quick||0)+1; c.s.trust=Math.min(100,c.s.trust+2); spawnFx('h',c.g.position.clone().setY(0.9),3,.3); Snd.chirp(); floatWorld(c.g.position.clone().setY(1.2),'Got you!'); comeHome(c); }
 function renderMissing(){ const el=$('#missing'), R=W.runaway; if(!R||R.c.state==='path'&&R.c.pathEnd==='home'){ el.hidden=true; return; } el.hidden=false;
   if(!R.looking){ el.innerHTML=`<div class="fam">${PAWS_SVG}<div><div class="want">${R.c.name} is missing!</div><div class="sub">slipped out the gate</div></div></div><button id="mGo">Go look</button>`;
@@ -1685,6 +1691,10 @@ function extraUpdate(dt){
   runT-=dt; if(runT<=0){ runT=15; if(!W.runaway&&!W.family&&W.time>120&&W.time-W.lastInput<30&&W.time-(W.lastRun||-999)>240){ const cand=active().filter(c=>c.s.trust<22&&!c.carried&&!c.outside&&!c.leaving&&['idle','walk'].includes(c.state)&&c.age>0.3); if(cand.length&&Math.random()<0.35)runaway(pick(cand)); } }
   const R=W.runaway;
   if(R){ R.t+=dt; const c=R.c;
+    // paw prints appear behind the runaway as it goes (only outside the fence)
+    if(c.state==='path'&&c.pathEnd==='hide'&&!inB(c.g.position.x,c.g.position.z,-0.3)){ const p=c.g.position;
+      if(!R.lastPaw||dist2(R.lastPaw,p)>=0.38){ const side=(R.pawI++%2?0.08:-0.08), hd=c.heading; const m=new THREE.Mesh(pawGeo,pawMat); m.rotation.x=-Math.PI/2; m.rotation.z=Math.PI-hd;
+        m.position.set(p.x+Math.cos(hd)*side,0.015,p.z-Math.sin(hd)*side); scene.add(m); R.trail.push(m); R.lastPaw=p.clone(); } }
     if(c.state==='hiding'){ R.meowT=(R.meowT||0)-dt; if(R.meowT<=0){ const urgency=Math.min(1,R.t/120); R.meowT=rand(3.2,5)*(1-0.45*urgency); const d=dist2(cam.target,c.g.position); const vol=clamp(1-d/18,0.06,1)*(0.7+1.1*urgency); Snd.meow(1.2-0.15*urgency,vol); if(d<6||urgency>0.6)showIcon(c,'sniff',1.6); } }
     if(!R.notified&&c.pathEnd==='hide'&&(R.t>7||dist2(c.g.position,new V3(0,0,-LV().half))>4.5)){ R.notified=true; renderMissing(); toast(c.name+' slipped out!'); Snd.meow(0.95,0.6); }
     if(R.t>240&&c.state==='hiding')comeHome(c); }
@@ -1753,7 +1763,7 @@ function applySky(dt){ if(W.dayOn)dayT=(dayT+dt)%DAYLEN; const ph=W.dayOn?dayT/D
   const a=ph*Math.PI*2; sun.position.set(Math.cos(a)*12,9+Math.max(0,Math.sin(a))*8,7);
   hemi.intensity=0.55*(1-0.5*n); hemi.color.set(0xfffdf5).lerp(MOONC,n*0.7);
   stars.material.opacity=n*(1-weather.k); for(const g of (W.glows||[]))g.material.opacity=n*0.9; }
-const flies=[]; for(let i=0;i<46;i++){ const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:iconTexture('fly'),transparent:true,depthWrite:false,opacity:0,blending:THREE.AdditiveBlending})); sp.scale.set(0.22,0.22,0.22); sp.visible=false; scene.add(sp); flies.push({sp,ph:rand(0,6.28),k:rand(0.5,1.2),home:new V3(),placed:false}); }
+const flies=[]; for(let i=0;i<46;i++){ const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:iconTexture('fly'),transparent:true,depthWrite:false,opacity:0,blending:THREE.AdditiveBlending})); sp.scale.set(0.22,0.22,0.22); sp.visible=false; scene.add(sp); const f={sp,g:sp,ph:rand(0,6.28),k:rand(0.5,1.2),home:new V3(),placed:false}; f.dodge=()=>{ f.home.y=Math.min(2.2,f.home.y+0.7); f.home.x+=rand(-1.2,1.2); f.home.z+=rand(-1.2,1.2); }; flies.push(f); }
 function updateFireflies(dt,t){ const n=W.night||0;
   for(const f of flies){ if(n<0.05){ f.sp.visible=false; f.placed=false; continue; }
     if(!f.placed){ const q=Math.random()<0.75?rIn(-1):outPt(rand(0.5,5)); f.home.set(q.x,rand(0.3,1.6),q.z); f.placed=true; } f.sp.visible=true;

@@ -120,6 +120,10 @@ body.intro .dock,body.intro #hud,body.intro .top{opacity:.25;pointer-events:none
 #modal h3,#meet h3{margin:0 0 12px;font:700 26px var(--display)}
 #modal .x{position:absolute;right:14px;top:14px;width:40px;height:40px;border-radius:50%;background:#f3e7d6;font:700 20px var(--display)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.item.guide{border-color:#ff8fb1;animation:guideGlow 1.2s ease-in-out infinite;position:relative}
+@keyframes guideGlow{0%,100%{box-shadow:0 0 0 0 rgba(255,143,177,.0)}50%{box-shadow:0 0 0 6px rgba(255,143,177,.45)}}
+.item .gHand{position:absolute;right:-4px;bottom:-14px;width:44px;height:44px;pointer-events:none;opacity:.85;filter:drop-shadow(0 3px 4px rgba(0,0,0,.3));animation:gTap 1.5s ease-in-out infinite}
+@keyframes gTap{0%,30%{transform:translate(0,-12px)}45%,55%{transform:translate(0,0) scale(.88)}70%,100%{transform:translate(0,-12px)}}
 .item{border:2px solid var(--line);border-radius:18px;padding:10px 12px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
 .item .ico{height:46px;display:grid;place-items:center}
 .item .ico svg{height:42px;width:42px}
@@ -601,7 +605,7 @@ function fillBowl(b){ const room=b.cap-b.portions; if(room<=0)return false; cons
   W.premium-=fp; W.food-=fr; b.prem=(b.prem||0)+fp; b.portions+=fp+fr; updateBowl(b); return true; }
 function useItem(it){
   if(it.kind==='bowl'){ if(it.portions>=it.cap){ floatWorld(it.pos.clone().setY(.5),'Full'); return; }
-    if(W.food<=0&&!(W.premium>0)){ floatWorld(it.pos.clone().setY(.5),'No food!'); openShop(); return; }
+    if(W.food<=0&&!(W.premium>0)){ floatWorld(it.pos.clone().setY(.5),'No food!'); openShop('food'); return; }
     fillBowl(it); W.stat.fills++; Snd.pop(); spawnFx('spark',it.pos.clone().setY(.3),4,.3); hud(); }
   else if(it.kind==='litter'){ if(it.dirt<0.5){ floatWorld(it.pos.clone().setY(.5),'Clean'); return; }
     it.dirt=0; updateLitter(it); W.stat.cleaned++; Snd.scoop(); spawnFx('spark',it.pos.clone().setY(.4),5,.4); if(W.stat.cleaned>=10)unlock('spotless'); }
@@ -1384,7 +1388,7 @@ function updateGoals(){ for(const g of W.goals){ if(g.done)continue; const [n,f,
 
 /* ================= UI ================= */
 function hud(){ $('#hMoney').textContent=Math.floor(W.money); $('#hFood').textContent=W.food+(W.premium>0?` +${W.premium}★`:''); const away=W.cats.filter(c=>c.away>0).length; $('#hCats').textContent=`${W.cats.length}/${LV().cap}`; $('#hAway').hidden=!away; $('#hAwayN').textContent=away; $('#hRib').textContent=W.ribbons; $('#hStars').textContent=W.stars; }
-function setTool(t){ if(t==='laser'&&!W.laser){ openShop(); return; } W.tool=t; document.querySelectorAll('.tool').forEach(b=>b.classList.toggle('on',b.dataset.tool===t));
+function setTool(t){ if(t==='laser'&&!W.laser){ openShop('laser'); return; } W.tool=t; document.querySelectorAll('.tool').forEach(b=>b.classList.toggle('on',b.dataset.tool===t));
   if(t==='wand'){ wand.tip.copy(cam.target).setY(0.5); wand.anchor.copy(cam.target).setY(0); wand.feather.copy(wand.tip).setY(0.1); wand.lastAct=W.time; }
   if(t==='laser'){ laser.pos.copy(cam.target).setY(0); laser.lastMove=W.time; } handVis(); }
 document.querySelectorAll('.tool').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
@@ -1476,15 +1480,27 @@ const SHOP=[
   {id:'fire',name:()=>'Fewer helpers',desc:'Saves wages',cost:()=>0,buy(){ const hp=helpers.pop(); if(hp){ if(hp.task&&hp.task.cat)hp.task.cat.helped=null; scene.remove(hp.g); } }},
   {id:'helper',name:()=>'Helper',desc:'Feeds, scoops, pets \u00b7 $6/min wage',cost:()=>150,max:()=>W.level,buy(){makeHelper();}},
 ];
-function openShop(){
+function guidePick(why){ const can=id=>{ const it=SHOP.find(x=>x.id===id); if(!it)return false; const av=it.avail?it.avail():true, mx=it.max?it.max():Infinity; return av&&countItems(id)<mx&&W.money>=it.cost(); };
+  if(why==='roof')return 'shelter'; if(why==='space')return 'expand'; if(why==='food')return 'food'; if(why==='laser')return 'laser';
+  const meals=(W.food||0)+(W.premium||0), n=active().length;
+  if(weather.raining&&can('shelter'))return 'shelter';
+  if(meals<Math.max(6,n*2)&&can('food'))return 'food';
+  const lit=items.filter(i=>i.kind==='litter'); if(lit.length&&lit.every(i=>i.dirt>=2)&&can('litter'))return 'litter';
+  if(n>countItems('bowl')*3&&can('bowl'))return 'bowl';
+  if(!countItems('bed')&&can('bed'))return 'bed';
+  if(can('ball'))return 'ball'; return 'food'; }
+const GUIDE_LABEL={food:'Buy food',shelter:'Rain roof',litter:'Litter box',bowl:'Food bowl',bed:'Cozy bed',ball:'Buy a toy',expand:'More room',laser:'Laser'};
+function openShop(guide){
   const cards=SHOP.filter(it=>it.id!=='fire'||helpers.length).map(it=>{ const avail=it.avail?it.avail():true, max=it.max?it.max():Infinity, have=it.id==='helper'?helpers.length:it.max?countItems(it.id):0, cost=it.cost(), need=it.need?it.need():0, starOk=W.stars>=need;
     const hn=it.homes?it.homes():0, hOk=W.homes.length>=hn; const can=avail&&have<max&&W.money>=cost&&starOk&&hOk; const lbl=!avail?(it.id==='laser'?'Owned':'Maxed'):have>=max?'Full':!starOk?`★${need} needed`:!hOk?`${hn} homes needed`:it.id==='fire'?'Let one go':`$${cost}`;
     const desc=it.id==='expand'?(LEVELS[W.level+1]?`Room for ${LEVELS[W.level+1].cap} cats${LEVELS[W.level+1].ponds?' \u00b7 new pond':''}`:'Biggest already'):it.desc;
-    return `<div class="item"><div class="ico"><svg viewBox="0 0 24 24">${IC[it.id]}</svg></div><b>${it.name()}</b><span>${desc}${it.max&&max<99?` · ${have}/${max}`:''}</span><button data-buy="${it.id}" ${can?'':'disabled'}>${lbl}</button></div>`; }).join('');
+    const gd=it.id===guide;
+    return `<div class="item${gd?' guide':''}"${gd?' data-guide':''}><div class="ico"><svg viewBox="0 0 24 24">${IC[it.id]}</svg></div><b>${it.name()}</b><span>${desc}${it.max&&max<99?` · ${have}/${max}`:''}</span><button data-buy="${it.id}" ${can?'':'disabled'}>${lbl}</button>${gd?`<svg class="gHand" viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`:''}</div>`; }).join('');
   const kinds=Object.keys(TIERS).filter(k=>k==='wand'||(k==='laser'?W.laser:countItems(k)>0)).filter(k=>W.tier[k]<TIERS[k].length);
   const ups=kinds.map(k=>{ const n=W.tier[k]+1, cost=upCost(k,n), sOk=W.stars>=starsFor(n), can=sOk&&W.money>=cost;
     return `<div class="item"><div class="ico"><svg viewBox="0 0 24 24">${IC[k]}</svg></div><b>${TIERS[k][n-1]}</b><span>${TIER_DESC[k][n-1]}</span><button data-up="${k}" ${can?'':'disabled'}>${sOk?`$${cost}`:`★${starsFor(n)} needed`}</button></div>`; }).join('');
   openModal(`<h3>Shop</h3><div class="grid">${cards}</div>${ups?`<h3 style="margin-top:18px">Upgrades</h3><div class="grid">${ups}</div>`:''}`);
+  const gEl=document.querySelector('[data-guide]'); if(gEl)setTimeout(()=>gEl.scrollIntoView({block:'center',behavior:'smooth'}),60);
   document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{ const it=SHOP.find(x=>x.id===b.dataset.buy); const cost=it.cost(); if(W.money<cost)return; W.money-=cost; it.buy(); W.stat.buys++; Snd.coin(); hud(); if($('#modal').hidden)return; openShop(); });
   document.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{ const k=b.dataset.up, n=W.tier[k]+1, cost=upCost(k,n); if(W.money<cost||W.stars<starsFor(n))return; W.money-=cost; W.tier[k]=n; W.stat.upgrades++;
     for(const c of W.cats)if(c.useItem&&c.useItem.kind===k&&!c.carried)setState(c,'idle',1); for(const it of items)if(it.kind===k)buildItem(it); if(k==='wand')buildWandToy(); Snd.chime(); hud(); openShop(); });
@@ -1498,7 +1514,7 @@ function openBadges(tab='badges'){
   else body=W.goals.map(g=>{ const [n,f,tg]=GOALS[g.i]; const v=Math.max(0,Math.min(tg,f()-g.base)); return `<div class="goal ${g.done?'done':''}">${g.done?'✓ ':''}${n}<span>${g.done?'+$15':`${v} / ${tg}`}</span></div>`; }).join('');
   openModal(`<h3>Sanctuary ${'★'.repeat(W.stars)}</h3>${tabs}${tab==='badges'?`<p style="margin:-4px 0 10px;color:var(--muted);font:700 13px var(--body)">Bronze +$10 \u00b7 Silver +$25 \u00b7 Gold +$60. Gold badges unlock special collars.</p>`:''}${body}`);
   document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>openBadges(b.dataset.tab)); }
-$('#bShop').onclick=()=>openShop(); $('#bBadges').onclick=()=>openBadges(); $('#bSnap').onclick=()=>{ Snd.shutter(); snapshot(); };
+$('#bShop').onclick=()=>openShop(curHint&&curHint.el==='#bShop'?guidePick(curHint.id):null); $('#bBadges').onclick=()=>openBadges(); $('#bSnap').onclick=()=>{ Snd.shutter(); snapshot(); };
 $('#bMusic').onclick=()=>{ Snd.toggleMusic(); $('#bMusic').classList.toggle('off',!Snd.musicOn); };
 $('#bDay').onclick=()=>{ W.dayOn=!W.dayOn; store.set('wm_daynight',W.dayOn); $('#bDay').classList.toggle('off',!W.dayOn); toast(W.dayOn?'Day & night: on':'Always daytime'); };
 $('#bDay').classList.toggle('off',!W.dayOn);
@@ -1538,7 +1554,7 @@ const HINTS=[
   {id:'blink',when:()=>W.cats.some(c=>c.blinkBackT>0.5&&c.away<=0),at:()=>headOf(W.cats.find(c=>c.blinkBackT>0)),g:'tap',label:'Blink back!',done:()=>W.stat.blinkBack>0,auto:9,again:true},
   {id:'carry',when:()=>W.time>60,at:()=>bodyOf(anyCat()),g:'hold',label:'Hold to carry',done:()=>W.stat.drops>0},
   {id:'litter',when:()=>items.some(i=>i.kind==='litter'&&i.dirt>=2),at:()=>{ const l=items.find(i=>i.kind==='litter'&&i.dirt>=2); return l&&l.pos.clone().setY(0.3); },g:'tap',label:'Scoop',done:()=>W.stat.cleaned>0},
-  {id:'shop',when:()=>W.time>80&&W.money>=12,el:'#bShop',g:'tap',label:'Buy a toy',done:()=>W.stat.buys>0},
+  {id:'shop',when:()=>W.time>80&&W.money>=12,el:'#bShop',g:'tap',label:()=>GUIDE_LABEL[guidePick('shop')]||'Shop',done:()=>W.stat.buys>0},
   {id:'wand',when:()=>W.time>100,el:'[data-tool=wand]',g:'tap',label:'Play',done:()=>W.tool==='wand'},
   {id:'wand2',when:()=>W.tool==='wand',at:()=>wand.tip.clone().setY(0.2),g:'stroke',label:'Drag · Flick · Hold',done:()=>W.stat.pounces>=3},
   {id:'brush',when:()=>W.time>140,el:'[data-tool=brush]',g:'tap',label:'Brush',done:()=>W.tool==='brush'},
@@ -1835,7 +1851,7 @@ function extraUpdate(dt){
     if(R.t>240&&c.state==='hiding')comeHome(c); }
   donT-=dt; if(donT<=0){ donT=25; const a=active().filter(c=>!c.outside); if(a.length){ const happy=a.reduce((s,c)=>s+(c.s.aff+c.s.health)/2,0)/a.length; const amt=Math.round(a.length*happy/100*2*(1+W.stars*0.2)); if(amt>0){ W.money+=amt; W.earned+=amt; if(W.jarPos)floatWorld(W.jarPos.clone().setY(1.2),'+$'+amt); hud(); } } }
   const f=W.family;
-  if(!f){ if(W.cats.some(readyHome)&&!W.runaway){ visitT-=dt; if(visitT<=0)spawnFamily(); } }
+  if(!f){ if(W.cats.some(readyHome)&&!W.runaway&&(W.night||0)<0.55){ visitT-=dt; if(visitT<=0)spawnFamily(); } }
   else { f.t+=dt;
     if(f.state==='walking'&&f.cat&&f.cat.state!=='path'){ f.state='wait'; f.cat=null; renderFamily(); }
     if(W.pickHome&&!W.cats.some(readyHome)){ W.pickHome=false; renderFamily(); }
@@ -2083,7 +2099,7 @@ function begin(){ Snd.init(); $('#start').hidden=true; W.started=true; cam.theta
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); }catch(e){} begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={animateCat,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={animateCat,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>
 

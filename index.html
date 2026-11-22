@@ -2032,18 +2032,23 @@ function endPairTut(ok){ const {a,b}=pl; if(!a)return; pl.a=null; pl.done=true; 
 function updatePairTut(dt){
   if(!pl.a){ pl.wait=(pl.wait||0)-dt; if(pl.wait<=0){ pl.wait=3; if(pairReady())startPairTut(); } return; }
   const {a,b}=pl; if([a,b].some(c=>c.away>0||c.outside||c.leaving)){ endPairTut(false); return; } pl.t+=dt; tag.c=null;
-  const pa=a.g.position, pb=b.g.position, close=dist2(pa,pb)<1.9*1.9;
+  const held=W.cats.find(c=>c.carried); if(held)pl.held=held;
+  if(pl.stage==='carry'&&W.stat.drops>pl.lastDrop&&!held){ pl.lastDrop=W.stat.drops; const d=pl.held;
+    // whichever cat was carried, whichever cat it landed next to: that's the pair we watch
+    const o=d&&active().filter(k=>k!==d&&!k.carried).sort((x,y)=>dist2(x.g.position,d.g.position)-dist2(y.g.position,d.g.position))[0];
+    if(o&&dist2(o.g.position,d.g.position)<1.9*1.9){ pl.a=d; pl.b=o; pl.stage='watch'; pl.t=0; $('#ghost').hidden=true; if(d.state!=='boop'&&canBoop(d)&&canBoop(o)){ d.boopCD=o.boopCD=0; boop(d,o); } updatePairTut(0); return; } }
+  const pa=a.g.position, pb=b.g.position;
   if(pl.stage==='carry'){
     for(const c of [a,b])if(!c.carried&&c.state!=='boop'){ if(c.state==='walk'&&c===b&&c.path)continue; if(c.state!=='idle')setState(c,'idle',3); c.stT=Math.max(c.stT||0,2); }
-    if(W.stat.drops>pl.lastDrop&&!a.carried&&!b.carried){ if(close){ pl.stage='watch'; pl.t=0; $('#ghost').hidden=true; if(a.state!=='boop'&&canBoop(a)&&canBoop(b)){ a.boopCD=b.boopCD=0; boop(a,b); } } else pl.lastDrop=W.stat.drops; } }
+  }
   // camera + spotlight on both cats
   const mid=pa.clone().add(pb).multiplyScalar(0.5); cam.target.lerp(new V3(mid.x,0.4,mid.z),Math.min(1,dt*2.5));
   const sa=toScreen(new V3(pa.x,0.5,pa.z)), sb=toScreen(new V3(pb.x,0.5,pb.z)); if(!sa.ok||!sb.ok)return;
-  const carried=a.carried?a:b.carried?b:null, mx=(sa.x+sb.x)/2, my=(sa.y+sb.y)/2;
+  const carried=held||null, mx=(sa.x+sb.x)/2, my=(sa.y+sb.y)/2;
   $('#intro').style.setProperty('--x',mx+'px'); $('#intro').style.setProperty('--y',my+'px'); $('#intro').style.setProperty('--r',Math.round(Math.hypot(sa.x-sb.x,sa.y-sb.y)/2+100)+'px');
   if(pl.stage==='carry'){ const gh=$('#ghost'); gh.style.opacity=(P.mode&&P.mode!=='none'&&!carried)?0:'';
     if(carried){ // already holding one: point at the other cat
-      const tgt=carried===a?sb:sa, bob=Math.sin(pl.t*6)*8; gh.style.transform=`translate(${tgt.x-30}px,${tgt.y-70+bob}px)`; gh.style.opacity=0.8; }
+      const tgt=carried===a?sb:carried===b?sa:(dist2(carried.g.position,pa)<dist2(carried.g.position,pb)?sa:sb), bob=Math.sin(pl.t*6)*8; gh.style.transform=`translate(${tgt.x-30}px,${tgt.y-70+bob}px)`; gh.style.opacity=0.8; }
     else { // press and hold on the first cat, then glide over to the second one
       const cyc=pl.t%3.4; let x=sa.x,y=sa.y,sc=1;
       if(cyc<1.0){ sc=1-0.12*Math.min(1,cyc/0.3); }

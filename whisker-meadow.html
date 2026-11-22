@@ -906,6 +906,11 @@ function animateCat(c,dt,t){
   if(c.bat>0){ c.bat-=dt; legA[0]=-1.5*Math.sin(clamp(1-c.bat/0.5,0,1)*Math.PI); }
   if(c.hb>0){ c.hb-=dt; const k=Math.sin(clamp(1-c.hb/0.55,0,1)*Math.PI); hx-=0.35*k; hz+=0.3*k; }
   if(c.snap>0){ c.snap-=dt; hy=Math.sin(t*30)*0.5; earOut=1; }
+  // head shake: now and then on clear days, often in the rain (shaking off water)
+  if(!(c.shake>0)&&!c.carried&&!['sleep','flop','pet','boop','romp','groom','eat','laser','pounce','chase'].includes(st)){
+    const wetNow=weather.raining&&!shelterOf(c.g.position);
+    if(Math.random()<dt/(wetNow?14:weather.raining?24:110)) c.shake=0.65; }
+  if(c.shake>0){ c.shake-=dt; const k=Math.sin(clamp(1-c.shake/0.65,0,1)*Math.PI); hz=Math.sin(t*38)*0.55*k; hy+=Math.sin(t*38+1)*0.25*k; earOut=Math.max(earOut,k); eye=Math.min(eye,1-0.8*k); }
   // gaze up at the player + slow blink
   if(c.gaze>0&&!c.carried){ c.gaze-=dt; const p=c.g.position; const yaw=angDiff(c.heading,Math.atan2(camera.position.x-p.x,camera.position.z-p.z)); hy=clamp(yaw,-1.1,1.1); hx=Math.min(hx,-0.45);
     if(!c.gazeBl&&c.gaze<(c.leaving?2.1:9)){ c.gazeBl=true; c.slowBlink=1.9; showIcon(c,'blink',c.leaving?2.2:8.5); }
@@ -1849,6 +1854,6 @@ function begin(){ Snd.init(); $('#start').hidden=true; W.started=true; cam.theta
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); }catch(e){} begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={animateCat,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>

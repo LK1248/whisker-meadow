@@ -1,0 +1,95 @@
+<!doctype html><meta charset="utf-8"><title>Thumbnail Drafts</title>
+<style>body{margin:0;background:#2b2433;font:14px system-ui;color:#eee;padding:16px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+figure{margin:0}svg{width:100%;border-radius:22px;display:block}figcaption{padding:6px 2px}</style>
+<svg width="0" height="0" style="position:absolute"><defs>
+ <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fe0ff"/><stop offset="1" stop-color="#d9f6c8"/></linearGradient>
+ <linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b2f6b"/><stop offset="1" stop-color="#e98f8f"/></linearGradient>
+ <!-- kitten head, centered at 0,0, ~120 wide -->
+ <g id="kit"><path d="M-58,-20 L-50,-78 L-14,-48Z M58,-20 L50,-78 L14,-48Z" fill="var(--f)" stroke="#3a2a22" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M-46,-30 L-46,-64 L-24,-46Z M46,-30 L46,-64 L24,-46Z" fill="#ffb3c1"/>
+  <ellipse cx="0" cy="0" rx="64" ry="54" fill="var(--f)" stroke="#3a2a22" stroke-width="5"/>
+  <ellipse cx="-24" cy="-2" rx="15" ry="19" fill="#2a1d18"/><ellipse cx="24" cy="-2" rx="15" ry="19" fill="#2a1d18"/>
+  <circle cx="-19" cy="-9" r="6" fill="#fff"/><circle cx="29" cy="-9" r="6" fill="#fff"/><circle cx="-28" cy="5" r="3" fill="#fff"/><circle cx="20" cy="5" r="3" fill="#fff"/>
+  <path d="M-6,18 h12 l-6,7z" fill="#ff8fa3"/><path d="M0,25 q-8,10 -16,4 M0,25 q8,10 16,4" fill="none" stroke="#3a2a22" stroke-width="3.5" stroke-linecap="round"/>
+  <ellipse cx="-42" cy="20" rx="10" ry="6" fill="#ff9fb4" opacity=".6"/><ellipse cx="42" cy="20" rx="10" ry="6" fill="#ff9fb4" opacity=".6"/>
+  <path d="M-70,14 h-28 M-70,24 l-26,8 M70,14 h28 M70,24 l26,8" stroke="#3a2a22" stroke-width="2.5" stroke-linecap="round"/></g>
+ <g id="paw"><ellipse rx="20" ry="15" fill="var(--f)" stroke="#3a2a22" stroke-width="5"/><path d="M-8,-2 v8 M0,-3 v9 M8,-2 v8" stroke="#3a2a22" stroke-width="2.5"/></g>
+ <!-- box front + flaps, top edge at y=0, width 300 centered -->
+ <g id="box"><path d="M-170,-10 L-150,-70 L-60,-40 L-70,0Z" fill="#d9a45f" stroke="#6b4421" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M170,-10 L150,-70 L60,-40 L70,0Z" fill="#c99350" stroke="#6b4421" stroke-width="5" stroke-linejoin="round"/>
+  <rect x="-150" y="0" width="300" height="170" rx="10" fill="#e6b26c" stroke="#6b4421" stroke-width="5"/>
+  <path d="M-150,30 h300" stroke="#c99350" stroke-width="6"/>
+  <path d="M-20,90 c0,-30 40,-30 40,0 c0,20 -20,32 -20,40 c0,-8 -20,-20 -20,-40Z" fill="#ff7b95" transform="translate(0,-10)"/></g>
+ <path id="heart" d="M0,10 C-30,-15 -12,-40 0,-22 C12,-40 30,-15 0,10Z" fill="#ff6f8f" stroke="#fff" stroke-width="4"/>
+</defs></svg>
+<h2>Whisker Meadow — thumbnail drafts</h2><div class="g">
+
+<figure><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="url(#sky)"/>
+ <ellipse cx="256" cy="470" rx="260" ry="80" fill="#8fd16a"/>
+ <use href="#kit" transform="translate(256,250) scale(1.45)" style="--f:#f3a64a"/>
+ <use href="#paw" transform="translate(196,318)" style="--f:#f3a64a"/><use href="#paw" transform="translate(316,318)" style="--f:#f3a64a"/>
+ <use href="#box" transform="translate(256,320)"/></svg>
+<figcaption><b>A. One kitten, big eyes.</b> Paws on the rim, staring at the player. Simplest, and reads clearly as a tiny icon.</figcaption></figure>
+
+<figure><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="url(#sky)"/>
+ <ellipse cx="256" cy="470" rx="260" ry="80" fill="#8fd16a"/>
+ <use href="#kit" transform="translate(185,270) rotate(-10) scale(1.1)" style="--f:#9a9aa6"/>
+ <use href="#kit" transform="translate(330,250) rotate(8) scale(1.2)" style="--f:#fff3e2"/>
+ <use href="#paw" transform="translate(150,320)" style="--f:#9a9aa6"/><use href="#paw" transform="translate(360,318)" style="--f:#fff3e2"/>
+ <use href="#box" transform="translate(256,320)"/>
+ <use href="#heart" transform="translate(258,140) scale(1.2)"/></svg>
+<figcaption><b>B. Two kittens, one heart.</b> Tilted heads lean together. More story ("a pair to rescue"), but busier when small.</figcaption></figure>
+
+<figure><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="url(#dusk)"/>
+ <circle cx="400" cy="110" r="40" fill="#fff6c9"/>
+ <g fill="#fff59a"><circle cx="90" cy="150" r="5"/><circle cx="140" cy="230" r="4"/><circle cx="430" cy="250" r="5"/><circle cx="60" cy="300" r="4"/></g>
+ <ellipse cx="256" cy="480" rx="270" ry="80" fill="#4f8a55"/>
+ <use href="#kit" transform="translate(256,262) scale(1.4)" style="--f:#3b3b46"/>
+ <use href="#paw" transform="translate(200,322)" style="--f:#3b3b46"/>
+ <use href="#box" transform="translate(256,322)"/>
+ <path d="M300,320 c40,-20 60,-60 30,-90" fill="none" stroke="#f5d0a0" stroke-width="16" stroke-linecap="round"/></svg>
+<figcaption><b>C. Night rescue.</b> Black kitten in a box at dusk, fireflies, a hand reaching in. Higher contrast, more emotional and stands out on Poki's bright grid.</figcaption></figure>
+
+<figure><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="#ffd6e0"/>
+ <circle cx="256" cy="290" r="230" fill="#ffc0d0"/>
+ <use href="#kit" transform="translate(256,300) scale(2.6)" style="--f:#f3a64a"/>
+ <path d="M250,60 c60,-10 110,30 110,80 l-20,30 c-20,-30 -70,-50 -110,-30Z" fill="#f5d0a0" stroke="#6b4421" stroke-width="6"/>
+ <use href="#heart" transform="translate(110,120) scale(1.3)"/><use href="#heart" transform="translate(420,170) scale(.9)"/></svg>
+<figcaption><b>D. Alternative: "Pet me" close-up.</b> Huge kitten face filling the frame, a hand petting its head, hearts. This is the core action of the game and works well as the app icon.</figcaption></figure>
+
+<figure><svg viewBox="0 0 512 512"><defs><linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9a8b"/><stop offset=".6" stop-color="#ffc98b"/><stop offset="1" stop-color="#ffe7a8"/></linearGradient></defs>
+ <rect width="512" height="512" fill="url(#sun)"/><circle cx="256" cy="330" r="150" fill="#fff1c4" opacity=".7"/>
+ <g fill="#fff59a"><circle cx="80" cy="200" r="5"/><circle cx="440" cy="230" r="5"/><circle cx="110" cy="290" r="4"/></g>
+ <ellipse cx="256" cy="480" rx="270" ry="80" fill="#7fbf5e"/>
+ <use href="#kit" transform="translate(256,250) scale(1.45)" style="--f:#f3a64a"/>
+ <use href="#paw" transform="translate(196,318)" style="--f:#f3a64a"/>
+ <use href="#box" transform="translate(256,320)"/>
+ <path d="M300,322 c40,-20 60,-60 30,-90" fill="none" stroke="#f5d0a0" stroke-width="16" stroke-linecap="round"/>
+ <use href="#heart" transform="translate(256,95)"/></svg>
+<figcaption><b>E. A + C mix.</b> One kitten staring at you, warm sunset glow, fireflies, a hand reaching in to pet it.</figcaption></figure>
+
+<figure><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="url(#sky)"/>
+ <ellipse cx="256" cy="470" rx="260" ry="80" fill="#8fd16a"/>
+ <use href="#kit" transform="translate(256,250) scale(1.45)" style="--f:#c9c9d2"/>
+ <ellipse cx="291" cy="247" rx="25" ry="30" fill="#c9c9d2"/>
+ <path d="M272,244 q19,14 38,0" fill="none" stroke="#2a1d18" stroke-width="5" stroke-linecap="round"/>
+ <use href="#paw" transform="translate(196,318)" style="--f:#c9c9d2"/><use href="#paw" transform="translate(316,318)" style="--f:#c9c9d2"/>
+ <use href="#box" transform="translate(256,320)"/>
+ <g transform="translate(390,120)"><rect x="-58" y="-34" width="116" height="62" rx="30" fill="#fff" stroke="#3a2a22" stroke-width="4"/><path d="M-30,28 l-12,22 l26,-22" fill="#fff" stroke="#3a2a22" stroke-width="4" stroke-linejoin="round"/>
+ <path d="M-30,-4 q12,12 24,0 M8,-4 q12,12 24,0" fill="none" stroke="#3a2a22" stroke-width="5" stroke-linecap="round"/></g></svg>
+<figcaption><b>F. Slow blink.</b> A wink at the viewer with a "blink back" bubble. Hints at a mechanic in the game and makes people curious.</figcaption></figure>
+
+<figure><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="url(#sky)"/>
+ <ellipse cx="256" cy="420" rx="330" ry="170" fill="#8fd16a"/>
+ <g transform="translate(110,215)"><rect x="-55" y="-30" width="110" height="70" fill="#fff1dc" stroke="#6b4421" stroke-width="4"/><path d="M-70,-28 L0,-80 L70,-28Z" fill="#e5707c" stroke="#6b4421" stroke-width="4" stroke-linejoin="round"/><rect x="-12" y="5" width="24" height="35" fill="#9b6a3d"/><rect x="-42" y="-14" width="20" height="18" fill="#9fd7ff"/><rect x="22" y="-14" width="20" height="18" fill="#9fd7ff"/></g>
+ <path d="M20,270 h470" stroke="#fff" stroke-width="5" stroke-dasharray="14 10"/>
+ <g transform="translate(410,240) scale(.5)"><use href="#kit" style="--f:#3b3b46"/></g>
+ <g transform="translate(470,262) scale(.4)"><use href="#kit" style="--f:#fff3e2"/></g>
+ <g fill="#ff9fc0"><circle cx="60" cy="320" r="7"/><circle cx="460" cy="350" r="7"/><circle cx="380" cy="300" r="6"/></g><g fill="#fff27a"><circle cx="90" cy="360" r="6"/><circle cx="430" cy="310" r="6"/></g>
+ <use href="#kit" transform="translate(256,330) scale(1.15)" style="--f:#f3a64a"/>
+ <use href="#paw" transform="translate(208,384)" style="--f:#f3a64a"/><use href="#paw" transform="translate(304,384)" style="--f:#f3a64a"/>
+ <use href="#box" transform="translate(256,385) scale(.8)"/></svg>
+<figcaption><b>G. Sanctuary behind.</b> Kitten in a box up front, house, fence, flowers and other cats behind. Says "sanctuary" rather than just "cat", but gets busier.</figcaption></figure>
+<figure><img src="thumb-3d-draft.jpg" style="width:100%;border-radius:22px;aspect-ratio:1;object-fit:cover"><figcaption><b>H. Real in-game 3D.</b> A quick camera grab of Mochi and friends from the actual game, with no editing. Honest to what players get; a final one would need posing, a box prop and better lighting.</figcaption></figure>
+</div>

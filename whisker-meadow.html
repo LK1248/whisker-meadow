@@ -573,6 +573,8 @@ function bestFriend(c){ let best=null,bv=0; for(const o of W.cats){ if(o===c)con
 function related(a,b){ const pa=a.parents||[], pb=b.parents||[]; return pa.includes(b.id)||pb.includes(a.id)||pa.some(p=>pb.includes(p)); }
 function active(){ return W.cats.filter(c=>c.away<=0); }
 function hop(c,h,dur=0.5){ c.hopT=dur; c.hopDur=dur; c.hopH=h; }
+// kittens learn to trust faster: x1.8 for a newborn, easing to x1 when grown
+function kt(c){ return c.age<1?1.8-0.8*c.age:1; }
 
 function setState(c,st,dur=0){
   const it=c.useItem;
@@ -644,7 +646,7 @@ function onStroke(c,zone,frantic){
   const rating=frantic||iv<(brush?0.7:1.3)*slow?'fast':(iv>=(brush?1.0:2.0)*slow&&iv<=7)?'good':'neutral';
   if(rating==='fast'){ c.over+=brush?0.6:1; c.streak=0; c.purr*=0.6; }
   else if(rating==='good'){
-    s.aff=Math.min(100,s.aff+4*like*(1-s.aff/130)*(c.trait==='cuddly'?1.25:1)); s.trust=Math.min(100,s.trust+2*like*(1-s.trust/120)*(c.trait==='shy'?0.85:1)); c.lean=0.9; if(!brush&&Math.random()<0.3)c.turnTo=c.heading+rand(-0.9,0.9);
+    s.aff=Math.min(100,s.aff+4*like*(1-s.aff/130)*(c.trait==='cuddly'?1.25:1)); s.trust=Math.min(100,s.trust+2*like*(1-s.trust/120)*(c.trait==='shy'?0.85:1)*kt(c)); c.lean=0.9; if(!brush&&Math.random()<0.3)c.turnTo=c.heading+rand(-0.9,0.9);
     if(brush){ s.groom=Math.min(100,s.groom+9*like); W.stat.brush++; spawnFx('spark',c.g.position.clone().setY(.75*c.g.scale.x),2,.35); }
     c.streak++; W.stat.good++; c.purr=clamp(0.35+s.aff/140,0,1)*Math.min(1,like+0.2);
     spawnFx('h',c.g.position.clone().setY(1.05*c.g.scale.x),1); Snd.ding();
@@ -740,7 +742,7 @@ function updateCat(c,dt){
       if(d<1.4&&c.pounceT<=0&&c.hopT<=0){ c.heading=Math.atan2(laser.pos.x-c.g.position.x,laser.pos.z-c.g.position.z); hop(c,(0.25+d*0.18)*c.g.scale.x,0.45); c.lunge=0.45; c.lungeSp=d/0.45; c.reach=0.2; c.pounceT=0.9; s.fun=Math.min(100,s.fun+3.5); W.stat.laserP++;
         if(W.tier.laser>=2&&W.stat.laserP%8===0){ s.trust=Math.min(100,s.trust+1.5); s.full=Math.min(100,s.full+5); spawnFx('h',c.g.position.clone().setY(.8),2); floatWorld(c.g.position.clone().setY(1),'Treat!'); } }
       if(c.hopT<=0)moveToward(c,dt,4.6,0.3); break; }
-    case 'eat': if(c.stT<=0){ const b=c.useItem; if(b&&b.portions>0){ const prem=b.prem>0; b.portions--; if(prem)b.prem--; updateBowl(b); s.full=Math.min(100,s.full+45); s.trust=Math.min(100,s.trust+1.5); spawnFx('h',c.g.position.clone().setY(.9),1);
+    case 'eat': if(c.stT<=0){ const b=c.useItem; if(b&&b.portions>0){ const prem=b.prem>0; b.portions--; if(prem)b.prem--; updateBowl(b); s.full=Math.min(100,s.full+45); s.trust=Math.min(100,s.trust+1.5*kt(c)); spawnFx('h',c.g.position.clone().setY(.9),1);
         if(prem){ s.health=Math.min(100,s.health+3); s.aff=Math.min(100,s.aff+2); c.nourT=150; spawnFx('spark',c.g.position.clone().setY(.8),3,.3); } } setState(c,'idle',rand(2,4)); } break;
     case 'litter': if(c.stT<=0){ const l=c.useItem; if(l){ l.dirt=Math.min(l.cap,l.dirt+1); updateLitter(l); } c.litterNeed=0; setState(c,'idle',rand(1,3)); } break;
     case 'perch': s.fun=Math.min(100,s.fun+dt*0.5); if(c.stT<=0)setState(c,'idle',1); break;
@@ -748,7 +750,7 @@ function updateCat(c,dt){
       if(c.stT<=0){ if(c.nextPlay){ const b=c.nextPlay; c.nextPlay=null; goTo(c,b.pos.x,b.pos.z,'play',b); c.run=true; } else decide(c); }
   }
 }
-function reward(c,f){ const s=c.s; f*=(1+0.25*((W.tier.wand||1)-1))*(c.trait==='playful'?1.3:1); s.fun=Math.min(100,s.fun+f); s.trust=Math.min(100,s.trust+0.6); s.aff=Math.min(100,s.aff+0.5); W.stat.pounces++; if(Math.random()<0.4)spawnFx('h',c.g.position.clone().setY(.9),1); }
+function reward(c,f){ const s=c.s; f*=(1+0.25*((W.tier.wand||1)-1))*(c.trait==='playful'?1.3:1); s.fun=Math.min(100,s.fun+f); s.trust=Math.min(100,s.trust+0.6*kt(c)); s.aff=Math.min(100,s.aff+0.5); W.stat.pounces++; if(Math.random()<0.4)spawnFx('h',c.g.position.clone().setY(.9),1); }
 
 /* ---------- carrying (vet-style two-hand hold) ---------- */
 const carryHands=[0,1].map(()=>{ const m=mesh(G.sph,0xffd8bd,{s:[0.2,0.08,0.17]}); m.visible=false; scene.add(m); return m; });

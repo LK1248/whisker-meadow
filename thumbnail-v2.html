@@ -1,0 +1,81 @@
+<!doctype html><meta charset="utf-8"><title>Thumbnail Drafts v2</title>
+<style>body{margin:0;background:#17152b;font:14px system-ui;color:#eee;padding:16px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+svg{width:100%;border-radius:24px;display:block}p{margin:6px 2px 0}</style>
+<h2>Whisker Meadow: close-up dusk drafts</h2><div class="g" id="g"></div>
+<script>
+const CATS={
+ orange:{f1:'#ffbe6e',f2:'#e9852f',mz:'#fff1dc',chest:'#ffe2bd',paw:'#ffcf94',ir1:'#d8f07a',ir2:'#5e9e34',stripes:true},
+ tux:{f1:'#4a4a5c',f2:'#1d1d28',mz:'#fbf6ee',chest:'#fbf6ee',paw:'#fbf6ee',ir1:'#ffe07a',ir2:'#e0892a',stripes:false},
+ grey:{f1:'#d9dbe6',f2:'#9ea3b8',mz:'#ffffff',chest:'#f2f3f8',paw:'#eef0f6',ir1:'#9fe3ff',ir2:'#2f86c9',stripes:true}};
+const FF=[[60,70,1],[120,150,.7],[440,60,.9],[470,170,1.2],[30,250,.8],[400,230,.6],[90,40,.5],[300,40,.6],[180,90,.5],[490,320,.9],[20,350,.7]];
+function svg(id,{cat,blanket,hand}){ const c=CATS[cat]; const u=s=>s.replace(/([A-Za-z]+)X(["')])/g,'$1'+id+'$2');
+return u(`<svg viewBox="0 0 512 512"><defs>
+<linearGradient id="skyX" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1842"/><stop offset=".45" stop-color="#4a3a7c"/><stop offset=".8" stop-color="#d98a86"/><stop offset="1" stop-color="#f6b88a"/></linearGradient>
+<radialGradient id="glowX" cx=".5" cy=".55" r=".5"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".55"/><stop offset="1" stop-color="#ffd9a0" stop-opacity="0"/></radialGradient>
+<radialGradient id="ffX"><stop offset="0" stop-color="#fffbd0"/><stop offset=".25" stop-color="#fff27a" stop-opacity=".9"/><stop offset="1" stop-color="#ffe95a" stop-opacity="0"/></radialGradient>
+<radialGradient id="furX" cx=".45" cy=".35" r=".7"><stop offset="0" stop-color="${c.f1}"/><stop offset="1" stop-color="${c.f2}"/></radialGradient>
+<radialGradient id="shadeX" cx=".5" cy=".4" r=".6"><stop offset=".7" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#2a1030" stop-opacity=".28"/></radialGradient>
+<radialGradient id="irisX" cx=".5" cy=".7" r=".7"><stop offset="0" stop-color="${c.ir1}"/><stop offset="1" stop-color="${c.ir2}"/></radialGradient>
+<linearGradient id="earX" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9fb6"/><stop offset="1" stop-color="#ffd0dc"/></linearGradient>
+<linearGradient id="inX" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a6435"/><stop offset="1" stop-color="#5a3519"/></linearGradient>
+<linearGradient id="frontX" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0aa68"/><stop offset="1" stop-color="#b47b3c"/></linearGradient>
+<linearGradient id="flapX" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b88250"/><stop offset="1" stop-color="#d7a265"/></linearGradient>
+<linearGradient id="skinX" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe0c8"/><stop offset="1" stop-color="#e9b08e"/></linearGradient>
+<pattern id="knitX" width="16" height="12" patternUnits="userSpaceOnUse"><rect width="16" height="12" fill="#f3a3b8"/><path d="M1,2 l7,8 l7,-8" fill="none" stroke="#ffc6d4" stroke-width="3" stroke-linecap="round"/></pattern>
+<filter id="softX"><feGaussianBlur stdDeviation="6"/></filter>
+<filter id="dropX" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#1a0d20" flood-opacity=".35"/></filter>
+</defs>
+<rect width="512" height="512" fill="url(#skyX)"/>
+<ellipse cx="256" cy="300" rx="280" ry="230" fill="url(#glowX)"/>
+${FF.map(([x,y,s])=>`<circle cx="${x}" cy="${y}" r="${16*s}" fill="url(#ffX)"/>`).join('')}
+<!-- back flap + inside of box -->
+<path d="M18,212 L494,212 L470,128 L44,136Z" fill="url(#flapX)" stroke="#8a5a2e" stroke-width="3" stroke-linejoin="round"/>
+<rect x="10" y="206" width="492" height="200" fill="url(#inX)"/>
+<rect x="10" y="202" width="492" height="9" rx="3" fill="#f0c98f"/>
+<path d="M-20,250 L60,206 L30,110 L-30,140Z M532,250 L452,206 L482,110 L542,140Z" fill="#c99358" stroke="#8a5a2e" stroke-width="3" stroke-linejoin="round"/>
+${blanket?`<path d="M10,330 C80,300 140,345 200,322 C280,300 340,340 420,316 C460,305 490,320 502,330 L502,406 L10,406Z" fill="url(#knitX)"/>`:''}
+<g filter="url(#dropX)">
+ <!-- chest -->
+ <ellipse cx="256" cy="395" rx="118" ry="70" fill="url(#furX)"/>
+ <ellipse cx="256" cy="400" rx="62" ry="52" fill="${c.chest}"/>
+ <!-- ears -->
+ <g id="earLX"><path d="M148,222 C136,150 150,104 176,92 C206,118 226,150 236,178Z" fill="url(#furX)"/>
+  <path d="M160,200 C154,152 164,126 178,118 C196,138 208,158 214,176Z" fill="url(#earX)"/></g>
+ <use href="#earLX" transform="translate(512,0) scale(-1,1)"/>
+ <!-- head -->
+ <path d="M256,160 C340,160 384,212 386,268 C390,290 400,300 384,306 C392,316 378,324 370,326 C350,372 300,384 256,384 C212,384 162,372 142,326 C134,324 120,316 128,306 C112,300 122,290 126,268 C128,212 172,160 256,160Z" fill="url(#furX)"/>
+ <path d="M256,160 C340,160 384,212 386,268 C390,290 400,300 384,306 C392,316 378,324 370,326 C350,372 300,384 256,384 C212,384 162,372 142,326 C134,324 120,316 128,306 C112,300 122,290 126,268 C128,212 172,160 256,160Z" fill="url(#shadeX)"/>
+ ${c.stripes?`<g stroke="${c.f2}" stroke-width="8" stroke-linecap="round" opacity=".55" fill="none"><path d="M256,170 v30"/><path d="M230,174 l6,26"/><path d="M282,174 l-6,26"/><path d="M134,258 h22 M136,276 h18 M378,258 h-22 M376,276 h-18"/></g>`:''}
+ <ellipse cx="234" cy="330" rx="34" ry="26" fill="${c.mz}"/><ellipse cx="278" cy="330" rx="34" ry="26" fill="${c.mz}"/>
+ ${cat==='tux'?`<path d="M256,240 C244,270 236,300 232,320 L280,320 C276,300 268,270 256,240Z" fill="${c.mz}"/>`:''}
+ <ellipse cx="174" cy="320" rx="20" ry="11" fill="#ff8fab" opacity=".45" filter="url(#softX)"/><ellipse cx="338" cy="320" rx="20" ry="11" fill="#ff8fab" opacity=".45" filter="url(#softX)"/>
+ <!-- eyes, looking up at the viewer -->
+ ${[204,308].map(x=>`<g transform="translate(${x},268)"><ellipse rx="36" ry="40" fill="#1c1410"/><ellipse rx="32" ry="36" fill="url(#irisX)"/>
+  <ellipse cy="-6" rx="17" ry="25" fill="#120c0a"/><circle cx="-11" cy="-17" r="11" fill="#fff"/><circle cx="12" cy="12" r="5" fill="#fff" opacity=".9"/>
+  <path d="M-26,18 q26,16 52,0" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="4" stroke-linecap="round"/></g>`).join('')}
+ <path d="M243,309 Q256,304 269,309 Q264,322 256,324 Q248,322 243,309Z" fill="#ff8ca4"/>
+ <path d="M256,324 q-6,13 -19,9 M256,324 q6,13 19,9" fill="none" stroke="#5a3a2e" stroke-width="3" stroke-linecap="round"/>
+ <g stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".85"><path d="M196,328 L118,318 M196,336 L120,342 M316,328 L394,318 M316,336 L392,342"/></g>
+</g>
+<!-- front of box -->
+<rect x="-10" y="398" width="532" height="130" fill="url(#frontX)"/>
+<rect x="-10" y="392" width="532" height="12" rx="3" fill="#f3d19c"/>
+<path d="M-10,398 ${Array.from({length:45},(_,i)=>`q6,-4 12,0`).join(' ')}" fill="none" stroke="#c99358" stroke-width="2"/>
+<g transform="translate(430,462) rotate(-12)" fill="#8f5d2c" opacity=".35"><ellipse rx="16" ry="13" cy="8"/><circle cx="-16" cy="-10" r="6"/><circle cx="-5" cy="-18" r="6"/><circle cx="7" cy="-18" r="6"/><circle cx="17" cy="-9" r="6"/></g>
+${blanket?`<path d="M30,394 C90,384 170,388 240,396 L246,470 C220,482 200,470 180,486 C150,478 120,492 96,480 C70,490 44,476 26,486Z" fill="url(#knitX)" stroke="#e48aa2" stroke-width="2" filter="url(#dropX)"/>`:''}
+<!-- paws on the rim -->
+${[200,312].map(x=>`<g transform="translate(${x},396)" filter="url(#dropX)"><ellipse rx="34" ry="22" fill="${c.paw}"/><path d="M-12,4 v12 M0,6 v12 M12,4 v12" stroke="#00000033" stroke-width="3" stroke-linecap="round"/></g>`).join('')}
+${hand?`<g transform="translate(395,150) rotate(50)" filter="url(#dropX)">
+ <rect x="-52" y="-170" width="104" height="160" rx="44" fill="url(#skinX)"/>
+ ${[[-39,70],[-13,86],[13,84],[39,70]].map(([x,h])=>`<rect x="${x-12}" y="-40" width="24" height="${h}" rx="12" fill="url(#skinX)" stroke="#d29a7a" stroke-width="1.5"/>`).join('')}
+ <path d="M-50,-60 C-80,-50 -88,-20 -78,0" stroke="url(#skinX)" stroke-width="26" stroke-linecap="round" fill="none"/>
+</g>`:''}
+${FF.slice(0,4).map(([x,y,s])=>`<circle cx="${512-x}" cy="${y+330}" r="${10*s}" fill="url(#ffX)"/>`).join('')}
+</svg>`); }
+const V=[['A',{cat:'orange',blanket:true,hand:true},'Orange tabby, knitted blanket, a hand reaching in'],
+ ['B',{cat:'orange',blanket:false,hand:true},'Same, without the blanket'],
+ ['C',{cat:'tux',blanket:true,hand:true},'Tuxedo kitten (black and white). Classic "rescue" look'],
+ ['D',{cat:'grey',blanket:true,hand:false},'Grey tabby, no hand: just the face and the eyes']];
+document.getElementById('g').innerHTML=V.map(([id,o,t])=>`<figure style="margin:0">${svg(id,o)}<p><b>${id}.</b> ${t}</p></figure>`).join('');
+</script>

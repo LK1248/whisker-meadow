@@ -1983,7 +1983,7 @@ function extraUpdate(dt){
       W.owlT=(W.owlT??rand(8,15))-dt; if(W.owlT<=0){ W.owlT=rand(18,40); if(n>0.6)Snd.owl(n); } } }
   W.payT=(W.payT??30)-dt; if(W.payT<=0){ W.payT=30; const cost=helpers.length*3; if(cost){ if(W.money>=cost){ W.money-=cost; if(W.unpaid)toast('Helpers back to work'); W.unpaid=false; floatAt(70,62,'-$'+cost); hud(); } else { if(!W.unpaid)toast('Not enough for wages: helpers are resting'); W.unpaid=true; } } else W.unpaid=false; }
   if(cam.goTo){ cam.target.lerp(cam.goTo,Math.min(1,dt*2.5)); if(cam.target.distanceTo(cam.goTo)<0.1)cam.goTo=null; }
-  runT-=dt; if(runT<=0){ runT=15; if(!W.runaway&&!W.family&&W.time>120&&W.time-W.lastInput<30&&W.time-(W.lastRun||-999)>240){ const cand=active().filter(c=>c.s.trust<22&&!c.carried&&!c.outside&&!c.leaving&&['idle','walk'].includes(c.state)&&c.age>0.3); if(cand.length&&Math.random()<0.35)runaway(pick(cand)); } }
+  runT-=dt; if(runT<=0){ runT=15; if(!W.runaway&&!W.family&&W.time>120&&W.time-W.lastInput<30&&W.time-(W.lastRun||-999)>240){ const cand=active().filter(c=>(c.s.trust<22||(c.trait==='playful'&&c.age>=0.5&&Math.random()<0.5))&&!c.carried&&!c.outside&&!c.leaving&&['idle','walk'].includes(c.state)&&c.age>0.3); if(cand.length&&Math.random()<0.35)runaway(pick(cand)); } }
   const R=W.runaway;
   if(R){ R.t+=dt; const c=R.c;
     // paw prints appear behind the runaway as it goes (only outside the fence)

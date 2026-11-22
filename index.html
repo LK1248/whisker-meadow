@@ -594,14 +594,25 @@ function useItem(it){
 
 /* ================= CATS ================= */
 const COATS={orange:{body:0xf2a35e,belly:0xfbe3c4,stripe:0xd27a35},black:{body:0x3d3532,belly:0x564c48,stripe:0x2a2421},grey:{body:0x9da6b0,belly:0xdde1e6,stripe:0x6e7782},
-  cream:{body:0xf3dcb5,belly:0xfff4e2,stripe:0xdcb57f},white:{body:0xf7f4ef,belly:0xffffff,stripe:0xe6e0d6},lilac:{body:0xc7b3cc,belly:0xf0e6f1,stripe:0xa58fab,rare:1},golden:{body:0xe9c157,belly:0xfff0c0,stripe:0xc6902a,rare:1}};
+  cream:{body:0xf3dcb5,belly:0xfff4e2,stripe:0xdcb57f},white:{body:0xf7f4ef,belly:0xffffff,stripe:0xe6e0d6},lilac:{body:0xc7b3cc,belly:0xf0e6f1,stripe:0xa58fab,rare:1},golden:{body:0xe9c157,belly:0xfff0c0,stripe:0xc6902a,rare:1},
+  bengal:{body:0xe3a352,belly:0xfbe8cc,stripe:0x5a3a22,rare:1},savannah:{body:0xe8cc92,belly:0xfaf1de,stripe:0x2a2220,rare:1},mainecoon:{body:0x8c6a4c,belly:0xeadac4,stripe:0x4e3826,rare:1},
+  siamese:{body:0xf1e4cf,belly:0xfbf5ea,stripe:0x4a3426,rare:1},ragdoll:{body:0xf4ede4,belly:0xffffff,stripe:0x8b7d74,rare:1},fold:{body:0xa3abb6,belly:0xe0e4ea,stripe:0x6e7782,rare:1}};
+// body plans: len = body length, leg = leg length, size = overall, ear = ear size
+const BREEDS={
+  bengal:{name:'Bengal',pattern:'solid',eye:0x8fd14f,len:1.1,leg:1.06,size:1.02,ear:0.95,rosettes:15},
+  savannah:{name:'Savannah',pattern:'solid',eye:0xd9a441,len:1.24,leg:1.34,size:1.04,ear:1.55,spots:22,tailLen:0.8},
+  mainecoon:{name:'Maine Coon',pattern:'tabby',eye:0xd9a441,len:1.12,leg:1.06,size:1.2,ear:1.18,ruff:1,tufts:1,bushy:1.6},
+  siamese:{name:'Siamese',pattern:'solid',eye:0x5fb8f2,len:1.08,leg:1.12,size:0.96,ear:1.3,points:1},
+  ragdoll:{name:'Ragdoll',pattern:'socks',eye:0x4f9ff0,len:1.05,leg:1.0,size:1.12,ear:1.0,points:1,ruff:1,bushy:1.35},
+  fold:{name:'Scottish Fold',pattern:'solid',eye:0xe08a2a,len:0.94,leg:0.92,size:1.0,ear:0.75,fold:1,round:1.12}};
+function exoticCoat(){ const owned=new Set(W.cats.map(c=>c.coat.base)), all=Object.keys(BREEDS), pool=all.filter(b=>!owned.has(b)); const b=pick(pool.length?pool:all); return {base:b,pattern:BREEDS[b].pattern,eye:BREEDS[b].eye}; }
 const PATTERNS=['solid','tabby','tuxedo','calico','socks'];
 const EYES=[0x8fd14f,0xf2b632,0x6ec3f0,0xd9a441];
 const TRAITS=['shy','playful','cuddly','calm','curious'];
 const NAMES=['Biscuit','Miso','Tofu','Luna','Olive','Pickle','Noodle','Maple','Ziggy','Clover','Pumpkin','Juniper','Waffles','Pip','Hazel','Nori','Sesame','Dumpling','Willow','Fig','Mango','Peanut','Sprout','Cocoa','Marble','Pudding','Basil','Poppy','Kiwi','Bramble','Tater','Cinnamon','Dot','Sardine','Tumble','Chai','Muffin','Pebble','Bao','Wasabi','Truffle','Button','Nutmeg','Pesto','Jellybean','Mochi','Pepper','Bean'];
 const used=new Set();
 function uniqueName(){ const free=NAMES.filter(n=>!used.has(n)); const n=free.length?pick(free):pick(NAMES)+' '+(used.size+1); used.add(n); return n; }
-function coatName(c){ if(c.pattern==='calico')return 'Calico'; const b={orange:'Ginger',black:'Black',grey:'Grey',cream:'Cream',white:'White',lilac:'Lilac',golden:'Golden'}[c.base];
+function coatName(c){ if(BREEDS[c.base])return BREEDS[c.base].name; if(c.pattern==='calico')return 'Calico'; const b={orange:'Ginger',black:'Black',grey:'Grey',cream:'Cream',white:'White',lilac:'Lilac',golden:'Golden'}[c.base];
   return b+({solid:'',tabby:' tabby',tuxedo:' tuxedo',socks:' socks'}[c.pattern]); }
 function randomCoat(){ let base=Math.random()<0.05?pick(['lilac','golden']):pick(['orange','black','grey','cream','white']); let pattern=pick(PATTERNS); if(base==='white'&&pattern!=='calico')pattern='solid'; return {base,pattern,eye:pick(EYES)}; }
 let catId=0;
@@ -650,12 +661,30 @@ function buildCatMesh(cat){
   const tail=new THREE.Group(); tail.position.set(0,0.08,-0.52); core.add(tail); cat.tail=[];
   for(let i=0;i<9;i++){ const r=0.068-0.0028*i; const col=(pat==='tabby'&&i%2)?dark:(pat==='calico'&&i>4)?0xf2a35e:(pat==='tuxedo'&&i===8)?0xffffff:body;
     cat.tail.push(add(tail,G.sph,col,[0,0,0],[r,r,r],'tail')); }
+  const B=BREEDS[cat.coat.base];
+  if(B){ const ax=[0.36,0.33,0.58];
+    // a spot sitting on the surface of an ellipsoid (centre pulled in a little so it reads as a flat-ish patch)
+    const spot=(parent,col,dir,eax,zone,r)=>{ const d=new V3(...dir).normalize(); const t=1/Math.sqrt((d.x/eax[0])**2+(d.y/eax[1])**2+(d.z/eax[2])**2); const P=d.multiplyScalar(t); const n=P.clone().normalize();
+      const m=add(parent,G.sph,col,[P.x-n.x*r*0.6,P.y-n.y*r*0.6,P.z-n.z*r*0.6],[r,r,r],zone); return m; };
+    if(B.rosettes) for(let i=0;i<B.rosettes;i++){ const d=[rand(-1,1),rand(-0.15,1),rand(-0.9,0.9)]; spot(core,dark,d,ax,'back',0.075); spot(core,0xc98a45,d,ax,'back',0.045); }
+    if(B.spots){ for(let i=0;i<B.spots;i++)spot(core,dark,[rand(-1,1),rand(-0.2,1),rand(-0.9,0.9)],ax,'back',0.05); for(let i=0;i<4;i++)spot(head,dark,[rand(-0.8,0.8),rand(0.5,1),rand(-0.6,0.1)],[0.3,0.27,0.27],'head',0.035); }
+    if(B.ruff){ add(core,G.sph,light,[0,0.12,0.4],[0.33,0.3,0.24],'chest'); add(head,G.sph,light,[0.17,-0.1,0.02],[0.14,0.13,0.12],'cheek'); add(head,G.sph,light,[-0.17,-0.1,0.02],[0.14,0.13,0.12],'cheek'); }
+    if(B.points){ const pc=dark; head.traverse(o=>{ if(o.isMesh&&o.userData.zone==='chin')o.material=M(pc); }); add(head,G.sph,pc,[0,-0.06,0.2],[0.14,0.1,0.08],'chin');
+      cat.ears.forEach(e=>{ e.children[0].material=M(pc); }); cat.tail.forEach((m,i)=>{ if(i>=2)m.material=M(pc); });
+      if(B.pattern!=='socks')cat.legs.forEach(L=>L.children.forEach(m=>{ m.material=M(pc); })); }
+    if(B.tufts)cat.ears.forEach(e=>add(e,G.cone,dark,[0,0.25,0],[0.03,0.1,0.025],'head'));
+    cat.ears.forEach(e=>{ e.scale.setScalar(B.ear); if(B.fold){ e.scale.y=B.ear*0.55; e.rotation.x=0.95; e.position.y=0.17; } });
+    if(B.bushy)cat.tail.forEach(m=>m.scale.multiplyScalar(B.bushy));
+    // longer (or shorter) body: stretch the torso, push head, legs and tail out
+    for(const m of core.children)if(m.isMesh){ m.position.z*=B.len; m.scale.z*=B.len; }
+    head.position.z*=B.len; tail.position.z*=B.len; cat.legs.forEach(L=>{ L.position.z*=B.len; L.scale.y=B.leg; });
+    cat.legLift=(B.leg-1)*0.34; cat.tailLen=B.tailLen||1; }
   const icon=new THREE.Sprite(new THREE.SpriteMaterial({map:iconTexture('purr'),transparent:true,depthWrite:false})); icon.scale.set(.42,.42,.42); icon.position.y=1.45; icon.visible=false; g.add(icon);
   const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:iconTexture('glow'),transparent:true,depthWrite:false,opacity:0})); glow.scale.set(1.7,1.7,1.7); glow.position.y=0.55; g.add(glow);
   g.traverse(o=>{ if(o.isMesh){ o.userData.cat=cat; if(!o.userData.zone)o.userData.zone='back'; } });
   Object.assign(cat,{g,core,head,icon,glow});
 }
-function applyAge(c){ const a=c.age; c.g.scale.setScalar(0.52+0.48*a); c.head.scale.setScalar(1+0.28*(1-a)); }
+function applyAge(c){ const a=c.age, B=BREEDS[c.coat.base]; c.g.scale.setScalar((0.52+0.48*a)*(B?B.size:1)); c.head.scale.setScalar((1+0.28*(1-a))*(B&&B.round||1)); }
 function showIcon(c,kind,dur=2.5){ c.icon.material.map=iconTexture(kind); c.icon.material.needsUpdate=true; c.icon.visible=true; c.iconT=dur; c.iconKind=kind; }
 function dist2(a,b){ return Math.hypot(a.x-b.x,a.z-b.z); }
 const bk=(a,b)=>a.id<b.id?a.id+'|'+b.id:b.id+'|'+a.id;
@@ -967,7 +996,7 @@ function animateCat(c,dt,t){
     legA=[-1.15*s1-0.1,-1.15*s1+0.15,1.05*s1+0.1,1.05*s1-0.15]; rx=0.24*c1; coreY=0.43; stretch=0.12*s1;
     baseY+=Math.max(0,Math.sin(ph-0.6))*0.17*c.g.scale.x; tailUp=0.15; swish=0.04; earOut=Math.max(earOut,0.4); hx=-0.15; eye=Math.min(eye,0.85); }
   const k=Math.min(1,dt*8);
-  c.core.position.y=lerp(c.core.position.y,coreY+(moving&&!gal?Math.abs(Math.sin(c.phase))*0.025:0),k);
+  c.core.position.y=lerp(c.core.position.y,coreY+(c.legLift||0)*Math.max(0,Math.cos(legA[2]))+(moving&&!gal?Math.abs(Math.sin(c.phase))*0.025:0),k);
   c.core.rotation.x=gal?rx:lerp(c.core.rotation.x,rx,k); c.core.rotation.z=lerp(c.core.rotation.z,rz,Math.min(1,dt*(c.carried?14:5)));
   c.bodyM.scale.y=0.33*(warn?1+Math.sin(t*45)*0.02:1)*(1+arch); c.bodyM.scale.z=0.58*(1+stretch);
   c.head.rotation.x=lerp(c.head.rotation.x,hx,k); c.head.rotation.z=lerp(c.head.rotation.z,hz,k); c.head.rotation.y=lerp(c.head.rotation.y,hy,Math.min(1,dt*(c.snap>0?20:5)));
@@ -980,7 +1009,7 @@ function animateCat(c,dt,t){
   c.eyes.forEach(e=>{ e.scale.y=lerp(e.scale.y,eye,Math.min(1,dt*14)); });
   c.earT-=dt; if(c.earT<=0){ c.earT=rand(2,6); c.earTw=0.25; } if(c.earTw>0)c.earTw-=dt;
   c.ears.forEach((e,i)=>{ const sx=i?-1:1; e.rotation.z=lerp(e.rotation.z,(-0.35-earOut*0.9)*sx+(c.earTw>0&&i===0?0.3*Math.sin(t*40):0),k); });
-  const sp=0.075; let x=0,y=0,z=0;
+  const sp=0.075*(c.tailLen||1); let x=0,y=0,z=0;
   c.tail.forEach((m,i)=>{ const f=i/8; const th=tailUp+f*0.9*(tailUp>0.3?1:-0.4); const side=Math.sin(t*swSpd-i*0.45)*swish*f*3;
     x+=Math.sin(side)*sp*0.6; y+=Math.sin(th)*sp; z-=Math.cos(th)*sp; m.position.set(x,y,z); });
   let gOp=0; if(c.petT>0&&handOn(c)&&!c.carried){ const el=W.time-c.lastStroke, g0=(W.tool==='brush'?1.0:2.0)*(c.trait==='shy'?1.15:1); gOp=el<g0?0.05+0.2*(el/g0):el<=7?0.6+0.15*Math.sin(t*6):0.25; }
@@ -1295,6 +1324,9 @@ function arriveStray(){
   if(room>=3&&Math.random()<0.25){ const mama=makeCat({sex:'f',coat:randomCoat(),age:1,origin:'stray',fixed:true,x:0,z:-h+0.45,s:{trust:rand(15,25),aff:rand(15,25),full:35,fun:40,groom:20,health:50,clean:70}}); mama.litters=1; mama.heading=0; goTo(mama,0,-h+2.2,null);
     const kids=[]; for(let i=0;i<2;i++){ const k=makeCat({coat:inherit(mama.coat,randomCoat()),age:rand(0.08,0.2),origin:'stray',mother:mama.id,parents:[mama.id],x:rand(-.5,.5),z:-h+0.5,s:{trust:rand(25,40),aff:rand(25,40),full:50,fun:60,groom:30,health:60,clean:70}}); addBond(k,mama,60); k.heading=0; goTo(k,rand(-.6,.6),-h+1.8,null); kids.push(k); }
     addBond(kids[0],kids[1],60); W.stat.rescues+=3; meet(mama,'mama',null); kids.forEach(k=>meet(k,'withmama',[mama])); }
+  else if(W.exoticNext||(W.level>=3&&Math.random()<0.12)){ W.exoticNext=false; const coat=exoticCoat();
+    const c=makeCat({coat,age:1,origin:'stray',fixed:true,x:rand(-0.3,0.3),z:-h+0.45,s:{trust:rand(15,25),aff:rand(15,25),full:rand(35,50),fun:40,groom:rand(20,35),health:rand(50,60),clean:70}});
+    c.heading=0; goTo(c,rand(-1,1),-h+2.4,null); W.stat.rescues++; W.stat.breedSeen=[...new Set([...(W.stat.breedSeen||[]),coat.base])]; spawnFx('spark',c.g.position.clone().setY(0.8),14,0.7); Snd.chime(); meet(c,'stray'); }
   else { const kit=Math.random()<0.35; const c=makeCat({coat:randomCoat(),age:kit?rand(0.2,0.5):1,origin:'stray',fixed:Math.random()<0.5,x:rand(-0.3,0.3),z:-h+0.45,s:{trust:rand(10,20),aff:rand(10,20),full:rand(30,45),fun:40,groom:rand(15,30),health:rand(45,55),clean:70}}); c.heading=0; goTo(c,rand(-1,1),-h+2.4,null); W.stat.rescues++; meet(c,'stray'); }
   checkCollection(); hud(); }
 function heartBetween(a,b){ const mid=a.g.position.clone().add(b.g.position).multiplyScalar(0.5).setY(1.0); spawnFx('h',mid,1,0.05,0.35+getBond(a,b)/250); }
@@ -1324,7 +1356,7 @@ const ACH=[['rhythm','Gentle Hands','On-beat strokes',()=>W.stat.good,[10,60,250
   ['pairs','Together Forever','Best friends adopted together',()=>W.stat.pairs,[1,3,8]],['patient','Patient Friend','Very shy cats who found homes',()=>W.stat.patient,[1,3,8]],['rescues','Open Gate','Rescues welcomed',()=>W.stat.rescues,[1,8,20]],
   ['found','Welcome Home','Runaways found',()=>W.stat.found,[1,3,8]],['quick','Quick Paws','Caught a runaway at the gate',()=>W.stat.quick||0,[1,3,6]],['ribbons','Ribbon Collector','Fair ribbons',()=>W.ribbons,[1,10,30]],['kittens','Little Paws','Kittens born here',()=>W.stat.kittens,[1,4,10]],
   ['belly','Belly Rub Legend','Trusted belly rubs',()=>W.stat.belly,[3,20,60]],['butt','Butt Tap Expert','Happy butt taps',()=>W.stat.butt,[3,20,60]],['family','Big Happy Family','Cats at once',()=>W.maxCats||0,[6,12,20]],
-  ['coats','Rainbow Meadow','Different coats at once',()=>W.stat.coatsMax||0,[4,6,9]],['rare','Rare Coat','Lilac or golden cats',()=>W.stat.rare||0,[1,3,6]],['spotless','Spotless','Litter scoops',()=>W.stat.cleaned,[10,50,150]],
+  ['coats','Rainbow Meadow','Different coats at once',()=>W.stat.coatsMax||0,[4,6,9]],['rare','Rare Coat','Rare coats and breeds',()=>W.stat.rare||0,[1,3,6]],['breeds','Exotic Friends','Different breeds rescued',()=>(W.stat.breedSeen||[]).length,[1,3,6]],['spotless','Spotless','Litter scoops',()=>W.stat.cleaned,[10,50,150]],
   ['zoomies','Zoomies','Laser pounces',()=>W.stat.laserP,[25,150,500]],['deluxe','Deluxe Living','Upgrades bought',()=>W.stat.upgrades,[1,5,12]],['ouch','Band-Aid Club','Scratches (oops)',()=>W.stat.scratches,[1,5,15]]];
 const TIER_N=['','Bronze','Silver','Gold'];
 function unlock(){}
@@ -1441,7 +1473,7 @@ function openShop(){
   document.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{ const k=b.dataset.up, n=W.tier[k]+1, cost=upCost(k,n); if(W.money<cost||W.stars<starsFor(n))return; W.money-=cost; W.tier[k]=n; W.stat.upgrades++;
     for(const c of W.cats)if(c.useItem&&c.useItem.kind===k&&!c.carried)setState(c,'idle',1); for(const it of items)if(it.kind===k)buildItem(it); if(k==='wand')buildWandToy(); Snd.chime(); hud(); openShop(); });
 }
-function expand(){ const oh=LV().half; W.level++; shiftOutside(oh-LV().half); buildEnclosure(); buildDecor(); cam.want=LV().zoom; { const B=bnd(); cam.target.set((B.x0+B.x1)/2,0.3,(B.z0+B.z1)/2); } for(const c of W.cats){ const p=c.g.position; if(!c.outside&&!c.leaving&&inPond(p.x,p.z,0.4)){ const q=rIn(1); p.set(q.x,0,q.z); } } for(const it of items)if(inPond(it.pos.x,it.pos.z,0.8)){ const q=placeSpot(); it.pos.copy(q); } for(let i=0;i<2;i++)makeButterfly(); closeModal(); hud(); toast(LV().name?LV().name+' open!':'Bigger meadow!'); }
+function expand(){ const oh=LV().half; W.level++; if(W.level>=3){ W.exoticNext=true; setTimeout(()=>startDropoff(),20000); } shiftOutside(oh-LV().half); buildEnclosure(); buildDecor(); cam.want=LV().zoom; { const B=bnd(); cam.target.set((B.x0+B.x1)/2,0.3,(B.z0+B.z1)/2); } for(const c of W.cats){ const p=c.g.position; if(!c.outside&&!c.leaving&&inPond(p.x,p.z,0.4)){ const q=rIn(1); p.set(q.x,0,q.z); } } for(const it of items)if(inPond(it.pos.x,it.pos.z,0.8)){ const q=placeSpot(); it.pos.copy(q); } for(let i=0;i<2;i++)makeButterfly(); closeModal(); hud(); toast(LV().name?LV().name+' open!':'Bigger meadow!'); }
 function openBadges(tab='badges'){
   const tabs=`<div class="tabs"><button data-tab="badges" class="${tab==='badges'?'on':''}">Badges</button><button data-tab="tails" class="${tab==='tails'?'on':''}">Happy Tails · ${W.homes.length}</button><button data-tab="goals" class="${tab==='goals'?'on':''}">Goals</button></div>`;
   let body='';
@@ -2025,7 +2057,7 @@ function begin(){ Snd.init(); $('#start').hidden=true; W.started=true; cam.theta
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); }catch(e){} begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={animateCat,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={animateCat,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>
 

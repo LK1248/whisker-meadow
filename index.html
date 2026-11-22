@@ -344,6 +344,10 @@ const Snd={ac:null,musicOn:true,
   hiss(){ if(!this.ac)return; const ac=this.ac,t=ac.currentTime; const s=ac.createBufferSource(); s.buffer=this.noise; const f=ac.createBiquadFilter(); f.type='highpass'; f.frequency.value=2600; const g=ac.createGain();
     g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.35,t+0.04); g.gain.exponentialRampToValueAtTime(0.001,t+0.6); s.connect(f); f.connect(g); g.connect(this.sfx); s.start(t); s.stop(t+0.65); },
   chime(){ if(!this.ac)return; const t=this.ac.currentTime; [784,988,1319].forEach((f,i)=>this.note(f,t+i*0.09,0.18,0.5,'sine')); },
+  shutter(){ if(!this.ac)return; const ac=this.ac,t=ac.currentTime;
+    for(const [dt,f,v] of [[0,3200,0.5],[0.075,2200,0.38]]){ const s=ac.createBufferSource(); s.buffer=this.noise; const bp=ac.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=f; bp.Q.value=0.9; const g=ac.createGain();
+      g.gain.setValueAtTime(0.0001,t+dt); g.gain.exponentialRampToValueAtTime(v,t+dt+0.003); g.gain.exponentialRampToValueAtTime(0.0001,t+dt+0.045); s.connect(bp).connect(g).connect(this.sfx||ac.destination); s.start(t+dt,Math.random()*0.5,0.06); }
+    this.note(1900,t+0.002,0.02,0.12,'square'); },
   ding(){ if(!this.ac)return; const t=this.ac.currentTime; this.note(1175+Math.random()*200,t,0.07,0.35,'sine'); },
   coin(){ if(!this.ac)return; const t=this.ac.currentTime; this.note(988,t,0.12,0.12,'square'); this.note(1319,t+0.08,0.12,0.3,'square'); },
   pop(){ if(!this.ac)return; const t=this.ac.currentTime; this.note(660,t,0.15,0.12,'sine'); },
@@ -1482,7 +1486,7 @@ function openBadges(tab='badges'){
   else body=W.goals.map(g=>{ const [n,f,tg]=GOALS[g.i]; const v=Math.max(0,Math.min(tg,f()-g.base)); return `<div class="goal ${g.done?'done':''}">${g.done?'✓ ':''}${n}<span>${g.done?'+$15':`${v} / ${tg}`}</span></div>`; }).join('');
   openModal(`<h3>Sanctuary ${'★'.repeat(W.stars)}</h3>${tabs}${tab==='badges'?`<p style="margin:-4px 0 10px;color:var(--muted);font:700 13px var(--body)">Bronze +$10 \u00b7 Silver +$25 \u00b7 Gold +$60. Gold badges unlock special collars.</p>`:''}${body}`);
   document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>openBadges(b.dataset.tab)); }
-$('#bShop').onclick=()=>openShop(); $('#bBadges').onclick=()=>openBadges(); $('#bSnap').onclick=snapshot;
+$('#bShop').onclick=()=>openShop(); $('#bBadges').onclick=()=>openBadges(); $('#bSnap').onclick=()=>{ Snd.shutter(); snapshot(); };
 $('#bMusic').onclick=()=>{ Snd.toggleMusic(); $('#bMusic').classList.toggle('off',!Snd.musicOn); };
 $('#bDay').onclick=()=>{ W.dayOn=!W.dayOn; store.set('wm_daynight',W.dayOn); $('#bDay').classList.toggle('off',!W.dayOn); toast(W.dayOn?'Day & night: on':'Always daytime'); };
 $('#bDay').classList.toggle('off',!W.dayOn);

@@ -88,6 +88,9 @@ body.intro .dock,body.intro #hud,body.intro .top{opacity:.25;pointer-events:none
 #tag #tShow svg{width:46px;height:53px;filter:drop-shadow(0 3px 3px rgba(74,52,38,.25))}
 .fairpic{position:relative;margin:2px 0 10px}
 .fairpic img{width:100%;border-radius:16px;display:block}
+.fairpic .shine i{position:absolute;width:26px;height:26px;background:#fff6b0;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);animation:twk 1.6s ease-in-out infinite;filter:drop-shadow(0 0 4px #fff)}
+.fairpic .shine i:nth-child(1){left:38%;top:22%}.fairpic .shine i:nth-child(2){left:58%;top:34%;animation-delay:.4s;transform:scale(.7)}.fairpic .shine i:nth-child(3){left:44%;top:52%;animation-delay:.8s}.fairpic .shine i:nth-child(4){left:64%;top:18%;animation-delay:1.1s}.fairpic .shine i:nth-child(5){left:30%;top:42%;animation-delay:.6s}
+@keyframes twk{0%,100%{opacity:0;transform:scale(.3) rotate(0)}50%{opacity:1;transform:scale(1) rotate(45deg)}}
 .fairpic .fb{position:absolute;left:6px;top:4px;width:78px;height:78px}
 #hint{position:fixed;left:0;top:0;pointer-events:none;z-index:6}
 #hint .hh{position:absolute;left:-30px;top:-22px;width:60px;height:60px}
@@ -1039,7 +1042,7 @@ function animateCat(c,dt,t){
   const sp=0.075*(c.tailLen||1); let x=0,y=0,z=0;
   c.tail.forEach((m,i)=>{ const f=i/8; const th=tailUp+f*0.9*(tailUp>0.3?1:-0.4); const side=Math.sin(t*swSpd-i*0.45)*swish*f*3;
     x+=Math.sin(side)*sp*0.6; y+=Math.sin(th)*sp; z-=Math.cos(th)*sp; m.position.set(x,y,z); });
-  let gOp=0; if(c.petT>0&&handOn(c)&&!c.carried){ const el=W.time-c.lastStroke, g0=(W.tool==='brush'?0.8:1.55)*(c.trait==='shy'?1.15:1); gOp=el<g0?0.05+0.2*(el/g0):el<=7?0.6+0.15*Math.sin(t*6):0.25; }
+  let gOp=0; if(c.petT>0&&handOn(c)&&!c.carried&&W.tool!=='brush'){ const el=W.time-c.lastStroke, g0=(W.tool==='brush'?0.8:1.55)*(c.trait==='shy'?1.15:1); gOp=el<g0?0.05+0.2*(el/g0):el<=7?0.6+0.15*Math.sin(t*6):0.25; }
   c.glow.material.opacity=lerp(c.glow.material.opacity,gOp,Math.min(1,dt*8)); c.glow.position.y=c.state==='flop'?0.35:0.55;
   if(c.iconT>0){ c.iconT-=dt; if(c.iconT<=0)c.icon.visible=false; }
   else if(W.pickHome&&readyHome(c))showIcon(c,'house',0.4);
@@ -1243,13 +1246,41 @@ function pickAt(e){ setRay(e); const objs=[]; for(const c of W.cats)if(c.away<=0
   for(const h of ray.intersectObjects(objs,true)){ const u=h.object.userData; if(u.pass||h.object.isSprite)continue; if(u.cat){ let z=u.zone; if(z==='back'){ const lp=u.cat.core.worldToLocal(h.point.clone()); if(lp.z<-0.26&&lp.y>-0.05)z='rump'; } return {cat:u.cat,zone:z}; } if(u.item)return {item:u.item}; } return null; }
 const P={mode:null,pointers:new Map(),start:{x:0,y:0},last:{x:0,y:0},t0:0,moved:false,cat:null,item:null,grab:new V3(),pinch:0,hx:-200,hy:-200,over:false,hoverCat:null,hoverT:0,type:'mouse',down:false};
 const S={cat:null,len:0,zones:{},dir:null,t0:0,last:0};
+const BURR_SVG='<svg viewBox="0 0 32 32" width="30" height="30"><path d="M20 9q6-6 10-3-2 6-9 6z" fill="#7fa54a"/><g stroke="#6b5326" stroke-width="2.4" stroke-linecap="round"><path d="M16 6v20M6 16h20M9 9l14 14M23 9L9 23"/></g><circle cx="16" cy="16" r="6.5" fill="#8f7436"/></svg>';
+function burrCount(c){ const g=c.s.groom; return g>=55?0:Math.min(6,Math.ceil((55-g)/8)); }
+function ensureBurrs(c){ if(c.burrs)return; const B=BREEDS[c.coat.base], L=B?B.len:1, ax=[0.36,0.33,0.58];
+  const dirs=[[0.55,0.75,0.2],[-0.5,0.8,-0.25],[0.85,0.25,-0.45],[-0.85,0.3,0.35],[0.15,0.9,-0.6],[-0.2,0.85,0.55]];
+  c.burrs=dirs.map(dir=>{ const d=new V3(...dir).normalize(), t=1/Math.sqrt((d.x/ax[0])**2+(d.y/ax[1])**2+(d.z/ax[2])**2), p=d.clone().multiplyScalar(t);
+    const g=new THREE.Group(); g.position.set(p.x,p.y,p.z*L); g.scale.setScalar(1.3);
+    const ball=new THREE.Mesh(G.sphLo,M(0x8f7436)); ball.scale.setScalar(0.055); g.add(ball);
+    for(let i=0;i<5;i++){ const sp=new THREE.Mesh(G.cone,M(0x6b5326)); sp.scale.set(0.014,0.05,0.014); const a=i*1.26; sp.position.set(Math.cos(a)*0.05,0.02,Math.sin(a)*0.05); sp.rotation.set(Math.sin(a)*1.2,0,-Math.cos(a)*1.2); g.add(sp); }
+    const leaf=new THREE.Mesh(G.sph,M(0x7fa54a)); leaf.scale.set(0.06,0.012,0.03); leaf.position.set(0.05,0.04,0); leaf.rotation.z=0.5; g.add(leaf);
+    g.traverse(o=>{ if(o.isMesh)o.userData={cat:c,zone:'back'}; }); g.visible=false; c.core.add(g); return g; }); c.burrN=0; }
+function updateCoats(dt){ for(const c of W.cats){ if(c.away>0||!c.core)continue; ensureBurrs(c); const n=burrCount(c);
+  if(n!==c.burrN){ c.burrs.forEach((b,i)=>b.visible=i<n); c.burrN=n; }
+  if(c.s.groom>=85&&c.g.visible&&!c.outside){ c.shineT=(c.shineT||rand(0,2))-dt; if(c.shineT<=0){ c.shineT=rand(1.6,3); spawnFx('spark',c.g.position.clone().setY(0.75*c.g.scale.y),1,0.3,0.12); } } } }
+// brushing: scrub back and forth anywhere on the coat; every bit of scrubbing pops off a burr. No rhythm to hit.
+function brushScrub(c,len,zone){
+  if(c.state==='hiding'){ foundCat(c); return; }
+  if(c.away>0||c.carried||c.leaveT>0||c.outside||c.leaving||['boop','path','greet','bye','flop'].includes(c.state))return;
+  c.petT=3; tagFor(c,3); if(!['sleep','pet','eat','litter','perch','shelter'].includes(c.state))setState(c,'pet');
+  if(zone==='tail'){ c.flick=0.4; return; }
+  c.scrub=(c.scrub||0)+len; if(c.scrub<160)return; c.scrub=0; c.lastStroke=W.time;
+  const s=c.s, top=c.g.position.clone().setY(0.8*c.g.scale.y), before=burrCount(c);
+  if(s.groom>=97){ spawnFx('spark',top,1,0.3,0.12); return; }
+  s.groom=Math.min(100,s.groom+7); s.aff=Math.min(100,s.aff+0.3); W.stat.brush++; c.purr=Math.max(c.purr,0.2); c.lean=0.5;
+  spawnFx('spark',top,1,0.3,0.14);
+  if(burrCount(c)<before){ const b=c.burrs&&c.burrs[before-1]; if(b){ const wp=b.getWorldPosition(new V3()); spawnFx('spark',wp,4,0.12,0.12); b.visible=false; c.burrN=before-1; }
+    if(Snd.ac){ const t=Snd.ac.currentTime; Snd.note(980,t,0.07,0.05,'square'); Snd.note(1480,t+0.04,0.05,0.06,'triangle'); } }
+  if(before>0&&s.groom>=55&&s.groom-7<55){ spawnFx('spark',top,10,0.45,0.16); Snd.chime(); unlock&&unlock('first_brush'); } }
 function beginStroke(c,now){ S.cat=c; S.len=0; S.zones={}; S.dir=null; S.t0=now; S.last=now; }
-function finishStroke(){ if(S.cat&&S.len>=40){ let zone='back',best=0; for(const k in S.zones)if(S.zones[k]>best){best=S.zones[k];zone=k;} const dur=Math.max(60,S.last-S.t0); onStroke(S.cat,zone,S.len/dur*1000>1700); } S.len=0; S.zones={}; S.dir=null; }
+function finishStroke(){ if(S.cat&&S.len>=40&&W.tool!=='brush'){ let zone='back',best=0; for(const k in S.zones)if(S.zones[k]>best){best=S.zones[k];zone=k;} const dur=Math.max(60,S.last-S.t0); onStroke(S.cat,zone,S.len/dur*1000>1700); } S.len=0; S.zones={}; S.dir=null; }
 function strokeMove(e,dx,dy){
   const h=pickAt(e), now=performance.now();
   if(!h||!h.cat){ if(S.cat)finishStroke(); S.cat=null; return; }
   if(h.cat!==S.cat){ if(S.cat)finishStroke(); beginStroke(h.cat,now); }
   const len=Math.hypot(dx,dy); if(len<0.5)return; const ux=dx/len, uy=dy/len;
+  if(W.tool==='brush'){ S.len+=len; S.last=now; brushScrub(S.cat,len,h.zone); return; }
   if(S.dir&&S.len>=40&&ux*S.dir[0]+uy*S.dir[1]<-0.3){ finishStroke(); beginStroke(h.cat,now); }
   S.len+=len; S.zones[h.zone]=(S.zones[h.zone]||0)+len; S.last=now;
   if(!S.dir)S.dir=[ux,uy]; else { const a=lerp(S.dir[0],ux,0.3), b=lerp(S.dir[1],uy,0.3), n=Math.hypot(a,b)||1; S.dir=[a/n,b/n]; }
@@ -1320,14 +1351,14 @@ function returnFromShow(c){
   const s=c.s, bv=bestFriend(c)[1];
   const cats=[['Best Purr',s.aff],['Fluffiest Coat',s.groom],['Healthiest',s.health],['Most Improved',Math.min(100,(s.trust-c.trust0)*2.2)],['Bravest Rescue',c.origin==='stray'?Math.min(100,s.trust+25):0],['Best Friends',bv]];
   if(COATS[c.coat.base].rare)cats.push(['Rarest Coat',80]); if(c.collar)cats.push(['Best Dressed',74]);
-  cats.sort((a,b)=>b[1]-a[1]); const cat=cats[0][0], val=cats[0][1];
-  const score=val*0.8+rand(0,28)-W.showTier*4; const place=score>=72?1:score>=55?2:3;
+  cats.sort((a,b)=>b[1]-a[1]); const cat=cats[0][0], val=cats[0][1], shiny=s.groom>=85, scruffy=burrCount(c)>0;
+  const score=val*0.8+rand(0,28)-W.showTier*4+(shiny?10:scruffy?-8:0); const place=score>=72?1:score>=55?2:3;
   const base=Math.round(25*(1+W.showTier*0.6)); const prize=[0,base*3,base*2,Math.round(base*1.3)][place];
   if(place===1){ W.wins++; W.streak++; W.bestStreak=Math.max(W.bestStreak||0,W.streak); c.wins++; if(W.wins%2===0&&W.showTier<SHOWS.length-1)W.showTier++; } else W.streak=0;
   c.bestPlace=c.bestPlace?Math.min(c.bestPlace,place):place; W.ribbons++; W.money+=prize; W.earned+=prize; W.stat.showsBack++; s.groom=Math.max(20,s.groom-30); c.showCD=45; Snd.coin(); hud();
   const col=['','#ffcf3f','#c9d3de','#e1a06a'][place], lbl=place+['','st','nd','rd'][place];
   const shot=fairShot(c,place);
-  openModal(`<div class="${shot?'fairpic':'center'}">${shot?`<img src="${shot}" alt="">`:''}<svg ${shot?'class="fb"':''} viewBox="0 0 100 100" width="${shot?78:120}" height="${shot?78:120}"><path d="M34 52L20 96l16-8 10 12 8-40zM66 52l14 44-16-8-10 12-8-40z" fill="#5b8def"/><circle cx="50" cy="38" r="30" fill="${col}" stroke="rgba(0,0,0,.12)" stroke-width="4"/><text x="50" y="47" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="700" font-size="26" fill="#4a3426">${lbl}</text></svg></div>
+  openModal(`<div class="${shot?'fairpic':'center'}">${shot?`<img src="${shot}" alt="">`:''}${shot&&shiny?'<div class="shine"><i></i><i></i><i></i><i></i><i></i></div>':''}<svg ${shot?'class="fb"':''} viewBox="0 0 100 100" width="${shot?78:120}" height="${shot?78:120}"><path d="M34 52L20 96l16-8 10 12 8-40zM66 52l14 44-16-8-10 12-8-40z" fill="#5b8def"/><circle cx="50" cy="38" r="30" fill="${col}" stroke="rgba(0,0,0,.12)" stroke-width="4"/><text x="50" y="47" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="700" font-size="26" fill="#4a3426">${lbl}</text></svg></div>
     <h3 class="center" style="margin:0">${c.name}</h3><div class="center" style="font:600 19px var(--display);color:var(--pinkd)">${cat}</div><div class="prize">+$${prize}</div><button class="big" id="collect">Collect</button>`,true);
   $('#collect').onclick=closeModal;
 }
@@ -1538,7 +1569,7 @@ function openHelp(){
   ${sec(ICO_A+ICO_T+ICO_H+' The three stats',`<ul><li><b>Love</b> (heart): petting, playing, butt taps (for cats who like them), premium food.</li><li><b>Trust</b> (paw in hand): gentle on-beat petting, feeding, play, blinking back. Drops when you scratch the wrong spot, pet too fast, or hold a nervous cat too long. Kittens learn to trust faster.</li><li><b>Health</b> (leaf): full belly, fun, a groomed coat and a clean litter box. Naps on cushions and the water fountain help.</li></ul><p>Tap a cat to see its stats above its head.</p>`)}
   ${sec('Petting rhythm',`<ul><li>Drag across the cat: one smooth stroke, then <b>wait</b>.</li><li>A ring by your hand fills in about 1.5 seconds (longer for shy cats). Stroke again when it turns <b>green with a ✓</b>.</li><li>"Purr!" = perfect. An hourglass = slow down (a shaking one = way too fast).</li><li>Too many fast strokes overstimulate a cat: watch for a twitching tail and sideways ears. Then it walks off, or, if it doesn't trust you yet, it scratches (band-aid!).</li></ul>`)}
   ${sec('Where to pet',`<ul><li><b>Head, cheeks, chin</b>: favourites.</li><li><b>Back</b>: fine. <b>Tail</b>: no!</li><li><b>Belly</b>: only when a cat rolls over and has trust 75+. Otherwise it's a trap.</li><li><b>Butt taps</b>: tap the rump once. Some cats love it, some don't: find out!</li><li>Happy cats headbutt your hand, knead, lean in and slow-blink. When a cat looks up and slowly blinks at you, <b>tap it to blink back</b>.</li></ul>`)}
-  ${sec('Tools',`<ul><li><b>Pet</b>: stroke; press and hold a cat to carry it (relaxed cats flop, nervous ones wiggle free). Drop it next to another cat to introduce them.</li><li><b>Brush</b>: grooms the coat (fair judges notice). Cats also groom themselves a little when happy and fed.</li><li><b>Wand</b>: drag to move, flick to toss, tap to make it jump, hold still to raise it so cats leap.</li><li><b>Laser</b> (shop): cats sprint and pounce. Upgraded, it ends on a treat.</li><li>Bowls and litter boxes can be tapped with any tool.</li></ul>`)}
+  ${sec('Tools',`<ul><li><b>Pet</b>: stroke; press and hold a cat to carry it (relaxed cats flop, nervous ones wiggle free). Drop it next to another cat to introduce them.</li><li><b>Brush</b>: scrub back and forth to clean the coat. Scruffy cats have burrs stuck in their fur; brushing pops them off, and a clean coat shines. Love and trust come from petting; brushing is coat care (it helps health, and fair judges love a shiny coat). Cats also groom themselves a little when happy and fed.</li><li><b>Wand</b>: drag to move, flick to toss, tap to make it jump, hold still to raise it so cats leap.</li><li><b>Laser</b> (shop): cats sprint and pounce. Upgraded, it ends on a treat.</li><li>Bowls and litter boxes can be tapped with any tool.</li></ul>`)}
   ${sec('Daily care',`<ul><li>Tap a bowl to fill it (uses premium food first, then kibble).</li><li>Tap the litter box to scoop it; dirty boxes make the meadow smelly.</li><li>A rain roof keeps cats dry in showers.</li><li>Helpers fill bowls, scoop and pet cats, for $6 a minute. Unpaid helpers rest.</li><li>The donation jar by the gate collects money when your cats are happy.</li></ul>`)}
   ${sec('Cat fair',`<p>A grown cat with <b>Trust 55+, Love 50+ and Health 60+</b> gets a <b>Fair!</b> button on its tag. Every cat wins a category (Best Purr, Fluffiest Coat, Most Improved, Bravest Rescue, Best Dressed...) and prize money. Winning moves you up to bigger fairs.</p>`)}
   ${sec('New cats & kittens',`<ul><li>Rescuers drive up and drop off strays, sometimes a mama with kittens.</li><li>Close friends touch noses and lick each other. A happy, bonded, unrelated pair may have <b>one</b> litter, then both get a vet visit.</li><li>Kittens stay near mum until they grow up (about 3 minutes).</li></ul>`)}
@@ -1557,6 +1588,7 @@ const anyCat=()=>active().filter(c=>!c.carried).sort((a,b)=>dist2(a.g.position,c
 const headOf=c=>c?c.head.localToWorld(new V3(0,0.15,0.05)):null;
 const bodyOf=c=>c?c.core.localToWorld(new V3(0,0.2,0)):null;
 const elC=sel=>{ const r=$(sel).getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2}; };
+function scruffiest(){ return active().filter(c=>burrCount(c)>0&&!c.carried&&!c.outside).sort((a,b)=>a.s.groom-b.s.groom)[0]||null; }
 const HINTS=[
   {id:'pet',when:()=>W.time>1,at:()=>headOf(anyCat()),g:'stroke',label:'Stroke, then wait for ✓',done:()=>W.stat.good>=3},
   {id:'find',when:()=>W.runaway&&W.runaway.c.state==='hiding',at:()=>W.runaway&&W.runaway.trailMid,g:'tap',label:()=>'Find '+(W.runaway?W.runaway.c.name:''),done:()=>!W.runaway||W.runaway.c.state!=='hiding',auto:10,again:true},
@@ -1568,8 +1600,8 @@ const HINTS=[
   {id:'shop',when:()=>W.time>80&&W.money>=12,el:'#bShop',g:'tap',label:()=>GUIDE_LABEL[guidePick('shop')]||'Shop',done:()=>W.stat.buys>0},
   {id:'wand',when:()=>W.time>100,el:'[data-tool=wand]',g:'tap',label:'Play',done:()=>W.tool==='wand'},
   {id:'wand2',when:()=>W.tool==='wand',at:()=>wand.tip.clone().setY(0.2),g:'stroke',label:'Drag · Flick · Hold',done:()=>W.stat.pounces>=3},
-  {id:'brush',when:()=>W.time>140,el:'[data-tool=brush]',g:'tap',label:'Brush',done:()=>W.tool==='brush'},
-  {id:'brush2',when:()=>W.tool==='brush',at:()=>bodyOf(anyCat()),g:'stroke',label:'Brush the back',done:()=>W.stat.brush>=4},
+  {id:'brush',when:()=>W.time>100&&W.tool!=='brush'&&!!scruffiest(),el:'[data-tool=brush]',g:'tap',label:()=>BURR_SVG,done:()=>W.tool==='brush'},
+  {id:'brush2',when:()=>W.tool==='brush'&&!!scruffiest(),at:()=>{ const c=scruffiest(); return c&&bodyOf(c); },g:'stroke',label:()=>BURR_SVG+'<span style="font-size:24px;vertical-align:8px"> ⇆</span>',done:()=>W.stat.brush>=4},
   {id:'show',when:()=>W.cats.some(showReady),at:()=>headOf(W.cats.find(showReady)),g:'tap',label:'Cat fair!',done:()=>W.stat.shows>0},
   {id:'belly',when:()=>false&&W.cats.some(c=>c.state==='flop'&&c.offer&&c.s.trust<75),at:()=>{ const c=W.cats.find(c=>c.state==='flop'&&c.offer); return c&&bodyOf(c); },g:'none',label:'Belly? Careful!',auto:4},
   {id:'roof',when:()=>weather.raining&&!countItems('shelter'),el:'#bShop',g:'tap',label:'Rain roof',done:()=>countItems('shelter')>0||!weather.raining},
@@ -1587,7 +1619,7 @@ function updateHints(dt){ if(intro.c||bt.c||pl.a||(firstAdopt()&&W.family.cat)){
     const lab=hintEl.querySelector('.lab'); const lw=lab.offsetWidth; lab.style.marginLeft=(Math.max(0,lw/2+8-x)-Math.max(0,x+lw/2+8-innerWidth))+'px'; lab.style.top=y<130?'48px':'-70px';
     return; }
   hintGap-=dt; if(hintGap>0||!W.hints||!W.started||W.paused)return;
-  for(const h of HINTS){ if(hintDone.has(h.id)||(hintRetry[h.id]&&W.time<hintRetry[h.id]))continue; if(h.done&&h.done()&&h.when()){ hintDone.add(h.id); continue; } if(h.when()){ curHint=h; hintT=0; hintEl.className='g-'+h.g; hintEl.querySelector('.lab').textContent=typeof h.label==='function'?h.label():h.label; hintEl.hidden=false; break; } }
+  for(const h of HINTS){ if(hintDone.has(h.id)||(hintRetry[h.id]&&W.time<hintRetry[h.id]))continue; if(h.done&&h.done()&&h.when()){ hintDone.add(h.id); continue; } if(h.when()){ curHint=h; hintT=0; hintEl.className='g-'+h.g; { const L=typeof h.label==='function'?h.label():h.label, lb=hintEl.querySelector('.lab'); if(L.startsWith('<'))lb.innerHTML=L; else lb.textContent=L; } hintEl.hidden=false; break; } }
 }
 
 /* ================= SNAPSHOT ================= */
@@ -1890,7 +1922,7 @@ let camCycle=-1; $('#bCats').onclick=()=>{ const cs=W.cats.filter(c=>c.away<=0&&
   const b=document.createElement('div'); b.id='beat'; b.hidden=true; b.innerHTML='<svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="17" fill="rgba(255,250,242,.9)" stroke="#e8d9c6" stroke-width="5"/><circle id="beatFg" cx="22" cy="22" r="17" fill="none" stroke-width="5" stroke-linecap="round" transform="rotate(-90 22 22)" stroke-dasharray="106.8" stroke-dashoffset="106.8"/></svg><span id="beatTx"></span>'; document.body.appendChild(b); })();
 function updateBeat(){ const el=$('#beat'); let c=null;
   if(P.mode==='stroke'&&S.cat)c=S.cat; else if(P.mode==='catPending')c=P.cat; else if(P.type==='mouse'&&!P.mode&&P.hoverCat&&P.hoverCat.petT>0)c=P.hoverCat;
-  if(!c||!(W.tool==='hand'||W.tool==='brush')||c.carried||c.leaving||c.outside||!$('#modal').hidden){ el.hidden=true; return; }
+  if(!c||W.tool!=='hand'||c.carried||c.leaving||c.outside||!$('#modal').hidden){ el.hidden=true; return; }
   const slow=c.trait==='shy'?1.15:1, g0=(W.tool==='brush'?0.8:1.55)*slow, t=W.time-c.lastStroke, p=t>7?1:clamp(t/g0,0,1);
   el.hidden=false; el.style.transform=`translate(${P.hx+48}px,${P.hy-(P.type==='mouse'?48:104)}px)`;
   const fg=$('#beatFg'); fg.style.strokeDashoffset=106.8*(1-p); fg.style.stroke=p>=1?'#5fb35a':'#f0a13a'; el.classList.toggle('ready',p>=1); $('#beatTx').textContent=p>=1?'✓':''; }
@@ -1958,7 +1990,7 @@ function update(dt){
   birdT-=dt; if(birdT<=0){ birdT=rand(6,14); if(birds.length<3+W.level&&!weather.raining)makeBird(); }
   slowT-=dt; if(slowT<=0){ slowT=0.3; hud(); const a=active(); if(a.length>=4&&a.every(c=>c.s.health>=80))unlock('bliss'); }
   if(W.aidT>0)W.aidT-=dt; $('#hAid').style.opacity=W.aidT>0?1:0;
-  updateFirstAdopt(dt); updateIntro(dt); updateBlinkTut(dt); updatePairTut(dt); updateTips(dt); updateHints(dt); updateWeather(dt); extraUpdate(dt);
+  updateFirstAdopt(dt); updateCoats(dt); updateIntro(dt); updateBlinkTut(dt); updatePairTut(dt); updateTips(dt); updateHints(dt); updateWeather(dt); extraUpdate(dt);
   let purr=0; for(const c of W.cats)if(c.away<=0)purr=Math.max(purr,c.purr*(handOn(c)?1:0.3)); Snd.purr(purr*0.9);
 }
 let last=performance.now();
@@ -2110,6 +2142,6 @@ function begin(){ Snd.init(); $('#start').hidden=true; W.started=true; cam.theta
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); }catch(e){} begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={animateCat,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={animateCat,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>

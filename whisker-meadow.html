@@ -183,6 +183,7 @@ button:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
   <button class="hbtn pill" id="bBadges" aria-label="Badges"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17l-5.9 3.3 1.3-6.5L2.5 9.3l6.6-.8z" fill="#f6c443" stroke="#d99a1e" stroke-width="1.5" stroke-linejoin="round"/></svg><span class="lbl">Badges</span></button>
   <button class="hbtn pill" id="bSnap" aria-label="Snapshot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6.5" width="18" height="13" rx="3"/><circle cx="12" cy="13" r="3.6"/><path d="M8.5 6.5l1.5-2.5h4l1.5 2.5"/></svg><span class="lbl">Snapshot</span></button>
   <button class="hbtn pill icon" id="bHints" title="How to play" aria-label="How to play"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.4a2.8 2.8 0 1 1 3.8 2.6c-.8.4-1.1.9-1.1 1.8"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg></button>
+  <button class="hbtn pill icon" id="bDay" title="Day & night cycle on/off" aria-label="Day and night cycle on/off"><svg viewBox="0 0 24 24"><path d="M15.5 3.5a8.5 8.5 0 1 0 5 15.2A7 7 0 0 1 15.5 3.5z" fill="#8b6fd6"/><circle cx="7" cy="7" r="3.2" fill="#f6c443"/></svg></button>
   <button class="hbtn pill icon" id="bMusic" title="Music on/off" aria-label="Music on/off"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 17.5V6l11-2v11.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="3"/><circle cx="17.5" cy="15.5" r="3"/></svg></button>
 </div>
 
@@ -258,7 +259,7 @@ function clampZ(z,m){ const B=bnd(); return clamp(z,B.z0+m,B.z1-m); }
 function ext(){ const B=bnd(); return Math.max(-B.x0,B.x1,-B.z0,B.z1); }
 function outPt(d){ const B=bnd(), s=Math.floor(Math.random()*4); if(s===0)return {x:rand(B.x0-d,B.x1+d),z:B.z0-d}; if(s===1)return {x:B.x1+d,z:rand(B.z0-d,B.z1+d)}; if(s===2)return {x:rand(B.x0-d,B.x1+d),z:B.z1+d}; return {x:B.x0-d,z:rand(B.z0-d,B.z1+d)}; }
 function fencePt(){ const B=bnd(), s=Math.floor(Math.random()*4); if(s===0){ let x=rand(B.x0+0.8,B.x1-0.8); if(Math.abs(x)<1)x=B.x1*0.6; return [x,B.z0]; } if(s===1)return [B.x1,rand(B.z0+0.8,B.z1-0.8)]; if(s===2)return [rand(B.x0+0.8,B.x1-0.8),B.z1]; return [B.x0,rand(B.z0+0.8,B.z1-0.8)]; }
-const W={started:false,paused:false,time:0,money:40,food:10,premium:0,level:1,cats:[],tool:'hand',laser:false,ribbons:0,wins:0,streak:0,bestStreak:0,showTier:0,earned:0,aidT:0,
+const W={started:false,paused:false,time:0,money:40,food:10,premium:0,dayOn:store.get('wm_daynight')!==false,night:0,level:1,cats:[],tool:'hand',laser:false,ribbons:0,wins:0,streak:0,bestStreak:0,showTier:0,earned:0,aidT:0,
   stars:1,homes:[],tier:{tree:1,bed:1,ball:1,bowl:1,litter:1,shelter:1,wand:1,laser:1},achT:{},goals:[],lastInput:0,maxCats:3,tagShows:0,family:null,pickHome:false,runaway:null,postQ:[],boops:[],
   hints:store.get('wm_hints')!==false,ach:{},stat:{good:0,fills:0,drops:0,cleaned:0,pounces:0,brush:0,shows:0,showsBack:0,buys:0,belly:0,kittens:0,laserP:0,blinkBack:0,gazes:0,scratches:0,rescues:0,pairs:0,patient:0,found:0,upgrades:0,rare:0,coatsMax:0,butt:0,quick:0}};
 const STAT0=JSON.parse(JSON.stringify(W.stat));
@@ -325,7 +326,7 @@ const scene=new THREE.Scene();
 const SKY=new THREE.Color(0xbfe8f7), SKY_RAIN=new THREE.Color(0x9fb1bd);
 scene.background=SKY.clone(); scene.fog=new THREE.Fog(SKY.clone(),45,120);
 const camera=new THREE.PerspectiveCamera(42,1,0.1,400);
-scene.add(new THREE.HemisphereLight(0xfffdf5,0x7fae5c,0.55));
+const hemi=new THREE.HemisphereLight(0xfffdf5,0x7fae5c,0.55); scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xfff0d0,0.75); sun.position.set(9,16,7); sun.castShadow=true; sun.shadow.mapSize.set(2048,2048); sun.shadow.bias=-0.0008;
 scene.add(sun); scene.add(sun.target);
 function setShadowBounds(){ const h=ext()+6, sc=sun.shadow.camera; sc.left=-h; sc.right=h; sc.top=h; sc.bottom=-h; sc.near=1; sc.far=70; sc.updateProjectionMatrix(); }
@@ -422,7 +423,7 @@ function sanctuaryHouse(){
   return g;
 }
 function buildDecor(){
-  const h=LV().half, B=bnd(); if(decorGroup)scene.remove(decorGroup); decorGroup=new THREE.Group();
+  const h=LV().half, B=bnd(); if(decorGroup)scene.remove(decorGroup); decorGroup=new THREE.Group(); W.glows=[];
   const fc=[0xffffff,0xffd84d,0xff9ec7,0xb89cff,0xff8a65];
   for(let i=0;i<Math.round(Math.min(area()*0.35,900));i++){ const g=new THREE.Group(); const q=rIn(0.3); g.position.set(q.x,0,q.z);
     g.add(mesh(G.cyl,0x5fa443,{p:[0,0.09,0],s:[0.012,0.18,0.012],cast:false})); g.add(mesh(G.sphLo,pick(fc),{p:[0,0.19,0],s:[0.055,0.035,0.055],cast:false})); decorGroup.add(g); }
@@ -446,7 +447,7 @@ function heartPath(x,cx,cy,s){ x.beginPath(); x.moveTo(cx,cy+s*0.9); x.bezierCur
 function iconTexture(kind){
   if(iconTex[kind])return iconTex[kind];
   const c=document.createElement('canvas'); c.width=c.height=128; const x=c.getContext('2d');
-  if(!['h','spark','glow','paw'].includes(kind)){ x.fillStyle='rgba(255,250,242,.95)'; x.beginPath(); x.arc(64,56,44,0,7); x.fill(); x.beginPath(); x.moveTo(52,92); x.lineTo(64,116); x.lineTo(76,92); x.fill(); }
+  if(!['h','spark','glow','paw','glowY','fly'].includes(kind)){ x.fillStyle='rgba(255,250,242,.95)'; x.beginPath(); x.arc(64,56,44,0,7); x.fill(); x.beginPath(); x.moveTo(52,92); x.lineTo(64,116); x.lineTo(76,92); x.fill(); }
   x.textAlign='center'; x.textBaseline='middle'; x.font='800 60px Nunito, sans-serif';
   switch(kind){
     case 'h': x.fillStyle='#ff5d8f'; heartPath(x,64,64,40); x.fillStyle='rgba(255,255,255,.5)'; x.beginPath(); x.ellipse(46,48,9,6,-.6,0,7); x.fill(); break;
@@ -462,6 +463,8 @@ function iconTexture(kind){
     case 'bored': x.fillStyle='#8c7666'; x.font='800 46px Nunito, sans-serif'; x.fillText('...',64,50); break;
     case 'rain': x.fillStyle='#5b9be6'; x.beginPath(); x.moveTo(64,26); x.quadraticCurveTo(88,62,64,80); x.quadraticCurveTo(40,62,64,26); x.fill(); break;
     case 'star': x.fillStyle='#f6b800'; x.beginPath(); for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?14:32; x.lineTo(64+Math.cos(a)*r,56+Math.sin(a)*r);} x.fill(); break;
+    case 'glowY': { const g=x.createRadialGradient(64,64,2,64,64,62); g.addColorStop(0,'rgba(255,236,170,1)'); g.addColorStop(0.35,'rgba(255,205,120,.55)'); g.addColorStop(1,'rgba(255,190,100,0)'); x.fillStyle=g; x.fillRect(0,0,128,128); break; }
+    case 'fly': { const g=x.createRadialGradient(64,64,1,64,64,60); g.addColorStop(0,'rgba(255,255,220,1)'); g.addColorStop(0.18,'rgba(230,255,120,.95)'); g.addColorStop(0.5,'rgba(190,255,90,.3)'); g.addColorStop(1,'rgba(160,255,80,0)'); x.fillStyle=g; x.fillRect(0,0,128,128); break; }
     case 'vet': x.fillStyle='#5fb35a'; x.fillRect(54,28,20,54); x.fillRect(37,45,54,20); break;
     case 'house': x.fillStyle='#e07a5f'; x.beginPath(); x.moveTo(28,60); x.lineTo(64,28); x.lineTo(100,60); x.fill(); x.fillStyle='#f6d2b4'; x.fillRect(38,58,52,32); x.fillStyle='#ff5d8f'; heartPath(x,64,72,10); break;
     case 'paw': x.fillStyle='rgba(110,78,56,.8)'; x.beginPath(); x.ellipse(64,82,24,20,0,0,7); x.fill(); [[32,52],[50,32],[78,32],[96,52]].forEach(([a,b])=>{x.beginPath();x.ellipse(a,b,10,13,0,0,7);x.fill();}); break;
@@ -643,6 +646,7 @@ function shelterOf(p){ return items.find(i=>i.kind==='shelter'&&Math.abs(p.x-i.p
 function decide(c){
   const s=c.s, p=c.g.position;
   if(c.age<0.7&&c.mother){ const mum=W.cats.find(m=>m.id===c.mother&&m.away<=0&&!m.outside&&!m.leaving); if(mum&&Math.random()<0.5){ const mp=mum.g.position; goTo(c,mp.x+rand(-0.7,0.7),mp.z+rand(-0.7,0.7),null); return; } }
+  if((W.night||0)>0.6&&c.age>0.2&&Math.random()<0.35&&!weather.raining){ const b=pick(items.filter(i=>i.kind==='bed'&&!i.occupant)); if(b){ goTo(c,b.pos.x,b.pos.z,'bed',b); return; } setState(c,'sleep',rand(10,18)); return; }
   if(weather.raining){ const sh=nearest(items.filter(i=>i.kind==='shelter'),c); if(sh){ if(!shelterOf(p)){ goTo(c,sh.pos.x+rand(-.75,.75),sh.pos.z+rand(-.75,.75),'shelter',sh); c.run=true; return; } setState(c,'shelter',rand(4,8)); return; } }
   if(s.full<58){ const b=nearest(items.filter(i=>i.kind==='bowl'&&i.portions>0),c); if(b){ const [x,z]=approach(c,b,0.74); goTo(c,x,z,'eat',b); return; } if(Math.random()<0.5)showIcon(c,'hungry',2.5); }
   if(c.litterNeed>rand(70,100)){ const L=nearest(items.filter(i=>i.kind==='litter'&&i.dirt<i.cap-0.5&&!i.occupant),c); if(L){ goTo(c,L.pos.x,L.pos.z,'litter',L); return; } c.litterNeed=45; showIcon(c,'smell',3); }
@@ -1097,7 +1101,7 @@ function updateWeather(dt){
     for(const c of active())if(['idle','walk','watch','sleep','stalkBird'].includes(c.state)&&!c.useItem&&!c.carried&&!c.leaving&&!c.outside)setState(c,'idle',0); }
   if(weather.raining){ weather.rainT-=dt; if(weather.rainT<=0){ weather.raining=false; weather.t=rand(180,260); weather.bowT=16; rainbow.visible=true; } }
   weather.k=lerp(weather.k,weather.raining?1:0,Math.min(1,dt*0.6));
-  scene.background.copy(SKY).lerp(SKY_RAIN,weather.k); scene.fog.color.copy(scene.background); sun.intensity=0.75-0.35*weather.k; rain.material.opacity=0.55*weather.k;
+  applySky(dt); rain.material.opacity=0.55*weather.k;
   if(rain.visible){ for(let i=0;i<RN;i++){ const o=i*6; rainPos[o+1]-=14*dt; rainPos[o+4]-=14*dt; if(rainPos[o+1]<0){ rainPos[o+1]+=14; rainPos[o+4]+=14; } }
     const sh=items.filter(i=>i.kind==='shelter'); if(sh.length)for(let i=0;i<RN;i++){ const o=i*6; for(const s of sh){ if(Math.abs(rainPos[o]-s.pos.x)<1.4&&Math.abs(rainPos[o+2]-s.pos.z)<1.4&&rainPos[o+1]<2){ rainPos[o+1]+=12; rainPos[o+4]+=12; } } }
     rainGeo.attributes.position.needsUpdate=true; if(weather.k<0.02&&!weather.raining)rain.visible=false; }
@@ -1363,6 +1367,8 @@ function openBadges(tab='badges'){
   document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>openBadges(b.dataset.tab)); }
 $('#bShop').onclick=()=>openShop(); $('#bBadges').onclick=()=>openBadges(); $('#bSnap').onclick=snapshot;
 $('#bMusic').onclick=()=>{ Snd.toggleMusic(); $('#bMusic').classList.toggle('off',!Snd.musicOn); };
+$('#bDay').onclick=()=>{ W.dayOn=!W.dayOn; store.set('wm_daynight',W.dayOn); $('#bDay').classList.toggle('off',!W.dayOn); toast(W.dayOn?'Day & night: on':'Always daytime'); };
+$('#bDay').classList.toggle('off',!W.dayOn);
 (()=>{ const st=document.createElement('style'); st.textContent='.help details{border:2px solid var(--line);border-radius:14px;padding:8px 12px;margin-bottom:6px}.help summary{font:600 17px var(--display);cursor:pointer;min-height:32px;display:flex;align-items:center;gap:8px}.help summary svg{width:20px;height:20px}.help p,.help li{font:600 14px/1.45 var(--body);margin:6px 0}.help ul{padding-left:18px;margin:4px 0}.help b{color:var(--ink)}.help .hrow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0 12px;font:700 14px var(--body);color:var(--muted)}.help .hrow button{min-height:40px;padding:0 16px;border-radius:999px;background:#f3e7d6;font:600 15px var(--display)}'; document.head.appendChild(st); })();
 function openHelp(){
   const sec=(title,body,open)=>`<details${open?' open':''}><summary>${title}</summary>${body}</details>`;
@@ -1379,7 +1385,7 @@ function openHelp(){
   ${sec('Adoption',`<ul><li>A cat is <b>ready for a home</b> after settling in (about 2½ minutes) with Trust 50+ and Health 55+. Looks and ribbons don't matter.</li><li>Families drive up and say what they'd love (a calm cat, a playful cat...). Tap <b>Pick a cat</b>, then a cat with a little house. A good personality match goes home; best friends go together.</li><li>No money changes hands. Postcards arrive later; see them in Badges → Happy Tails.</li><li>Tap <b>Stay</b> on a cat to keep it forever. Tap × to send a family off.</li></ul>`)}
   ${sec('Runaways',`<p>A cat with very low trust may slip out the gate. Catch it before the "missing" notice for the <b>Quick Paws</b> badge, or press <b>Go look</b>, follow the paw prints and listen: meows get louder as you get closer. Tap it to bring it home (trust goes up).</p>`)}
   ${sec('Stars, shop & badges',`<ul><li>Sanctuary stars (1-5) come from homes found, rescues, ribbons and happiness. Stars unlock bigger meadows and item upgrades (cat castle, fountain, sunroom...).</li><li>At 5 stars the sanctuary keeps growing: new wings with ponds open as you find more cats homes (3, 6, 10, 16 homes).</li><li>Badges have bronze, silver and gold, and pay $10 / $25 / $60. Gold badges unlock special collars (rainbow, starry, blossom). Three small goals per visit pay $15 each (Badges → Goals).</li><li>Collars and premium food are in the shop.</li><li>Progress saves automatically on this device.</li></ul>`)}
-  ${sec('Controls',`<ul><li>Drag the grass to move around; pinch or mouse wheel to zoom; right-drag to rotate (desktop).</li><li>Tap the cat counter (top left) to jump between cats.</li><li>Keys 1-4 pick tools on desktop.</li></ul>`)}
+  ${sec('Controls',`<ul><li>Drag the grass to move around; pinch or mouse wheel to zoom; right-drag to rotate (desktop).</li><li>Tap the cat counter (top left) to jump between cats.</li><li>Keys 1-4 pick tools on desktop.</li><li>The moon button turns the day &amp; night cycle on or off. At night cats get sleepy and fireflies come out.</li></ul>`)}
   </div>`);
   $('#hTog').onclick=()=>{ W.hints=!W.hints; store.set('wm_hints',W.hints); $('#hTog').textContent=W.hints?'On':'Off'; if(!W.hints)hideHint(); };
 }
@@ -1556,7 +1562,8 @@ function outsideDecor(grp,h){ const BB=bnd(), X0=BB.x0, X1=BB.x1, Z1=BB.z1;
   for(let x=-44;x<44;x+=2.4)grp.add(mesh(G.box,0xf6d34a,{p:[x,0.026,rz],s:[1.2,0.01,0.1],cast:false}));
   grp.add(mesh(G.box,0xe0cfa8,{p:[-3.6,0.011,(rz+1.2+(-h-2.6))/2],s:[1.3,0.02,Math.abs(rz+1.2-(-h-2.6))],cast:false,recv:true}));
   grp.add(mesh(G.box,0xe0cfa8,{p:[-1.8,0.011,-h-2.2],s:[3.6,0.02,1.1],cast:false,recv:true}));
-  for(const x of [-14,-8,8,15,22,-22]){ const lp=new THREE.Group(); lp.position.set(x,0,rz-1.6); lp.add(mesh(G.cyl,0x4a4f55,{p:[0,1.1,0],s:[0.05,2.2,0.05]})); lp.add(mesh(G.sph,0xfff3c4,{p:[0,2.25,0],s:[0.16,0.12,0.16],cast:false})); grp.add(lp); }
+  for(const x of [-14,-8,8,15,22,-22]){ const lp=new THREE.Group(); lp.position.set(x,0,rz-1.6); lp.add(mesh(G.cyl,0x4a4f55,{p:[0,1.1,0],s:[0.05,2.2,0.05]})); lp.add(mesh(G.sph,0xfff3c4,{p:[0,2.25,0],s:[0.16,0.12,0.16],cast:false})); grp.add(lp); addGlow(grp,x,2.2,rz-1.6,1.6); }
+  for(const sx of [-1.05,1.05])addGlow(grp,sx,1.25,-h-4.4+1.32,1.1);
   const sg=new THREE.Group(); sg.position.set(-5.2,0,rz+1.7); sg.add(mesh(G.cyl,0x8a5a3b,{p:[0,0.5,0],s:[0.05,1,0.05]})); sg.add(mesh(G.box,0xff7aa2,{p:[0,1.05,0.03],s:[0.7,0.32,0.05]})); grp.add(sg);
   // farther props: crates, wheelbarrow, big tree with a tire swing, bushes behind the meadow
   const cr=new THREE.Group(); cr.position.set(X1+6,0,-h-6); grp.add(cr); cr.add(mesh(G.box,0xc99a6b,{p:[0,0.3,0],s:[0.6,0.6,0.6]})); cr.add(mesh(G.box,0xb58b63,{p:[0.65,0.25,0.1],s:[0.5,0.5,0.5],r:[0,0.3,0]})); cr.add(mesh(G.box,0xd9b48a,{p:[0.2,0.82,0],s:[0.45,0.45,0.45],r:[0,0.6,0]}));
@@ -1732,6 +1739,27 @@ function openCollars(){ const g=golds();
   document.querySelectorAll('[data-col]').forEach(b=>b.onclick=()=>pickC(+b.dataset.col,15));
   document.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>pickC(b.dataset.sp,30)); }
 
+/* ================= day & night, fireflies ================= */
+const DAYLEN=420, NIGHT=new THREE.Color(0x1c2850), DUSK=new THREE.Color(0xf7a98a), SUNC=new THREE.Color(0xfff0d0), MOONC=new THREE.Color(0x9fb4ff);
+let dayT=40;
+function addGlow(grp,x,y,z,s){ const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:iconTexture('glowY'),transparent:true,depthWrite:false,opacity:0,blending:THREE.AdditiveBlending})); sp.position.set(x,y,z); sp.scale.set(s,s,s); grp.add(sp); (W.glows=W.glows||[]).push(sp); }
+const stars=(()=>{ const n=350, pos=new Float32Array(n*3); for(let i=0;i<n;i++){ const a=rand(0,6.28), e=rand(0.15,1.4), R=170; pos[i*3]=Math.cos(a)*Math.cos(e)*R; pos[i*3+1]=Math.sin(e)*R; pos[i*3+2]=Math.sin(a)*Math.cos(e)*R; }
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3)); const p=new THREE.Points(g,new THREE.PointsMaterial({color:0xffffff,size:2,sizeAttenuation:false,transparent:true,opacity:0,fog:false,depthWrite:false})); p.frustumCulled=false; scene.add(p); return p; })();
+function applySky(dt){ if(W.dayOn)dayT=(dayT+dt)%DAYLEN; const ph=W.dayOn?dayT/DAYLEN:0.25, el=Math.sin(ph*Math.PI*2)+0.5;
+  const n=W.dayOn?clamp((0.15-el)/0.5,0,1):0, dusk=W.dayOn?clamp(1-Math.abs(el-0.2)/0.3,0,1)*(1-n):0; W.night=n;
+  const sky=SKY.clone().lerp(DUSK,dusk*0.55).lerp(NIGHT,n), rainy=SKY_RAIN.clone().lerp(NIGHT,n*0.9);
+  scene.background.copy(sky).lerp(rainy,weather.k); scene.fog.color.copy(scene.background);
+  sun.intensity=(0.75-0.35*weather.k)*(1-0.72*n); sun.color.copy(SUNC).lerp(DUSK,dusk*0.6).lerp(MOONC,n);
+  const a=ph*Math.PI*2; sun.position.set(Math.cos(a)*12,9+Math.max(0,Math.sin(a))*8,7);
+  hemi.intensity=0.55*(1-0.5*n); hemi.color.set(0xfffdf5).lerp(MOONC,n*0.7);
+  stars.material.opacity=n*(1-weather.k); for(const g of (W.glows||[]))g.material.opacity=n*0.9; }
+const flies=[]; for(let i=0;i<46;i++){ const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:iconTexture('fly'),transparent:true,depthWrite:false,opacity:0,blending:THREE.AdditiveBlending})); sp.scale.set(0.22,0.22,0.22); sp.visible=false; scene.add(sp); flies.push({sp,ph:rand(0,6.28),k:rand(0.5,1.2),home:new V3(),placed:false}); }
+function updateFireflies(dt,t){ const n=W.night||0;
+  for(const f of flies){ if(n<0.05){ f.sp.visible=false; f.placed=false; continue; }
+    if(!f.placed){ const q=Math.random()<0.75?rIn(-1):outPt(rand(0.5,5)); f.home.set(q.x,rand(0.3,1.6),q.z); f.placed=true; } f.sp.visible=true;
+    const p=f.sp.position; p.x=f.home.x+Math.sin(t*0.35*f.k+f.ph)*1.2; p.z=f.home.z+Math.cos(t*0.27*f.k+f.ph*1.3)*1.2; p.y=f.home.y+Math.sin(t*0.9*f.k+f.ph)*0.35;
+    const b=Math.max(0,Math.sin(t*1.7*f.k+f.ph*2)); f.sp.material.opacity=n*(0.25+0.75*b*b); } }
+
 /* ================= LOOP ================= */
 let bondT=0, famT=0, slowT=0, birdT=8;
 function update(dt){
@@ -1766,7 +1794,7 @@ function frame(now){
   if(W.started&&!W.paused)update(dt); else if(W.paused){ Snd.purr(0); hintEl.hidden=true; }
   updateTag(dt);
   for(const c of W.cats)animateCat(c,W.paused?dt*0.6:dt,t);
-  updateWand(dt,t); updateLaser(t); updateFamilyMeshes(dt,t); updateButterflies(dt,t); if(!W.paused)updateBirds(dt,t); updateFx(dt);
+  updateWand(dt,t); updateLaser(t); updateFamilyMeshes(dt,t); updateFireflies(dt,t); updateButterflies(dt,t); if(!W.paused)updateBirds(dt,t); updateFx(dt);
   for(const cl of clouds){ cl.position.x+=dt*0.4; if(cl.position.x>110)cl.position.x=-110; }
   if(!W.started)cam.theta+=dt*0.05;
   updateCamera(dt); renderer.render(scene,camera);
@@ -1796,6 +1824,6 @@ function begin(){ Snd.init(); $('#start').hidden=true; W.started=true; cam.theta
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); }catch(e){} begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={W,items,cam,cars,startRomp,setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>

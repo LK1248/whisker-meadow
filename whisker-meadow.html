@@ -528,6 +528,15 @@ function spawnFx(kind,pos,n=1,spread=.25,size){ for(let i=0;i<n;i++){ const sp=n
 function updateFx(dt){ for(let i=parts.length-1;i>=0;i--){ const p=parts[i]; p.life-=dt; p.sp.position.y+=p.vy*dt; p.sp.position.x+=p.vx*dt; p.sp.material.opacity=clamp(p.life/p.max*1.5,0,1);
   if(p.life<=0){ scene.remove(p.sp); p.sp.material.dispose(); parts.splice(i,1); } } }
 const pv=new V3();
+function catScreenH(c){ const p=c.g.position, a=toScreen(p.clone().setY(0)), b=toScreen(p.clone().setY(0.9*c.g.scale.y)); return a.ok&&b.ok?Math.abs(a.y-b.y):999; }
+function lessonOn(){ return !!(intro.c||bt.c||pl.a); }
+function focusClose(c){ if(!cam.close)cam.close={want:cam.want}; cam.close.c=c; cam.close.idle=0; cam.want=Math.min(cam.want,3.8); cam.focus=c; cam.focusT=0.3; tagFor(c,4); Snd.chirp(); }
+function leaveClose(restore){ const k=cam.close; if(!k)return; cam.close=null; if(cam.focus===k.c)cam.focus=null; if(restore)cam.want=Math.max(cam.want,k.want); }
+function updateClose(dt){ const k=cam.close; if(!k)return; const c=k.c;
+  if(lessonOn()||cam.meet||!W.cats.includes(c)||c.away>0||c.outside||c.leaving){ leaveClose(false); return; }
+  if(P.mode==='pinch'||(P.mode==='pan'&&P.moved)){ leaveClose(false); return; }
+  const busy=P.cat===c&&P.mode&&P.mode!=='none'||S.cat===c||tag.c===c&&W.time-c.lastStroke<2; k.idle=busy?0:k.idle+dt;
+  if(k.idle>8){ leaveClose(true); return; } if(!c.carried){ cam.focus=c; cam.focusT=0.3; } }
 function toScreen(v){ pv.copy(v).project(camera); return {x:(pv.x+1)/2*innerWidth,y:(1-pv.y)/2*innerHeight,ok:pv.z<1}; }
 function floatAt(x,y,text,cls=''){ const d=document.createElement('div'); d.className='float '+cls; d.textContent=text; d.style.left=x+'px'; d.style.top=y+'px'; document.body.appendChild(d); setTimeout(()=>d.remove(),1450); }
 function floatWorld(v,text){ const s=toScreen(v); if(s.ok)floatAt(s.x,s.y,text); }
@@ -1267,10 +1276,10 @@ function endPointer(e){
   P.pointers.delete(e.pointerId); P.down=P.pointers.size>0; $('#ring').hidden=true;
   if(P.mode==='pinch'){ if(P.pointers.size===0)P.mode=null; handVis(); return; }
   if(P.mode==='stroke')finishStroke();
-  if(P.mode==='catPending'&&!P.moved){ const c=P.cat; if(c.state==='hiding')foundCat(c); else if(W.runaway&&W.runaway.c===c&&!W.runaway.notified&&c.pathEnd==='hide')caughtEarly(c); else if(W.collarPick){ setCollar(c,W.collarPick); W.collarPick=null; tagFor(c,3); spawnFx('spark',c.g.position.clone().setY(.8),5,.3); Snd.chime(); floatWorld(c.g.position.clone().setY(1.3),'Looking sharp!'); } else if(W.pickHome)pickForHome(c); else if(P.zone==='rump'&&!(c.blinkBackT>0))buttTap(c); else { tagFor(c,5); if(c.blinkBackT>0)blinkBack(c); else Snd.meow(rand(1.05,1.3),0.25); } }
+  if(P.mode==='catPending'&&!P.moved){ const c=P.cat; if(c.state==='hiding')foundCat(c); else if(W.runaway&&W.runaway.c===c&&!W.runaway.notified&&c.pathEnd==='hide')caughtEarly(c); else if(W.collarPick){ setCollar(c,W.collarPick); W.collarPick=null; tagFor(c,3); spawnFx('spark',c.g.position.clone().setY(.8),5,.3); Snd.chime(); floatWorld(c.g.position.clone().setY(1.3),'Looking sharp!'); } else if(W.pickHome)pickForHome(c); else if(!lessonOn()&&!(c.blinkBackT>0)&&(!cam.close||cam.close.c!==c)&&catScreenH(c)<75)focusClose(c); else if(P.zone==='rump'&&!(c.blinkBackT>0))buttTap(c); else { tagFor(c,5); if(c.blinkBackT>0)blinkBack(c); else Snd.meow(rand(1.05,1.3),0.25); } }
   else if(P.mode==='carry')dropCat(P.cat);
   else if(P.mode==='item'&&!P.moved)useItem(P.item);
-  else if(P.mode==='pan'&&!P.moved){ if(W.collarPick){ const pr=W.collarPrice||15; W.money+=pr; W.collarPick=null; hud(); toast(`Collar returned: $${pr} back`); } else if(!tapWildlife(e))tag.c=null; }
+  else if(P.mode==='pan'&&!P.moved){ if(W.collarPick){ const pr=W.collarPrice||15; W.money+=pr; W.collarPick=null; hud(); toast(`Collar returned: $${pr} back`); } else if(!tapWildlife(e)){ tag.c=null; leaveClose(true); } }
   else if(P.mode==='wand')wandUp(e);
   S.cat=null; P.mode=null; handVis();
 }
@@ -1789,7 +1798,7 @@ function saveGame(){ if(!W.started)return; try{
   try{ localStorage.setItem(SAVE,JSON.stringify(data)); }catch(e){ data.homes=data.homes.map((hm,i)=>i<data.homes.length-6?Object.assign({},hm,{img:null}):hm); localStorage.setItem(SAVE,JSON.stringify(data)); } }catch(e){} }
 function loadGame(d){
   for(const c of W.cats)scene.remove(c.g); W.cats=[]; for(const it of items)scene.remove(it.mesh); items.length=0; for(const hp of helpers)scene.remove(hp.g); helpers.length=0; used.clear();
-  Object.assign(W,d.W); W.stat=Object.assign({},STAT0,d.W.stat||{}); W.homes=d.homes||[]; W.tier=Object.assign({tree:1,bed:1,ball:1,bowl:1,litter:1,shelter:1,wand:1,laser:1},d.W.tier||{});
+  Object.assign(W,d.W); W.stat=Object.assign({},STAT0,d.W.stat||{}); if(!['hand','brush','wand','laser'].includes(W.tool))W.tool='hand'; W.homes=d.homes||[]; W.tier=Object.assign({tree:1,bed:1,ball:1,bowl:1,litter:1,shelter:1,wand:1,laser:1},d.W.tier||{});
   buildEnclosure(); buildDecor(); cam.want=cam.dist=LV().zoom;
   for(const i of d.items){ const it=addItem(i.kind,new V3(i.x,0,i.z)); if(i.portions!=null){ it.portions=i.portions; it.prem=Math.min(i.prem||0,i.portions); updateBowl(it); } if(i.dirt!=null){ it.dirt=i.dirt; updateLitter(it); } }
   for(const s of d.cats){ const c=makeCat({loading:true,name:s.name,sex:s.sex,coat:s.coat,age:s.age,parents:s.parents,mother:s.mother,s:s.s,trait:s.trait,fixed:s.fixed,origin:s.origin,buttLike:s.buttLike,x:s.x,z:s.z});
@@ -1899,6 +1908,7 @@ function update(dt){
   if(P.mode==='catPending'&&!P.moved&&W.tool==='hand'){ const e=performance.now()-P.t0, r=$('#ring');
     if(e>130){ r.hidden=false; r.style.transform=`translate(${P.hx}px,${P.hy}px)`; r.style.setProperty('--p',clamp((e-130)/320,0,1)); }
     if(e>450)startCarry(P.cat); }
+  updateClose(dt);
   if(P.mode==='stroke'&&S.cat&&S.len>=40&&performance.now()-S.last>260){ const c=S.cat; finishStroke(); beginStroke(c,performance.now()); }
   updateBeat();
   for(const c of W.cats){ const p=c.g.position; if(!isFinite(p.x)||!isFinite(p.y)||!isFinite(p.z)||!isFinite(c.heading)){ p.set(0,0,0); c.heading=0; c.speed=0; c.jump=0; c.hopT=0; c.lunge=0; c.target.set(0,0,0); if(!c.carried&&!c.outside)setState(c,'idle',1); } updateCat(c,dt); }
@@ -1956,7 +1966,7 @@ if(hasSave){ $('#bPlay').textContent='Continue'; $('#bNew').hidden=false; }
 const intro={c:null,t:0,g0:0};
 const PIP='<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/></svg>';
 function startIntro(){ if(bt.c||pl.a)return; const c=W.cats.find(k=>k.name==='Mochi'&&k.away<=0&&!k.outside)||active().slice().sort((a,b)=>b.s.trust-a.s.trust)[0]; if(!c)return;
-  Object.assign(intro,{c,t:0,g0:W.stat.good,want:cam.want}); if(c.state==='idle'||c.state==='walk'){ setState(c,'idle',3); c.heading=cam.theta+Math.PI/2; } cam.want=3.5; hintDone.add('pet'); hideHint(); if(W.tool!=='pet')setTool('pet');
+  Object.assign(intro,{c,t:0,g0:W.stat.good,want:cam.want}); if(c.state==='idle'||c.state==='walk'){ setState(c,'idle',3); c.heading=cam.theta+Math.PI/2; } cam.want=3.5; hintDone.add('pet'); hideHint(); if(W.tool!=='hand')setTool('hand');
   document.body.classList.add('intro'); for(const id of ['#intro','#ghost','#pips','#introSkip'])$(id).hidden=false; $('#intro').classList.remove('off');
   $('#ghost').innerHTML=`<svg viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`; $('#pips').innerHTML=PIP+PIP+PIP; }
 function endIntro(){ const c=intro.c; if(!c)return; intro.c=null; cam.want=Math.max(intro.want||0,LV().zoom*0.75); document.body.classList.remove('intro');
@@ -1975,7 +1985,7 @@ $('#introSkip').onclick=()=>{ if(pl.a){ endPairTut(false); return; } if(bt.c){ b
 // first slow blink: spotlight the face, the cat looks right at you and blinks very slowly; "closed eyes = love"; a faint hand boops the nose
 const bt={c:null,t:0,n0:0,lastB:-9};
 const BLINK_EQ='<div class="eq"><svg viewBox="0 0 150 46"><g fill="none" stroke="#4a3426" stroke-width="5" stroke-linecap="round"><path d="M10 20q12 12 24 0"/><path d="M44 20q12 12 24 0"/><path d="M80 17h14M80 27h14"/></g><path d="M122 40s-17-10.5-17-22a9 9 0 0 1 17-5 9 9 0 0 1 17 5c0 11.5-17 22-17 22z" fill="#ff6f99"/></svg></div>';
-function startBlinkTut(c){ if(bt.c||intro.c||pl.a)return; Object.assign(bt,{c,t:0,n0:W.stat.blinkBack,lastB:-9,want:cam.want}); cam.want=3.3; hideHint(); hintDone.add('blink'); tag.c=null; if(W.tool!=='pet')setTool('pet');
+function startBlinkTut(c){ if(bt.c||intro.c||pl.a)return; Object.assign(bt,{c,t:0,n0:W.stat.blinkBack,lastB:-9,want:cam.want}); cam.want=3.3; hideHint(); hintDone.add('blink'); tag.c=null; if(W.tool!=='hand')setTool('hand');
   document.body.classList.add('intro'); for(const id of ['#intro','#ghost','#pips','#introSkip'])$(id).hidden=false; $('#intro').classList.remove('off');
   const gh=$('#ghost'); gh.innerHTML=`<svg viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`; gh.classList.add('tap'); $('#pips').innerHTML=BLINK_EQ; }
 function endBlinkTut(ok){ const c=bt.c; if(!c)return; bt.c=null; cam.want=Math.max(bt.want||0,LV().zoom*0.75); document.body.classList.remove('intro');
@@ -2007,7 +2017,7 @@ function startPairTut(){ const ok=c=>!c.carried&&!c.outside&&!c.leaving&&c.away<
   const b=cs.slice(1).sort((x,y)=>dist2(x.g.position,a.g.position)-dist2(y.g.position,a.g.position))[0];
   // keep them apart enough that a carry is needed
   if(dist2(a.g.position,b.g.position)<4){ const p=b.g.position, d=new V3(p.x-a.g.position.x,0,p.z-a.g.position.z).normalize(); goTo(b,p.x+(d.x||1)*2,p.z+d.z*2,null); }
-  Object.assign(pl,{a,b,t:0,stage:'carry',want:cam.want,romp:false,lastDrop:W.stat.drops}); cam.want=Math.max(5.5,cam.want*0.8); hideHint(); hintDone.add('carry'); tag.c=null; if(W.tool!=='pet')setTool('pet');
+  Object.assign(pl,{a,b,t:0,stage:'carry',want:cam.want,romp:false,lastDrop:W.stat.drops}); cam.want=Math.max(5.5,cam.want*0.8); hideHint(); hintDone.add('carry'); tag.c=null; if(W.tool!=='hand')setTool('hand');
   document.body.classList.add('intro'); for(const id of ['#intro','#ghost','#pips','#introSkip'])$(id).hidden=false; $('#intro').classList.remove('off');
   const gh=$('#ghost'); gh.innerHTML=`<svg viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`; gh.classList.remove('tap'); $('#pips').innerHTML=PAIR_EQ; return true; }
 function endPairTut(ok){ const {a,b}=pl; if(!a)return; pl.a=null; pl.done=true; W.stat.pairDone=1; cam.want=Math.max(pl.want||0,LV().zoom*0.75); document.body.classList.remove('intro');
@@ -2063,6 +2073,6 @@ function begin(){ Snd.init(); $('#start').hidden=true; W.started=true; cam.theta
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); }catch(e){} begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={animateCat,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={animateCat,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>

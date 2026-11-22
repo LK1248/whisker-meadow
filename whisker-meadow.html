@@ -182,7 +182,7 @@ button:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
   <button class="hbtn pill primary" id="bShop" aria-label="Shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 9h16l-1.5 11h-13z" fill="currentColor" fill-opacity=".25"/><path d="M8 9V7a4 4 0 0 1 8 0v2"/></svg><span class="lbl">Shop</span></button>
   <button class="hbtn pill" id="bBadges" aria-label="Badges"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17l-5.9 3.3 1.3-6.5L2.5 9.3l6.6-.8z" fill="#f6c443" stroke="#d99a1e" stroke-width="1.5" stroke-linejoin="round"/></svg><span class="lbl">Badges</span></button>
   <button class="hbtn pill" id="bSnap" aria-label="Snapshot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6.5" width="18" height="13" rx="3"/><circle cx="12" cy="13" r="3.6"/><path d="M8.5 6.5l1.5-2.5h4l1.5 2.5"/></svg><span class="lbl">Snapshot</span></button>
-  <button class="hbtn pill icon" id="bHints" title="Hints on/off" aria-label="Hints on/off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.4a2.8 2.8 0 1 1 3.8 2.6c-.8.4-1.1.9-1.1 1.8"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg></button>
+  <button class="hbtn pill icon" id="bHints" title="How to play" aria-label="How to play"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.4a2.8 2.8 0 1 1 3.8 2.6c-.8.4-1.1.9-1.1 1.8"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg></button>
   <button class="hbtn pill icon" id="bMusic" title="Music on/off" aria-label="Music on/off"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 17.5V6l11-2v11.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="3"/><circle cx="17.5" cy="15.5" r="3"/></svg></button>
 </div>
 
@@ -611,6 +611,7 @@ function decide(c){
     const bf=butterflies.find(b=>dist2(b.g.position,p)<4); if(bf){ c.watch=bf; setState(c,'watch',rand(5,8)); return; } }
   if(r<0.37){ const t=pick(items.filter(i=>i.kind==='tree'&&freeSpot(i)>=0)); if(t){ const [x,z]=approach(c,t,0.5); goTo(c,x,z,'perch',t); return; } }
   if(r<0.43&&s.aff>35&&s.fun>30&&c.age>0.3){ setState(c,'flop',rand(6,11)); return; }
+  if(r<0.47&&c.age>0.25){ setState(c,'groom',rand(4,7)); c.groomKind=pick(['paw','paw','flank','tail','behind']); return; }
   if(r<0.52&&W.time>45){ const b=pick(items.filter(i=>i.kind==='bed'&&!i.occupant)); if(b&&Math.random()<0.8){ goTo(c,b.pos.x,b.pos.z,'bed',b); return; } setState(c,'sleep',rand(8,14)); return; }
   if(r<0.8){ const [fr,v]=bestFriend(c); if(fr&&v>25&&fr.away<=0&&Math.random()<0.45){ const fp=fr.g.position; goTo(c,fp.x+rand(-1,1),fp.z+rand(-1,1),null); return; }
     const h=LV().half-0.6; goTo(c,clamp(p.x+rand(-3,3),-h,h),clamp(p.z+rand(-3,3),-h,h),null); return; }
@@ -713,6 +714,7 @@ function updateCat(c,dt){
     case 'path': { const wp=c.path&&c.path[0]; if(!wp){ pathDone(c); break; } c.target.copy(wp); if(moveToward(c,dt,c.pathSpeed||1,0.2)){ c.path.shift(); if(!c.path.length)pathDone(c); } break; }
     case 'hiding': c.hideT=(c.hideT||0)-dt; if(c.hideT<=0){ c.hideT=rand(5,8); showIcon(c,'sniff',2); Snd.meow(1.25,0.35); } break;
     case 'greet': case 'bye': break;
+    case 'groom': if(s.full>=60&&s.fun>=45)s.groom=Math.min(100,s.groom+dt*0.7); if(c.stT<=0){ if(c.groomKind==='paw'&&Math.random()<0.4){ c.groomKind=pick(['flank','tail']); c.stT=rand(3,5); } else setState(c,'idle',rand(2,4)); } break;
     case 'boop': { const o=c.boopP; if(!o||o.state!=='boop'||o.away>0){ setState(c,'idle',1.5); break; } const op=o.g.position,p=c.g.position, d=dist2(p,op), want=(c.boopKind==='lick'?1.32:1.56)*(c.g.scale.x+o.g.scale.x)/2;
       c.heading=angLerp(c.heading,Math.atan2(op.x-p.x,op.z-p.z),dt*6); if(d>want){ c.speed=lerp(c.speed,0.5,Math.min(1,dt*4)); p.x+=Math.sin(c.heading)*c.speed*dt; p.z+=Math.cos(c.heading)*c.speed*dt; }
       else if(d<want-0.04){ const bx=p.x-op.x, bz=p.z-op.z, n=Math.hypot(bx,bz)||1, ux=n>0.01?bx/n:Math.sin(c.heading+Math.PI), uz=n>0.01?bz/n:Math.cos(c.heading+Math.PI); p.x+=ux*0.8*dt; p.z+=uz*0.8*dt; c.speed=0.2; c.stT=Math.max(c.stT,1.5); }
@@ -799,6 +801,11 @@ function animateCat(c,dt,t){
   else if(st==='pet'){ hz=Math.sin(t*2.2)*0.18; hy=purring?Math.sin(t*2.6)*0.3:0; rz=Math.sin(t*1.6)*0.08; hx=-0.15; tailUp=0.95; swish=0.06; eye=purring?0.42:1; legA=[0,0,0,0]; if(c.lean>0){ c.lean-=dt; hx-=0.25*c.lean; rz+=0.12*c.lean; } if(c.purr>0.6){ legA=[Math.max(0,Math.sin(t*5))*-0.35,Math.max(0,-Math.sin(t*5))*-0.35,0,0]; } }
   else if(st==='eat'){ hx=0.6; rx=0.12; coreY=0.43; legA=[0,0,0,0]; }
   else if(st==='greet'||st==='bye'){ rx=-0.45; coreY=0.44; legA=[0.45,0.45,-1.0,-1.0]; tailUp=0.7; swish=0.1; }
+  else if(st==='groom'){ const lick=Math.sin(t*9)*0.12, gk=c.groomKind; eye=0.3; swish=0.05;
+    if(gk==='paw'){ rx=-0.45; coreY=0.44; legA=[-1.35+Math.sin(t*3)*0.15,0.45,-1.0,-1.0]; hx=0.38+lick; hz=-0.25; hy=0.25; tailUp=-0.2; }
+    else if(gk==='flank'){ rx=-0.4; coreY=0.43; legA=[0.4,0.4,-1.0,-1.0]; hx=0.45+lick; hy=1.35; hz=0.2; tailUp=-0.4; }
+    else if(gk==='tail'){ coreY=0.3; legA=[1.3,1.3,-1.3,-1.3]; hx=0.55+lick; hy=0.95; tailUp=-1.1; swish=0.02; }
+    else { rx=-0.6; coreY=0.4; legA=[0.35,0.35,-2.3+Math.sin(t*2)*0.1,-1.0]; hx=0.75+lick; hy=1.25; hz=0.25; tailUp=-0.9; } }
   else if(st==='boop'&&!moving){ legA=[0,0,0,0]; tailUp=1.0; swish=0.05; if(c.licker){ hx=0.15+Math.sin(t*9)*0.18; hz=Math.sin(t*4.5)*0.2; eye=0.5; } else { eye=c.boopKind==='lick'?0.15:0.45; hx=c.boopKind==='lick'?0.25:-0.05; hz=c.boopKind==='lick'?-0.25:0; } }
   else if(st==='litter'){ rx=-0.35; coreY=0.42; legA=[0.35,0.35,-1,-1]; baseY=0.2; tailUp=0.2; }
   else if(st==='perch'){ coreY=0.3; hx=0.15; legA=[1.3,1.3,-1.3,-1.3]; baseY=c.perchY||1.15; tailUp=-1.2; swish=0.25; }
@@ -1285,7 +1292,27 @@ function openBadges(tab='badges'){
   document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>openBadges(b.dataset.tab)); }
 $('#bShop').onclick=()=>openShop(); $('#bBadges').onclick=()=>openBadges(); $('#bSnap').onclick=snapshot;
 $('#bMusic').onclick=()=>{ Snd.toggleMusic(); $('#bMusic').classList.toggle('off',!Snd.musicOn); };
-$('#bHints').onclick=()=>{ W.hints=!W.hints; store.set('wm_hints',W.hints); $('#bHints').classList.toggle('off',!W.hints); if(!W.hints)hideHint(); };
+(()=>{ const st=document.createElement('style'); st.textContent='.help details{border:2px solid var(--line);border-radius:14px;padding:8px 12px;margin-bottom:6px}.help summary{font:600 17px var(--display);cursor:pointer;min-height:32px;display:flex;align-items:center;gap:8px}.help summary svg{width:20px;height:20px}.help p,.help li{font:600 14px/1.45 var(--body);margin:6px 0}.help ul{padding-left:18px;margin:4px 0}.help b{color:var(--ink)}.help .hrow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0 12px;font:700 14px var(--body);color:var(--muted)}.help .hrow button{min-height:40px;padding:0 16px;border-radius:999px;background:#f3e7d6;font:600 15px var(--display)}'; document.head.appendChild(st); })();
+function openHelp(){
+  const sec=(title,body,open)=>`<details${open?' open':''}><summary>${title}</summary>${body}</details>`;
+  openModal(`<h3>How to play</h3><div class="help">
+  <div class="hrow"><span>Pointing hints</span><button id="hTog">${W.hints?'On':'Off'}</button></div>
+  ${sec('The goal',`<p>You run a cat sanctuary. Shy rescue cats arrive; you earn their trust, keep them healthy and happy, and help them find loving homes. There is no losing: cats never get hurt, they just get grumpy when ignored.</p>`,true)}
+  ${sec(ICO_A+ICO_T+ICO_H+' The three stats',`<ul><li><b>Love</b> (heart): petting, playing, butt taps (for cats who like them), premium food.</li><li><b>Trust</b> (paw in hand): gentle on-beat petting, feeding, play, blinking back. Drops when you scratch the wrong spot, pet too fast, or hold a nervous cat too long. Kittens learn to trust faster.</li><li><b>Health</b> (leaf): full belly, fun, a groomed coat and a clean litter box. Naps on cushions and the water fountain help.</li></ul><p>Tap a cat to see its stats above its head.</p>`)}
+  ${sec('Petting rhythm',`<ul><li>Drag across the cat: one smooth stroke, then <b>wait</b>.</li><li>A ring by your hand fills in about 2 seconds (longer for shy cats). Stroke again when it turns <b>green with a ✓</b>.</li><li>"Purr!" = perfect. "A bit slower" = slightly early. "Too fast!" = frantic.</li><li>Too many fast strokes overstimulate a cat: watch for a twitching tail and sideways ears. Then it walks off, or, if it doesn't trust you yet, it scratches (band-aid!).</li></ul>`)}
+  ${sec('Where to pet',`<ul><li><b>Head, cheeks, chin</b>: favourites.</li><li><b>Back</b>: fine. <b>Tail</b>: no!</li><li><b>Belly</b>: only when a cat rolls over and has trust 75+. Otherwise it's a trap.</li><li><b>Butt taps</b>: tap the rump once. Some cats love it, some don't: find out!</li><li>Happy cats headbutt your hand, knead, lean in and slow-blink. When a cat looks up and slowly blinks at you, <b>tap it to blink back</b>.</li></ul>`)}
+  ${sec('Tools',`<ul><li><b>Pet</b>: stroke; press and hold a cat to carry it (relaxed cats flop, nervous ones wiggle free). Drop it next to another cat to introduce them.</li><li><b>Brush</b>: grooms the coat (fair judges notice). Cats also groom themselves a little when happy and fed.</li><li><b>Wand</b>: drag to move, flick to toss, tap to make it jump, hold still to raise it so cats leap.</li><li><b>Laser</b> (shop): cats sprint and pounce. Upgraded, it ends on a treat.</li><li>Bowls and litter boxes can be tapped with any tool.</li></ul>`)}
+  ${sec('Daily care',`<ul><li>Tap a bowl to fill it (uses premium food first, then kibble).</li><li>Tap the litter box to scoop it; dirty boxes make the meadow smelly.</li><li>A rain roof keeps cats dry in showers.</li><li>Helpers fill bowls, scoop and pet cats, for $6 a minute. Unpaid helpers rest.</li><li>The donation jar by the gate collects money when your cats are happy.</li></ul>`)}
+  ${sec('Cat fair',`<p>A grown cat with <b>Trust 55+, Love 50+ and Health 60+</b> gets a <b>Fair!</b> button on its tag. Every cat wins a category (Best Purr, Fluffiest Coat, Most Improved, Bravest Rescue, Best Dressed...) and prize money. Winning moves you up to bigger fairs.</p>`)}
+  ${sec('New cats & kittens',`<ul><li>Rescuers drive up and drop off strays, sometimes a mama with kittens.</li><li>Close friends touch noses and lick each other. A happy, bonded, unrelated pair may have <b>one</b> litter, then both get a vet visit.</li><li>Kittens stay near mum until they grow up (about 3 minutes).</li></ul>`)}
+  ${sec('Adoption',`<ul><li>A cat is <b>ready for a home</b> after settling in (about 2½ minutes) with Trust 50+ and Health 55+. Looks and ribbons don't matter.</li><li>Families drive up and say what they'd love (a calm cat, a playful cat...). Tap <b>Pick a cat</b>, then a cat with a little house. A good personality match goes home; best friends go together.</li><li>No money changes hands. Postcards arrive later; see them in Badges → Happy Tails.</li><li>Tap <b>Stay</b> on a cat to keep it forever. Tap × to send a family off.</li></ul>`)}
+  ${sec('Runaways',`<p>A cat with very low trust may slip out the gate. Catch it before the "missing" notice for the <b>Quick Paws</b> badge, or press <b>Go look</b>, follow the paw prints and listen: meows get louder as you get closer. Tap it to bring it home (trust goes up).</p>`)}
+  ${sec('Stars, shop & badges',`<ul><li>Sanctuary stars (1-5) come from homes found, rescues, ribbons and happiness. Stars unlock bigger meadows and item upgrades (cat castle, fountain, sunroom...).</li><li>Badges have bronze, silver and gold. Three small goals per visit pay $15 each (Badges → Goals).</li><li>Collars and premium food are in the shop.</li><li>Progress saves automatically on this device.</li></ul>`)}
+  ${sec('Controls',`<ul><li>Drag the grass to move around; pinch or mouse wheel to zoom; right-drag to rotate (desktop).</li><li>Tap the cat counter (top left) to jump between cats.</li><li>Keys 1-4 pick tools on desktop.</li></ul>`)}
+  </div>`);
+  $('#hTog').onclick=()=>{ W.hints=!W.hints; store.set('wm_hints',W.hints); $('#hTog').textContent=W.hints?'On':'Off'; if(!W.hints)hideHint(); };
+}
+$('#bHints').onclick=openHelp;
 
 /* ================= HINT SIGNS (no reading needed) ================= */
 const hintEl=$('#hint'); hintEl.querySelector('.hh').innerHTML=`<svg viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`;

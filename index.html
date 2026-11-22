@@ -316,6 +316,15 @@ const Snd={ac:null,musicOn:true,
   pop(){ if(!this.ac)return; const t=this.ac.currentTime; this.note(660,t,0.15,0.12,'sine'); },
   scoop(){ if(!this.ac)return; const ac=this.ac,t=ac.currentTime; const s=ac.createBufferSource(); s.buffer=this.noise; const f=ac.createBiquadFilter(); f.type='bandpass'; f.frequency.value=900; f.Q.value=1.5; const g=ac.createGain();
     g.gain.setValueAtTime(0.3,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.3); s.connect(f); f.connect(g); g.connect(this.sfx); s.start(t); s.stop(t+0.32); this.note(880,t+0.25,0.1,0.25,'sine'); },
+  cricket(v=1){ if(!this.ac)return; const ac=this.ac, t=ac.currentTime, f=rand(4200,5200), pan=ac.createStereoPanner?ac.createStereoPanner():null; if(pan)pan.pan.value=rand(-0.8,0.8);
+    const n=3+Math.floor(Math.random()*3); for(let i=0;i<n;i++){ const s=t+i*0.055, o=ac.createOscillator(); o.type='sine'; o.frequency.value=f; const g=ac.createGain();
+      g.gain.setValueAtTime(0.0001,s); g.gain.exponentialRampToValueAtTime(0.022*v,s+0.006); g.gain.exponentialRampToValueAtTime(0.0001,s+0.04); o.connect(g); if(pan){ g.connect(pan); } else g.connect(this.sfx); o.start(s); o.stop(s+0.05); }
+    if(pan)pan.connect(this.sfx); },
+  owl(v=1){ if(!this.ac)return; const ac=this.ac, t=ac.currentTime, base=rand(360,420);
+    [[0,0.32],[0.42,0.24],[0.75,0.6]].forEach(([d,len],i)=>{ const s=t+d, o=ac.createOscillator(); o.type='sine'; const lp=ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=900; const g=ac.createGain();
+      o.frequency.setValueAtTime(base*(i===2?1.02:1.06),s); o.frequency.linearRampToValueAtTime(base*(i===2?0.9:1),s+len);
+      g.gain.setValueAtTime(0.0001,s); g.gain.exponentialRampToValueAtTime(0.09*v,s+0.06); g.gain.setValueAtTime(0.09*v,s+len*0.6); g.gain.exponentialRampToValueAtTime(0.0001,s+len);
+      o.connect(lp); lp.connect(g); g.connect(this.sfx); o.start(s); o.stop(s+len+0.05); }); },
   jingle(){ if(!this.ac)return; const t=this.ac.currentTime; for(let i=0;i<4;i++)this.note(2200+Math.random()*900,t+i*0.04,0.05,0.12,'sine'); }
 };
 
@@ -1690,6 +1699,9 @@ function updateStars(){ const a=active().filter(c=>!c.outside); const happy=a.le
 function extraUpdate(dt){
   for(const it of items){ if(it.kind==='ball'&&it.tier>1&&it.orb){ it.spin=Math.max(0,it.spin-dt*2); it.orb.rotation.y+=dt*(0.6+it.spin); } else if(it.kind==='bowl'&&it.water){ it.water.position.y=0.48+Math.sin(W.time*6)*0.025; } else if(it.kind==='litter'&&it.tier>=3&&it.dirt>0){ it.dirt=Math.max(0,it.dirt-dt/45); } else if(it.kind==='tree'&&it.toy){ it.toy.position.x=0.3+Math.sin(W.time*2)*0.04; } }
   updateBoops(dt); updateDropoff(dt);
+  // night ambience: crickets fade in with the dark, an owl hoots now and then
+  { const n=W.night||0; if(Snd.ac&&n>0.25&&!weather.raining){ W.crT=(W.crT??0)-dt; if(W.crT<=0){ W.crT=rand(0.25,0.9)/n; Snd.cricket(n*rand(0.5,1)); }
+      W.owlT=(W.owlT??rand(8,15))-dt; if(W.owlT<=0){ W.owlT=rand(18,40); if(n>0.6)Snd.owl(n); } } }
   W.payT=(W.payT??30)-dt; if(W.payT<=0){ W.payT=30; const cost=helpers.length*3; if(cost){ if(W.money>=cost){ W.money-=cost; if(W.unpaid)toast('Helpers back to work'); W.unpaid=false; floatAt(70,62,'-$'+cost+' wages'); hud(); } else { if(!W.unpaid)toast('Not enough for wages: helpers are resting'); W.unpaid=true; } } else W.unpaid=false; }
   if(cam.goTo){ cam.target.lerp(cam.goTo,Math.min(1,dt*2.5)); if(cam.target.distanceTo(cam.goTo)<0.1)cam.goTo=null; }
   runT-=dt; if(runT<=0){ runT=15; if(!W.runaway&&!W.family&&W.time>120&&W.time-W.lastInput<30&&W.time-(W.lastRun||-999)>240){ const cand=active().filter(c=>c.s.trust<22&&!c.carried&&!c.outside&&!c.leaving&&['idle','walk'].includes(c.state)&&c.age>0.3); if(cand.length&&Math.random()<0.35)runaway(pick(cand)); } }

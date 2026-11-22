@@ -434,7 +434,7 @@ function updateFx(dt){ for(let i=parts.length-1;i>=0;i--){ const p=parts[i]; p.l
   if(p.life<=0){ scene.remove(p.sp); p.sp.material.dispose(); parts.splice(i,1); } } }
 const pv=new V3();
 function toScreen(v){ pv.copy(v).project(camera); return {x:(pv.x+1)/2*innerWidth,y:(1-pv.y)/2*innerHeight,ok:pv.z<1}; }
-function floatAt(x,y,text){ const d=document.createElement('div'); d.className='float'; d.textContent=text; d.style.left=x+'px'; d.style.top=y+'px'; document.body.appendChild(d); setTimeout(()=>d.remove(),1450); }
+function floatAt(x,y,text,cls=''){ const d=document.createElement('div'); d.className='float '+cls; d.textContent=text; d.style.left=x+'px'; d.style.top=y+'px'; document.body.appendChild(d); setTimeout(()=>d.remove(),1450); }
 function floatWorld(v,text){ const s=toScreen(v); if(s.ok)floatAt(s.x,s.y,text); }
 function toast(html,cls='',ms=2600){ const d=document.createElement('div'); d.className='toast '+cls; d.innerHTML=html; $('#toasts').appendChild(d); setTimeout(()=>d.remove(),ms); const all=$('#toasts').children; if(all.length>3)all[0].remove(); }
 
@@ -653,6 +653,8 @@ function onStroke(c,zone,frantic){
     if(!brush&&s.aff>=40&&c.state==='pet'&&Math.random()<0.22){ setState(c,'flop',7); c.offer=true; }
     if(s.trust>=45&&c.slowBlink<=0&&Math.random()<0.2)c.slowBlink=1.9;
   } else { c.purr=Math.max(c.purr,0.25*like); s.aff=Math.min(100,s.aff+0.6*like); }
+  { const fx=P.hx, fy=P.hy-(P.type==='mouse'?62:112);
+    if(rating==='fast')floatAt(fx,fy,'Too fast!','bad'); else if(rating==='good')floatAt(fx,fy,c.streak>=2?`Purr! ×${c.streak}`:'Purr!','good'); else if(iv<(brush?1.0:2.0)*slow)floatAt(fx,fy,'A bit slower','bad'); }
   if(rating!=='fast'&&!brush&&s.trust>=35&&s.fun<60&&Math.random()<0.2){ c.bat=0.5; handFx('bump'); }
   if(s.trust<30||s.aff<25){ c.patience--; if(c.patience<=0){ c.patience=2+Math.floor(Math.random()*3); showIcon(c,'huff',1.5); walkAway(c,false); } }
 }
@@ -1086,10 +1088,10 @@ function endPointer(e){
   P.pointers.delete(e.pointerId); P.down=P.pointers.size>0; $('#ring').hidden=true;
   if(P.mode==='pinch'){ if(P.pointers.size===0)P.mode=null; handVis(); return; }
   if(P.mode==='stroke')finishStroke();
-  if(P.mode==='catPending'&&!P.moved){ const c=P.cat; if(c.state==='hiding')foundCat(c); else if(W.runaway&&W.runaway.c===c&&!W.runaway.notified&&c.pathEnd==='hide')caughtEarly(c); else if(W.pickHome)pickForHome(c); else if(P.zone==='rump')buttTap(c); else { tagFor(c,5); if(c.blinkBackT>0)blinkBack(c); else Snd.meow(rand(1.05,1.3),0.25); } }
+  if(P.mode==='catPending'&&!P.moved){ const c=P.cat; if(c.state==='hiding')foundCat(c); else if(W.runaway&&W.runaway.c===c&&!W.runaway.notified&&c.pathEnd==='hide')caughtEarly(c); else if(W.collarPick){ setCollar(c,W.collarPick); W.collarPick=null; tagFor(c,3); spawnFx('spark',c.g.position.clone().setY(.8),5,.3); Snd.chime(); floatWorld(c.g.position.clone().setY(1.3),'Looking sharp!'); } else if(W.pickHome)pickForHome(c); else if(P.zone==='rump')buttTap(c); else { tagFor(c,5); if(c.blinkBackT>0)blinkBack(c); else Snd.meow(rand(1.05,1.3),0.25); } }
   else if(P.mode==='carry')dropCat(P.cat);
   else if(P.mode==='item'&&!P.moved)useItem(P.item);
-  else if(P.mode==='pan'&&!P.moved){ if(!tapWildlife(e))tag.c=null; }
+  else if(P.mode==='pan'&&!P.moved){ if(W.collarPick){ W.money+=15; W.collarPick=null; hud(); toast('Collar returned: $15 back'); } else if(!tapWildlife(e))tag.c=null; }
   else if(P.mode==='wand')wandUp(e);
   S.cat=null; P.mode=null; handVis();
 }
@@ -1114,7 +1116,7 @@ function returnFromShow(c){
   const h=LV().half; c.g.position.set(rand(-1,1),0,-h+1.5); c.g.visible=true; setState(c,'idle',3);
   const s=c.s, bv=bestFriend(c)[1];
   const cats=[['Best Purr',s.aff],['Fluffiest Coat',s.groom],['Healthiest',s.health],['Most Improved',Math.min(100,(s.trust-c.trust0)*2.2)],['Bravest Rescue',c.origin==='stray'?Math.min(100,s.trust+25):0],['Best Friends',bv]];
-  if(COATS[c.coat.base].rare)cats.push(['Rarest Coat',80]);
+  if(COATS[c.coat.base].rare)cats.push(['Rarest Coat',80]); if(c.collar)cats.push(['Best Dressed',74]);
   cats.sort((a,b)=>b[1]-a[1]); const cat=cats[0][0], val=cats[0][1];
   const score=val*0.8+rand(0,28)-W.showTier*4; const place=score>=72?1:score>=55?2:3;
   const base=Math.round(25*(1+W.showTier*0.6)); const prize=[0,base*3,base*2,Math.round(base*1.3)][place];
@@ -1219,7 +1221,7 @@ $('#tStay').onclick=()=>{ const c=tag.c; if(!c)return; c.forever=!c.forever; flo
 function openModal(html,noX){ $('#mbox').innerHTML=(noX?'':'<button class="x" aria-label="Close">&times;</button>')+html; $('#modal').hidden=false; const x=$('#mbox .x'); if(x)x.onclick=closeModal; }
 function closeModal(){ $('#modal').hidden=true; }
 $('#modal').addEventListener('pointerdown',e=>{ if(e.target.id==='modal')closeModal(); });
-const IC={premium:'<path d="M2.5 12c3-5.2 9.3-6.3 13.4-3.1L21 5.8v12.4l-5.1-3.1C11.8 18.3 5.5 17.2 2.5 12z" fill="#e9b949"/><circle cx="8" cy="11" r="1.4" fill="#5a3d00"/><path d="M19 2l.9 2.1L22 5l-2.1.9L19 8l-.9-2.1L16 5l2.1-.9z" fill="#ff7aa2"/>',food:'<path d="M2.5 12c3-5.2 9.3-6.3 13.4-3.1L21 5.8v12.4l-5.1-3.1C11.8 18.3 5.5 17.2 2.5 12z" fill="#7fc4e8"/><circle cx="8" cy="11" r="1.4" fill="#24415a"/>',
+const IC={collar:'<circle cx="12" cy="11" r="7.5" fill="none" stroke="#e2574c" stroke-width="3"/><circle cx="12" cy="19" r="2.6" fill="#f6c443" stroke="#d99a1e"/>',premium:'<path d="M2.5 12c3-5.2 9.3-6.3 13.4-3.1L21 5.8v12.4l-5.1-3.1C11.8 18.3 5.5 17.2 2.5 12z" fill="#e9b949"/><circle cx="8" cy="11" r="1.4" fill="#5a3d00"/><path d="M19 2l.9 2.1L22 5l-2.1.9L19 8l-.9-2.1L16 5l2.1-.9z" fill="#ff7aa2"/>',food:'<path d="M2.5 12c3-5.2 9.3-6.3 13.4-3.1L21 5.8v12.4l-5.1-3.1C11.8 18.3 5.5 17.2 2.5 12z" fill="#7fc4e8"/><circle cx="8" cy="11" r="1.4" fill="#24415a"/>',
   ball:'<circle cx="12" cy="12" r="8" fill="#ff6f91"/><path d="M4.5 10.5c5 2 10 2 15 0" stroke="#fff" stroke-width="2" fill="none"/>',
   bed:'<ellipse cx="12" cy="15" rx="10" ry="5" fill="#f4a6b8"/><ellipse cx="12" cy="14" rx="7" ry="3" fill="#fcd3dc"/>',
   laser:'<rect x="2.5" y="13" width="11" height="5" rx="2.5" transform="rotate(-35 8 15.5)" fill="#8c7666"/><path d="M13 10l5-3.5" stroke="#e2574c" stroke-width="2"/><circle cx="20" cy="5.5" r="2.4" fill="#e2574c"/>',
@@ -1238,6 +1240,7 @@ function starsFor(n){ return n===2?2:4; }
 const SHOP=[
   {id:'food',name:()=>'Kibble',desc:'+12 meals',cost:()=>8,buy(){W.food+=12;}},
   {id:'premium',name:()=>'Premium food',desc:'+12 meals · healthier, cuddlier cats',cost:()=>22,buy(){W.premium=(W.premium||0)+12;}},
+  {id:'collar',name:()=>'Collar',desc:'Pick a color, then tap a cat',cost:()=>15,buy(){ W.money+=15; setTimeout(openCollars,0); }},
   {id:'ball',name:()=>TIERS.ball[W.tier.ball-1],desc:'Bat & chase',cost:()=>12,max:()=>2+W.level*2,buy(){addItem('ball');}},
   {id:'bed',name:()=>TIERS.bed[W.tier.bed-1],desc:'Cozy naps',cost:()=>15,max:()=>1+W.level,buy(){addItem('bed');}},
   {id:'laser',name:()=>'Laser pointer',desc:'Zoomies!',cost:()=>25,avail:()=>!W.laser,buy(){W.laser=true;refreshDock();}},
@@ -1282,7 +1285,7 @@ const headOf=c=>c?c.head.localToWorld(new V3(0,0.15,0.05)):null;
 const bodyOf=c=>c?c.core.localToWorld(new V3(0,0.2,0)):null;
 const elC=sel=>{ const r=$(sel).getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2}; };
 const HINTS=[
-  {id:'pet',when:()=>W.time>1,at:()=>headOf(anyCat()),g:'stroke',label:'Pet slowly',done:()=>W.stat.good>=3},
+  {id:'pet',when:()=>W.time>1,at:()=>headOf(anyCat()),g:'stroke',label:'Stroke, then wait for ✓',done:()=>W.stat.good>=3},
   {id:'find',when:()=>W.runaway&&W.runaway.c.state==='hiding',at:()=>W.runaway&&W.runaway.trailMid,g:'tap',label:()=>'Find '+(W.runaway?W.runaway.c.name:''),done:()=>!W.runaway||W.runaway.c.state!=='hiding',auto:10,again:true},
   {id:'pick',when:()=>W.pickHome&&W.cats.some(readyHome),at:()=>headOf(W.cats.find(readyHome)),g:'tap',label:'Pick a cat',done:()=>!W.pickHome},
   {id:'feed',when:()=>W.time>40||(W.time>15&&W.cats.some(c=>c.s.full<60)),at:()=>{ const b=items.find(i=>i.kind==='bowl'&&i.portions<i.cap)||items.find(i=>i.kind==='bowl'); return b&&b.pos.clone().setY(0.2); },g:'tap',label:'Feed',done:()=>W.stat.fills>0},
@@ -1537,7 +1540,7 @@ function portrait(c){ try{
 const SAVE='wm_save_v3';
 function saveGame(){ if(!W.started)return; try{
   const data={v:3,W:{time:W.time,money:W.money,food:W.food,premium:W.premium||0,level:W.level,laser:W.laser,ribbons:W.ribbons,wins:W.wins,streak:W.streak,bestStreak:W.bestStreak,showTier:W.showTier,earned:W.earned,stars:W.stars,tier:W.tier,achT:W.achT,stat:W.stat,maxCats:W.maxCats,tagShows:W.tagShows,lastRun:W.lastRun},
-    homes:W.homes,cats:W.cats.filter(c=>!c.leaving).map(c=>({id:c.id,name:c.name,sex:c.sex,coat:c.coat,age:c.age,parents:c.parents,mother:c.mother,s:c.s,trait:c.trait,fixed:c.fixed,litters:c.litters,origin:c.origin,arrivedAt:c.arrivedAt,trust0:c.trust0,forever:c.forever,wins:c.wins,pace:c.pace,buttLike:c.buttLike,buttKnown:c.buttKnown,x:c.outside?0:c.g.position.x,z:c.outside?-LV().half+1:c.g.position.z})),
+    homes:W.homes,cats:W.cats.filter(c=>!c.leaving).map(c=>({id:c.id,name:c.name,sex:c.sex,coat:c.coat,age:c.age,parents:c.parents,mother:c.mother,s:c.s,trait:c.trait,fixed:c.fixed,litters:c.litters,origin:c.origin,arrivedAt:c.arrivedAt,trust0:c.trust0,forever:c.forever,wins:c.wins,pace:c.pace,buttLike:c.buttLike,buttKnown:c.buttKnown,collar:c.collar||null,x:c.outside?0:c.g.position.x,z:c.outside?-LV().half+1:c.g.position.z})),
     items:items.map(i=>({kind:i.kind,x:i.pos.x,z:i.pos.z,portions:i.portions,prem:i.prem||0,dirt:i.dirt})),bonds,helpers:helpers.length,catId,used:[...used]};
   try{ localStorage.setItem(SAVE,JSON.stringify(data)); }catch(e){ data.homes=data.homes.map((hm,i)=>i<data.homes.length-6?Object.assign({},hm,{img:null}):hm); localStorage.setItem(SAVE,JSON.stringify(data)); } }catch(e){} }
 function loadGame(d){
@@ -1546,7 +1549,7 @@ function loadGame(d){
   buildEnclosure(); buildDecor(); cam.want=cam.dist=LV().zoom;
   for(const i of d.items){ const it=addItem(i.kind,new V3(i.x,0,i.z)); if(i.portions!=null){ it.portions=i.portions; it.prem=Math.min(i.prem||0,i.portions); updateBowl(it); } if(i.dirt!=null){ it.dirt=i.dirt; updateLitter(it); } }
   for(const s of d.cats){ const c=makeCat({loading:true,name:s.name,sex:s.sex,coat:s.coat,age:s.age,parents:s.parents,mother:s.mother,s:s.s,trait:s.trait,fixed:s.fixed,origin:s.origin,buttLike:s.buttLike,x:s.x,z:s.z});
-    Object.assign(c,{id:s.id,litters:s.litters||0,arrivedAt:s.arrivedAt||0,trust0:s.trust0??c.s.trust,forever:!!s.forever,wins:s.wins||0,pace:s.pace||c.pace,buttKnown:!!s.buttKnown}); }
+    Object.assign(c,{id:s.id,litters:s.litters||0,arrivedAt:s.arrivedAt||0,trust0:s.trust0??c.s.trust,forever:!!s.forever,wins:s.wins||0,pace:s.pace||c.pace,buttKnown:!!s.buttKnown}); if(s.collar)setCollar(c,s.collar); }
   catId=d.catId||W.cats.length; (d.used||[]).forEach(n=>used.add(n)); Object.assign(bonds,d.bonds||{}); for(let i=0;i<(d.helpers||0);i++)makeHelper();
   refreshDock(); buildWandToy(); hud(); }
 // ---- per-frame extras ----
@@ -1591,6 +1594,23 @@ function buildWandToy(){ const f=wand.fm; while(f.children.length)f.remove(f.chi
   else { f.add(mesh(G.sph,0x9da6b0,{p:[0,-0.06,0],s:[0.07,0.06,0.11]})); f.add(mesh(G.sph,0xf6b7c0,{p:[0.04,-0.01,0.05],s:[0.025,0.03,0.01]})); f.add(mesh(G.sph,0xf6b7c0,{p:[-0.04,-0.01,0.05],s:[0.025,0.03,0.01]})); f.add(mesh(G.cyl,0xf6b7c0,{p:[0,-0.07,-0.15],s:[0.006,0.12,0.006],r:[1.2,0,0]})); } }
 let camCycle=-1; $('#bCats').onclick=()=>{ const cs=W.cats.filter(c=>c.away<=0&&!c.leaving); if(!cs.length)return; camCycle=(camCycle+1)%cs.length; const c=cs[camCycle]; cam.focus=c; cam.focusT=1.6; tagFor(c,4); };
 
+/* ================= collars & petting-beat ring ================= */
+(()=>{ const st=document.createElement('style'); st.textContent='#beat{position:fixed;left:0;top:0;width:50px;height:50px;margin:-25px 0 0 -25px;pointer-events:none;z-index:9}#beat svg{width:100%;height:100%;filter:drop-shadow(0 2px 4px rgba(74,52,38,.25))}#beat span{position:absolute;inset:0;display:grid;place-items:center;font:700 20px var(--display);color:#3f8f3d}#beat.ready svg{animation:ipulse .7s ease-in-out infinite}.float.bad{color:#ffd0c8}.float.good{color:#d6ffc9}.sw{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:6px 0 4px}.sw button{width:56px;height:56px;border-radius:50%;border:4px solid #fff;box-shadow:0 2px 8px rgba(74,52,38,.25)}'; document.head.appendChild(st);
+  const b=document.createElement('div'); b.id='beat'; b.hidden=true; b.innerHTML='<svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="17" fill="rgba(255,250,242,.9)" stroke="#e8d9c6" stroke-width="5"/><circle id="beatFg" cx="22" cy="22" r="17" fill="none" stroke-width="5" stroke-linecap="round" transform="rotate(-90 22 22)" stroke-dasharray="106.8" stroke-dashoffset="106.8"/></svg><span id="beatTx"></span>'; document.body.appendChild(b); })();
+function updateBeat(){ const el=$('#beat'); let c=null;
+  if(P.mode==='stroke'&&S.cat)c=S.cat; else if(P.mode==='catPending')c=P.cat; else if(P.type==='mouse'&&!P.mode&&P.hoverCat&&P.hoverCat.petT>0)c=P.hoverCat;
+  if(!c||!(W.tool==='hand'||W.tool==='brush')||c.carried||c.leaving||c.outside||!$('#modal').hidden){ el.hidden=true; return; }
+  const slow=c.trait==='shy'?1.15:1, g0=(W.tool==='brush'?1.0:2.0)*slow, t=W.time-c.lastStroke, p=t>7?1:clamp(t/g0,0,1);
+  el.hidden=false; el.style.transform=`translate(${P.hx+48}px,${P.hy-(P.type==='mouse'?48:104)}px)`;
+  const fg=$('#beatFg'); fg.style.strokeDashoffset=106.8*(1-p); fg.style.stroke=p>=1?'#5fb35a':'#f0a13a'; el.classList.toggle('ready',p>=1); $('#beatTx').textContent=p>=1?'✓':''; }
+const COLLARS=[0xe2574c,0x5b9be6,0xff7aa2,0x5fb35a,0x9a86cf,0xf6c443,0x3d3532];
+function setCollar(c,col){ if(c.collarM){ c.core.remove(c.collarM); c.collarM=null; } c.collar=col||null; if(!col)return;
+  const g=new THREE.Group(); g.position.set(0,0.06,0.42); g.rotation.x=-Math.PI/2+0.35;
+  const ring=mesh(new THREE.TorusGeometry(0.245,0.036,8,28),col,{}); g.add(ring); g.add(mesh(G.sph,0xf6c443,{p:[0,-0.28,0.03],s:[0.05,0.05,0.05]}));
+  g.traverse(o=>{ if(o.isMesh){ o.userData.cat=c; o.userData.zone='chest'; } }); c.core.add(g); c.collarM=g; }
+function openCollars(){ openModal(`<h3>Choose a collar</h3><p style="margin:0 0 8px;color:var(--muted);font:700 14px var(--body)">$15, then tap a cat to put it on.</p><div class="sw">${COLLARS.map(col=>`<button data-col="${col}" style="background:#${col.toString(16).padStart(6,'0')}" aria-label="Collar color"></button>`).join('')}</div>`);
+  document.querySelectorAll('[data-col]').forEach(b=>b.onclick=()=>{ if(W.money<15)return; W.money-=15; W.collarPick=+b.dataset.col; hud(); closeModal(); toast('Tap a cat to give it the collar'); }); }
+
 /* ================= LOOP ================= */
 let bondT=0, famT=0, slowT=0, birdT=8;
 function update(dt){
@@ -1599,6 +1619,7 @@ function update(dt){
     if(e>130){ r.hidden=false; r.style.transform=`translate(${P.hx}px,${P.hy}px)`; r.style.setProperty('--p',clamp((e-130)/320,0,1)); }
     if(e>450)startCarry(P.cat); }
   if(P.mode==='stroke'&&S.cat&&S.len>=40&&performance.now()-S.last>260){ const c=S.cat; finishStroke(); beginStroke(c,performance.now()); }
+  updateBeat();
   for(const c of W.cats){ const p=c.g.position; if(!isFinite(p.x)||!isFinite(p.y)||!isFinite(p.z)||!isFinite(c.heading)){ p.set(0,0,0); c.heading=0; c.speed=0; c.jump=0; c.hopT=0; c.lunge=0; c.target.set(0,0,0); if(!c.carried&&!c.outside)setState(c,'idle',1); } updateCat(c,dt); }
   for(const hp of helpers)updateHelper(hp,dt,performance.now()/1000);
   collide();
@@ -1653,6 +1674,6 @@ function begin(){ Snd.init(); $('#start').hidden=true; W.started=true; cam.theta
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); }catch(e){} begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={W,items,cam,cars,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={W,items,cam,cars,setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>

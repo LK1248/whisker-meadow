@@ -57,7 +57,7 @@ button:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
 @keyframes bump{35%{transform:translate(8px,-14px) rotate(8deg)}}
 #hScr{transition:opacity .4s}
 #ring{position:fixed;left:0;top:0;width:70px;height:70px;margin:-35px 0 0 -35px;border-radius:50%;--p:0;background:conic-gradient(var(--pink) calc(var(--p)*1turn),rgba(255,255,255,.6) 0);-webkit-mask:radial-gradient(circle,transparent 26px,#000 27px);mask:radial-gradient(circle,transparent 26px,#000 27px);pointer-events:none;z-index:8}
-#intro{position:fixed;inset:0;pointer-events:none;z-index:3;background:radial-gradient(circle at var(--x,50%) var(--y,50%),transparent 0,transparent 110px,rgba(30,20,45,.6) 230px);transition:opacity .7s}
+#intro{position:fixed;inset:0;pointer-events:none;z-index:3;background:radial-gradient(circle at var(--x,50%) var(--y,50%),transparent 0,transparent var(--r,110px),rgba(30,20,45,.6) calc(var(--r,110px) + 120px));transition:opacity .7s}
 #intro.off{opacity:0}
 #ghost{position:fixed;left:0;top:0;width:76px;height:76px;pointer-events:none;z-index:6;filter:drop-shadow(0 5px 6px rgba(0,0,0,.35))}
 #ghost svg{width:100%;height:100%}
@@ -68,6 +68,8 @@ button:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
 #ghost.tap{width:58px;height:58px;opacity:.6}
 #pips .eq{background:rgba(255,250,242,.92);border-radius:22px;padding:6px 14px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
 #pips .eq svg{width:150px;height:46px}
+#tip{position:fixed;left:0;top:0;z-index:6;pointer-events:none;background:rgba(255,250,242,.94);border-radius:18px;padding:6px 10px;box-shadow:0 4px 14px rgba(0,0,0,.22);transition:opacity .4s}
+#tip svg{display:block;width:150px;height:auto}
 #introSkip{position:fixed;right:14px;bottom:calc(100px + env(safe-area-inset-bottom,0px));z-index:7;width:46px;height:46px;border-radius:50%;background:rgba(255,250,242,.85);font-size:20px;color:#8c7666}
 body.intro .dock,body.intro #hud,body.intro .top{opacity:.25;pointer-events:none}
 .ic3{display:flex;justify-content:space-around;align-items:flex-end;margin-top:4px;height:44px}
@@ -221,7 +223,7 @@ body.intro .dock,body.intro #hud,body.intro .top{opacity:.25;pointer-events:none
   <button class="tool locked" data-tool="laser" aria-label="Laser pointer"><span class="lock">$25</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="13" width="11" height="5" rx="2.5" transform="rotate(-35 8 15.5)" fill="currentColor" fill-opacity=".3"/><path d="M13 10l5-3.5"/><circle cx="20" cy="5.5" r="2.2" fill="#e2574c" stroke="none"/></svg>Laser</button>
 </div>
 
-<div id="tag" hidden></div><div id="intro" hidden></div><div id="ghost" hidden></div><div id="pips" hidden></div><button id="introSkip" hidden aria-label="Skip">&#9197;</button>
+<div id="tag" hidden></div><div id="intro" hidden></div><div id="ghost" hidden></div><div id="pips" hidden></div><div id="tip" hidden></div><button id="introSkip" hidden aria-label="Skip">&#9197;</button>
 
 <div id="hint" hidden><div class="rip"></div><div class="hh"></div><div class="lab"></div></div>
 <div id="ring" hidden></div>
@@ -1485,13 +1487,13 @@ const HINTS=[
   {id:'brush',when:()=>W.time>140,el:'[data-tool=brush]',g:'tap',label:'Brush',done:()=>W.tool==='brush'},
   {id:'brush2',when:()=>W.tool==='brush',at:()=>bodyOf(anyCat()),g:'stroke',label:'Brush the back',done:()=>W.stat.brush>=4},
   {id:'show',when:()=>W.cats.some(showReady),at:()=>headOf(W.cats.find(showReady)),g:'tap',label:'Cat fair!',done:()=>W.stat.shows>0},
-  {id:'belly',when:()=>W.cats.some(c=>c.state==='flop'&&c.offer&&c.s.trust<75),at:()=>{ const c=W.cats.find(c=>c.state==='flop'&&c.offer); return c&&bodyOf(c); },g:'none',label:'Belly? Careful!',auto:4},
+  {id:'belly',when:()=>false&&W.cats.some(c=>c.state==='flop'&&c.offer&&c.s.trust<75),at:()=>{ const c=W.cats.find(c=>c.state==='flop'&&c.offer); return c&&bodyOf(c); },g:'none',label:'Belly? Careful!',auto:4},
   {id:'roof',when:()=>weather.raining&&!countItems('shelter'),el:'#bShop',g:'tap',label:'Rain roof',done:()=>countItems('shelter')>0||!weather.raining},
   {id:'space',when:()=>W.cats.length>=LV().cap&&W.level<4,el:'#bShop',g:'tap',label:'More room',done:()=>W.cats.length<LV().cap},
 ];
 const hintDone=new Set(), hintRetry={}; let curHint=null, hintT=0, hintGap=0;
 function hideHint(){ curHint=null; hintEl.hidden=true; hintGap=4; }
-function updateHints(dt){ if(intro.c||bt.c){ hintEl.hidden=true; return; }
+function updateHints(dt){ if(intro.c||bt.c||pl.a){ hintEl.hidden=true; return; }
   if(curHint){ hintT+=dt; const h=curHint;
     if(h.done&&h.done()){ hintDone.add(h.id); hideHint(); return; }
     if(h.auto&&hintT>h.auto){ if(!h.again)hintDone.add(h.id); else hintRetry[h.id]=W.time+20; hideHint(); return; }
@@ -1871,7 +1873,7 @@ function update(dt){
   birdT-=dt; if(birdT<=0){ birdT=rand(6,14); if(birds.length<3+W.level&&!weather.raining)makeBird(); }
   slowT-=dt; if(slowT<=0){ slowT=0.3; hud(); const a=active(); if(a.length>=4&&a.every(c=>c.s.health>=80))unlock('bliss'); }
   if(W.aidT>0)W.aidT-=dt; $('#hAid').style.opacity=W.aidT>0?1:0;
-  updateIntro(dt); updateBlinkTut(dt); updateHints(dt); updateWeather(dt); extraUpdate(dt);
+  updateIntro(dt); updateBlinkTut(dt); updatePairTut(dt); updateTips(dt); updateHints(dt); updateWeather(dt); extraUpdate(dt);
   let purr=0; for(const c of W.cats)if(c.away<=0)purr=Math.max(purr,c.purr*(handOn(c)?1:0.3)); Snd.purr(purr*0.9);
 }
 let last=performance.now();
@@ -1909,12 +1911,12 @@ if(hasSave){ $('#bPlay').textContent='Continue'; $('#bNew').hidden=false; }
 // first-time intro: spotlight one friendly cat, a ghost hand shows the slow stroke, three hearts fill as the player does it
 const intro={c:null,t:0,g0:0};
 const PIP='<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/></svg>';
-function startIntro(){ if(bt.c)return; const c=W.cats.find(k=>k.name==='Mochi'&&k.away<=0&&!k.outside)||active().slice().sort((a,b)=>b.s.trust-a.s.trust)[0]; if(!c)return;
+function startIntro(){ if(bt.c||pl.a)return; const c=W.cats.find(k=>k.name==='Mochi'&&k.away<=0&&!k.outside)||active().slice().sort((a,b)=>b.s.trust-a.s.trust)[0]; if(!c)return;
   Object.assign(intro,{c,t:0,g0:W.stat.good,want:cam.want}); if(c.state==='idle'||c.state==='walk'){ setState(c,'idle',3); c.heading=cam.theta+Math.PI/2; } cam.want=3.5; hintDone.add('pet'); hideHint(); if(W.tool!=='pet')setTool('pet');
   document.body.classList.add('intro'); for(const id of ['#intro','#ghost','#pips','#introSkip'])$(id).hidden=false; $('#intro').classList.remove('off');
   $('#ghost').innerHTML=`<svg viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`; $('#pips').innerHTML=PIP+PIP+PIP; }
 function endIntro(){ const c=intro.c; if(!c)return; intro.c=null; cam.want=Math.max(intro.want||0,LV().zoom*0.75); document.body.classList.remove('intro');
-  $('#intro').classList.add('off'); setTimeout(()=>{ if(!intro.c&&!bt.c)$('#intro').hidden=true; },750); for(const id of ['#ghost','#pips','#introSkip'])$(id).hidden=true;
+  $('#intro').classList.add('off'); setTimeout(()=>{ if(!intro.c&&!bt.c&&!pl.a)$('#intro').hidden=true; },750); for(const id of ['#ghost','#pips','#introSkip'])$(id).hidden=true;
   spawnFx('h',c.g.position.clone().setY(0.9),10,0.7,0.5); Snd.chime(); hintGap=6; }
 function updateIntro(dt){ const c=intro.c; if(!c)return; if(c.away>0||c.outside||c.leaving){ endIntro(); return; } intro.t+=dt;
   const p=c.g.position; cam.target.lerp(new V3(p.x,0.4,p.z),Math.min(1,dt*3));
@@ -1925,15 +1927,15 @@ function updateIntro(dt){ const c=intro.c; if(!c)return; if(c.away>0||c.outside|
   const cyc=intro.t%2.8, k=clamp(cyc/1.2,0,1), e=k*k*(3-2*k), lift=cyc>1.2?(cyc-1.2)*30:0;
   const gh=$('#ghost'); gh.style.opacity=(handOn(c)||(P.mode&&P.mode!=='none'))?0:cyc<1.2?0.92:Math.max(0,0.92-(cyc-1.2)*1.6);
   gh.style.transform=`translate(${lerp(h.x,b.x,e)-30}px,${lerp(h.y,b.y,e)-30-lift}px)`; }
-$('#introSkip').onclick=()=>{ if(bt.c){ bt.skipped=true; endBlinkTut(false); } else endIntro(); };
+$('#introSkip').onclick=()=>{ if(pl.a){ endPairTut(false); return; } if(bt.c){ bt.skipped=true; endBlinkTut(false); } else endIntro(); };
 // first slow blink: spotlight the face, the cat looks right at you and blinks very slowly; "closed eyes = love"; a faint hand boops the nose
 const bt={c:null,t:0,n0:0,lastB:-9};
 const BLINK_EQ='<div class="eq"><svg viewBox="0 0 150 46"><g fill="none" stroke="#4a3426" stroke-width="5" stroke-linecap="round"><path d="M10 20q12 12 24 0"/><path d="M44 20q12 12 24 0"/><path d="M80 17h14M80 27h14"/></g><path d="M122 40s-17-10.5-17-22a9 9 0 0 1 17-5 9 9 0 0 1 17 5c0 11.5-17 22-17 22z" fill="#ff6f99"/></svg></div>';
-function startBlinkTut(c){ if(bt.c||intro.c)return; Object.assign(bt,{c,t:0,n0:W.stat.blinkBack,lastB:-9,want:cam.want}); cam.want=3.3; hideHint(); hintDone.add('blink'); tag.c=null; if(W.tool!=='pet')setTool('pet');
+function startBlinkTut(c){ if(bt.c||intro.c||pl.a)return; Object.assign(bt,{c,t:0,n0:W.stat.blinkBack,lastB:-9,want:cam.want}); cam.want=3.3; hideHint(); hintDone.add('blink'); tag.c=null; if(W.tool!=='pet')setTool('pet');
   document.body.classList.add('intro'); for(const id of ['#intro','#ghost','#pips','#introSkip'])$(id).hidden=false; $('#intro').classList.remove('off');
   const gh=$('#ghost'); gh.innerHTML=`<svg viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`; gh.classList.add('tap'); $('#pips').innerHTML=BLINK_EQ; }
 function endBlinkTut(ok){ const c=bt.c; if(!c)return; bt.c=null; cam.want=Math.max(bt.want||0,LV().zoom*0.75); document.body.classList.remove('intro');
-  $('#intro').classList.add('off'); setTimeout(()=>{ if(!intro.c&&!bt.c)$('#intro').hidden=true; },750); for(const id of ['#ghost','#pips','#introSkip'])$(id).hidden=true; $('#ghost').classList.remove('tap'); c.sbLen=1.9;
+  $('#intro').classList.add('off'); setTimeout(()=>{ if(!intro.c&&!bt.c&&!pl.a)$('#intro').hidden=true; },750); for(const id of ['#ghost','#pips','#introSkip'])$(id).hidden=true; $('#ghost').classList.remove('tap'); c.sbLen=1.9;
   if(ok){ const s=c.s; s.aff=Math.min(100,s.aff+18); s.trust=Math.min(100,s.trust+5); spawnFx('h',c.g.position.clone().setY(1.0*c.g.scale.x+0.2),16,0.9,0.6); Snd.chime(); tagFor(c,6); }
   hintGap=6; }
 function updateBlinkTut(dt){ const c=bt.c; if(!c)return; if(c.away>0||c.outside||c.leaving||c.carried){ endBlinkTut(false); return; }
@@ -1947,11 +1949,74 @@ function updateBlinkTut(dt){ const c=bt.c; if(!c)return; if(c.away>0||c.outside|
   // the hand shows up after the first blink: lift, then a gentle tap on the nose
   const cyc=(bt.t-1.5)%1.8, up=cyc<0?40:cyc<0.9?40*(1-Math.sin(cyc/0.9*Math.PI/2)):cyc<1.1?0:40*((cyc-1.1)/0.7);
   const gh=$('#ghost'); gh.style.opacity=bt.t<1.5||(P.mode&&P.mode!=='none')?0:''; gh.style.transform=`translate(${n.x-18}px,${n.y-8-up}px)`; }
+// ---- lesson 3: friends. Hold one cat, carry it next to another, watch them boop and play ----
+const pl={a:null,b:null,t:0,stage:'',lastDrop:0};
+const catFace=(x,col)=>`<g transform="translate(${x},25)"><path d="M-13 -3L-12 -18-3 -11zM13 -3L12 -18 3 -11z" fill="${col}"/><circle r="13" fill="${col}"/><circle cx="-4.5" cy="-1" r="2" fill="#4a3426"/><circle cx="4.5" cy="-1" r="2" fill="#4a3426"/><path d="M-2 4h4l-2 2z" fill="#ff8fa3"/></g>`;
+const HEART=(x,y,sc)=>`<path transform="translate(${x},${y}) scale(${sc})" d="M0 9s-8.5-5.2-8.5-11a4.5 4.5 0 0 1 8.5-2.5 4.5 4.5 0 0 1 8.5 2.5c0 5.8-8.5 11-8.5 11z" fill="#ff6f99"/>`;
+const PAIR_EQ=`<div class="eq"><svg viewBox="0 0 150 46">${catFace(20,'#f3a64a')}${catFace(52,'#9a9aa6')}<path d="M76 18h14M76 28h14" stroke="#4a3426" stroke-width="5" stroke-linecap="round"/>${HEART(120,24,1.9)}</svg></div>`;
+function pairReady(){ return !pl.a&&!pl.done&&!intro.c&&!bt.c&&W.started&&!W.paused&&!W.stat.pairDone&&W.stat.good>=3&&(W.stat.blinkBack>0||W.time>150)&&W.time>70&&$('#modal').hidden; }
+function startPairTut(){ const ok=c=>!c.carried&&!c.outside&&!c.leaving&&c.away<=0&&c.age>=0.3&&['idle','walk','watch','sit','groom'].includes(c.state);
+  const cs=active().filter(ok).sort((x,y)=>y.s.trust-x.s.trust); if(cs.length<2)return false; const a=cs[0];
+  const b=cs.slice(1).sort((x,y)=>dist2(x.g.position,a.g.position)-dist2(y.g.position,a.g.position))[0];
+  // keep them apart enough that a carry is needed
+  if(dist2(a.g.position,b.g.position)<4){ const p=b.g.position, d=new V3(p.x-a.g.position.x,0,p.z-a.g.position.z).normalize(); goTo(b,p.x+(d.x||1)*2,p.z+d.z*2,null); }
+  Object.assign(pl,{a,b,t:0,stage:'carry',want:cam.want,romp:false,lastDrop:W.stat.drops}); cam.want=Math.max(5.5,cam.want*0.8); hideHint(); hintDone.add('carry'); tag.c=null; if(W.tool!=='pet')setTool('pet');
+  document.body.classList.add('intro'); for(const id of ['#intro','#ghost','#pips','#introSkip'])$(id).hidden=false; $('#intro').classList.remove('off');
+  const gh=$('#ghost'); gh.innerHTML=`<svg viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`; gh.classList.remove('tap'); $('#pips').innerHTML=PAIR_EQ; return true; }
+function endPairTut(ok){ const {a,b}=pl; if(!a)return; pl.a=null; pl.done=true; W.stat.pairDone=1; cam.want=Math.max(pl.want||0,LV().zoom*0.75); document.body.classList.remove('intro');
+  $('#intro').classList.add('off'); $('#intro').style.setProperty('--r','110px'); setTimeout(()=>{ if(!intro.c&&!bt.c&&!pl.a)$('#intro').hidden=true; },750); for(const id of ['#ghost','#pips','#introSkip'])$(id).hidden=true;
+  if(ok){ addBond(a,b,15); const m=a.g.position.clone().add(b.g.position).multiplyScalar(0.5).setY(1); spawnFx('h',m,14,0.9,0.6); Snd.chime(); }
+  hintGap=8; }
+function updatePairTut(dt){
+  if(!pl.a){ pl.wait=(pl.wait||0)-dt; if(pl.wait<=0){ pl.wait=3; if(pairReady())startPairTut(); } return; }
+  const {a,b}=pl; if([a,b].some(c=>c.away>0||c.outside||c.leaving)){ endPairTut(false); return; } pl.t+=dt; tag.c=null;
+  const pa=a.g.position, pb=b.g.position, close=dist2(pa,pb)<1.9*1.9;
+  if(pl.stage==='carry'){
+    for(const c of [a,b])if(!c.carried&&c.state!=='boop'){ if(c.state==='walk'&&c===b&&c.path)continue; if(c.state!=='idle')setState(c,'idle',3); c.stT=Math.max(c.stT||0,2); }
+    if(W.stat.drops>pl.lastDrop&&!a.carried&&!b.carried){ if(close){ pl.stage='watch'; pl.t=0; $('#ghost').hidden=true; if(a.state!=='boop'&&canBoop(a)&&canBoop(b)){ a.boopCD=b.boopCD=0; boop(a,b); } } else pl.lastDrop=W.stat.drops; } }
+  // camera + spotlight on both cats
+  const mid=pa.clone().add(pb).multiplyScalar(0.5); cam.target.lerp(new V3(mid.x,0.4,mid.z),Math.min(1,dt*2.5));
+  const sa=toScreen(new V3(pa.x,0.5,pa.z)), sb=toScreen(new V3(pb.x,0.5,pb.z)); if(!sa.ok||!sb.ok)return;
+  const carried=a.carried?a:b.carried?b:null, mx=(sa.x+sb.x)/2, my=(sa.y+sb.y)/2;
+  $('#intro').style.setProperty('--x',mx+'px'); $('#intro').style.setProperty('--y',my+'px'); $('#intro').style.setProperty('--r',Math.round(Math.hypot(sa.x-sb.x,sa.y-sb.y)/2+100)+'px');
+  if(pl.stage==='carry'){ const gh=$('#ghost'); gh.style.opacity=(P.mode&&P.mode!=='none'&&!carried)?0:'';
+    if(carried){ // already holding one: point at the other cat
+      const tgt=carried===a?sb:sa, bob=Math.sin(pl.t*6)*8; gh.style.transform=`translate(${tgt.x-30}px,${tgt.y-70+bob}px)`; gh.style.opacity=0.8; }
+    else { // press and hold on the first cat, then glide over to the second one
+      const cyc=pl.t%3.4; let x=sa.x,y=sa.y,sc=1;
+      if(cyc<1.0){ sc=1-0.12*Math.min(1,cyc/0.3); }
+      else if(cyc<2.4){ const k=(cyc-1.0)/1.4, e=k*k*(3-2*k); x=sa.x+(sb.x-sa.x)*e; y=sa.y+(sb.y-sa.y)*e-Math.sin(e*Math.PI)*50; sc=0.88; }
+      else { x=sb.x; y=sb.y; sc=1; }
+      gh.style.opacity=cyc>2.8?Math.max(0,1-(cyc-2.8)/0.6)*0.9:0.9; gh.style.transform=`translate(${x-30}px,${y-40}px) scale(${sc})`; } }
+  else if(pl.stage==='watch'){
+    if(!pl.romp&&a.state!=='boop'&&b.state!=='boop'&&pl.t>1){ pl.romp=true; pl.rompT=pl.t; startRomp(a,b); }
+    if(pl.romp&&pl.t-pl.rompT>6)endPairTut(true);
+    if(pl.t>20)endPairTut(true); } }
+
+// ---- later, one-time wordless tips: belly rubs (only with high trust) and butt taps (some love them, some don't) ----
+const tips={cur:null,t:0};
+const CLAW='<g stroke="#e0505f" stroke-width="4" stroke-linecap="round"><path d="M92 68l10-13M100 72l10-13M108 76l10-13"/></g>';
+const trustIco=(x,y,w)=>ICO_T.replace('<svg ',`<svg x="${x}" y="${y}" width="${w}" height="${w}" `);
+const ARROW=y=>`<path d="M50 ${y}h24m-8-7l8 7-8 7" fill="none" stroke="#b9a89a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
+const BELLY_TIP=`<svg viewBox="0 0 160 84">${trustIco(4,2,36)}${ARROW(20)}${HEART(104,18,1.6)}${trustIco(14,50,18)}${ARROW(60)}${CLAW}</svg>`;
+const BUTT_TIP=`<svg viewBox="0 0 160 46">${HEART(36,22,1.8)}<path d="M72 36l14-26" stroke="#b9a89a" stroke-width="4" stroke-linecap="round"/><g fill="none" stroke="#e0505f" stroke-width="4" stroke-linecap="round"><path d="M110 14q6 6 0 12"/><path d="M128 14q-6 6 0 12"/><path d="M113 32q6-6 12 0"/></g></svg>`;
+function showTip(kind,c,svg,dur,tap){ tips.cur={kind,c,dur,tap}; tips.t=0; $('#tip').innerHTML=svg; $('#tip').hidden=false; $('#tip').style.opacity=1; if(tap){ const gh=$('#ghost'); gh.innerHTML=`<svg viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`; gh.classList.add('tap'); gh.hidden=false; } W.stat[kind+'Tip']=1; }
+function endTip(){ if(!tips.cur)return; if(tips.cur.tap){ $('#ghost').hidden=true; $('#ghost').classList.remove('tap'); } tips.cur=null; $('#tip').hidden=true; }
+function updateTips(dt){ const busy=intro.c||bt.c||pl.a||!W.started||W.paused||!$('#modal').hidden;
+  if(!tips.cur){ if(busy||!W.stat.pairDone)return; tips.wait=(tips.wait||0)-dt; if(tips.wait>0)return; tips.wait=2;
+    const flop=!W.stat.bellyTip&&active().find(c=>c.state==='flop'&&c.offer&&!c.carried); if(flop){ showTip('belly',flop,BELLY_TIP,7,false); return; }
+    if(!W.stat.buttTip&&W.time>240&&!W.stat.butt){ const c=active().filter(c=>!c.carried&&!c.outside&&c.away<=0&&c.s.trust>=45&&['idle','sit'].includes(c.state)).sort((x,y)=>dist2(x.g.position,cam.target)-dist2(y.g.position,cam.target))[0]; if(c)showTip('butt',c,BUTT_TIP,9,true); }
+    return; }
+  const T=tips.cur, c=T.c; tips.t+=dt; if(busy||c.away>0||c.carried||c.outside||tips.t>T.dur||(T.kind==='belly'&&c.state!=='flop')||(T.kind==='butt'&&c.buttKnown&&tips.t>1.5)){ endTip(); return; }
+  if(T.kind==='butt'&&c.state==='idle')c.stT=Math.max(c.stT||0,2);
+  const top=toScreen(c.g.position.clone().setY(1.35*c.g.scale.x+0.45)); if(!top.ok)return; const el=$('#tip'), w=el.offsetWidth, hh=el.offsetHeight;
+  el.style.transform=`translate(${clamp(top.x-w/2,8,innerWidth-w-8)}px,${clamp(top.y-hh,60,innerHeight-hh-90)}px)`; el.style.opacity=tips.t>T.dur-0.6?0:1;
+  if(T.tap){ const p=c.g.position, s2=c.g.scale.x, r=toScreen(new V3(p.x-Math.sin(c.heading)*0.5*s2,0.55*s2,p.z-Math.cos(c.heading)*0.5*s2)); if(r.ok){ const cyc=tips.t%1.6, up=cyc<0.8?36*(1-Math.sin(cyc/0.8*Math.PI/2)):cyc<1.0?0:36*((cyc-1.0)/0.6); $('#ghost').style.opacity=''; $('#ghost').style.transform=`translate(${r.x-18}px,${r.y-8-up}px)`; } } }
 function begin(){ Snd.init(); $('#start').hidden=true; W.started=true; cam.theta=0.55; Snd.meow(1.2,0.5); pickGoals(); handVis(); hud(); if((W.stat.good||0)<3)setTimeout(startIntro,700); }
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); }catch(e){} begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={animateCat,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={animateCat,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>
 

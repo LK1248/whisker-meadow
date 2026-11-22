@@ -1665,7 +1665,8 @@ document.addEventListener('visibilitychange',()=>{ if(!Snd.ac)return; if(documen
 buildEnclosure(); buildDecor();
 const bowl=addItem('bowl',new V3(-1.7,0,1.5)); bowl.portions=2; updateBowl(bowl);
 const lit=addItem('litter',new V3(1.9,0,-1.6)); updateLitter(lit);
-makeCat({name:'Mochi',sex:'f',coat:{base:'orange',pattern:'tabby',eye:0x8fd14f},x:-0.8,z:0.3,s:{trust:30,aff:25,full:66,groom:38}});
+// Mochi is the friendly one: a few good strokes make her fair-ready, so new players reach the cat fair early
+makeCat({name:'Mochi',sex:'f',trait:'cuddly',buttLike:true,coat:{base:'orange',pattern:'tabby',eye:0x8fd14f},x:-0.8,z:0.3,s:{trust:46,aff:42,health:72,full:80,fun:75,groom:62}});
 makeCat({name:'Pepper',sex:'m',coat:{base:'black',pattern:'tuxedo',eye:0xf2b632},x:1.0,z:0.6,s:{trust:22,aff:18,full:60,groom:30}});
 makeCat({name:'Bean',sex:'f',coat:{base:'cream',pattern:'calico',eye:0x6ec3f0},age:0.25,x:0.2,z:-1,s:{trust:45,aff:40,full:72,groom:45}});
 W.cats[0].gazeT=9;

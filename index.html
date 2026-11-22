@@ -718,7 +718,9 @@ function updateCat(c,dt){
     case 'hiding': c.hideT=(c.hideT||0)-dt; if(c.hideT<=0){ c.hideT=rand(5,8); showIcon(c,'sniff',2); Snd.meow(1.25,0.35); } break;
     case 'greet': case 'bye': break;
     case 'boop': { const o=c.boopP; if(!o||o.state!=='boop'||o.away>0){ setState(c,'idle',1.5); break; } const op=o.g.position,p=c.g.position, d=dist2(p,op), want=(c.boopKind==='lick'?1.32:1.56)*(c.g.scale.x+o.g.scale.x)/2;
-      c.heading=angLerp(c.heading,Math.atan2(op.x-p.x,op.z-p.z),dt*6); if(d>want){ c.speed=lerp(c.speed,0.5,Math.min(1,dt*4)); p.x+=Math.sin(c.heading)*c.speed*dt; p.z+=Math.cos(c.heading)*c.speed*dt; } else c.speed=lerp(c.speed,0,Math.min(1,dt*8));
+      c.heading=angLerp(c.heading,Math.atan2(op.x-p.x,op.z-p.z),dt*6); if(d>want){ c.speed=lerp(c.speed,0.5,Math.min(1,dt*4)); p.x+=Math.sin(c.heading)*c.speed*dt; p.z+=Math.cos(c.heading)*c.speed*dt; }
+      else if(d<want-0.04){ const bx=p.x-op.x, bz=p.z-op.z, n=Math.hypot(bx,bz)||1, ux=n>0.01?bx/n:Math.sin(c.heading+Math.PI), uz=n>0.01?bz/n:Math.cos(c.heading+Math.PI); p.x+=ux*0.8*dt; p.z+=uz*0.8*dt; c.speed=0.2; c.stT=Math.max(c.stT,1.5); }
+      else c.speed=lerp(c.speed,0,Math.min(1,dt*8));
       if(c.stT<=0)setState(c,'idle',2); break; }
     case 'pet': c.petT-=dt; if(c.turnTo!==undefined){ c.heading=angLerp(c.heading,c.turnTo,dt*1.5); if(Math.abs(angDiff(c.heading,c.turnTo))<0.05)c.turnTo=undefined; } if(c.petT<=0&&c.gaze<=0)setState(c,'idle',rand(1.5,3)); break;
     case 'flop': c.petT-=dt; if(c.stT<=0&&c.petT<=0)setState(c,'idle',1); break;

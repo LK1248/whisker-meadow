@@ -1475,7 +1475,7 @@ const STAY_SVG='<svg viewBox="0 0 24 24"><path d="M3 11L12 3l9 8v10H3z" fill="#f
 const tag={c:null,t:0,el:$('#tag'),prev:{}};
 tag.el.innerHTML=`<div class="tn" id="tName"></div><div id="tTrait"></div>
   <div class="ic3"><div class="ic" id="rA">${ICO_A}<span class="lb">Love</span></div><div class="ic" id="rT">${ICO_T}<span class="lb">Trust</span></div><div class="ic" id="rH">${ICO_H}<span class="lb">Health</span></div></div>
-  <div class="tbtns"><button id="tShow" hidden aria-label="Cat fair"></button><button id="tStay" hidden title="Forever resident">${STAY_SVG}Stay</button></div>`;
+  <div class="tbtns"><button id="tShow" hidden aria-label="Cat fair"></button><button id="tStay" hidden title="Keep this cat (not for adoption)">${STAY_SVG}Keep</button></div>`;
 function tagFor(c,sec){ if(tag.c!==c)W.tagShows=(W.tagShows||0)+1; tag.c=c; tag.t=Math.max(tag.t,sec); }
 function updateTag(dt){
   if(tag.c){ tag.t-=dt; if(tag.t<=0&&!(tag.c.petT>0&&handOn(tag.c)))tag.c=null; }
@@ -1825,7 +1825,7 @@ function renderFamily(msg,noX){ const f=W.family, el=$('#family'); if(!f){ el.hi
     $('#fPick').onclick=()=>{ if(!W.cats.some(readyHome)){ renderFamily('No one is ready yet'); setTimeout(()=>{ if(W.family&&W.family.state!=='leaving')renderFamily(); },1800); return; } W.pickHome=true; renderFamily(); }; $('#fNo').onclick=()=>familyLeave("We'll come back!"); }
   const bx=$('#fX'); if(bx)bx.onclick=()=>familyLeave('Maybe another day!'); }
 function pickForHome(c){ const f=W.family; if(!f){ W.pickHome=false; return; }
-  if(!readyHome(c)){ floatWorld(c.g.position.clone().setY(1.3),c.forever?'Stays here':'Not ready yet'); tagFor(c,4); return; }
+  if(!readyHome(c)){ floatWorld(c.g.position.clone().setY(1.3),c.forever?'We're keeping this one':'Not ready yet'); tagFor(c,4); return; }
   W.pickHome=false; f.state='walking'; f.cat=c; renderFamily('Saying hello…'); tag.c=null; walkPath(c,[new V3(rand(-.2,.2),0,-LV().half+0.85)],'greet',0.9); }
 function famGreet(c){ const f=W.family; f.state='greet'; f.greetT=3; f.members[0].kneel=true; c.heading=Math.PI; showIcon(c,'sniff',2); }
 function backFromGate(c){ walkPath(c,[new V3(rand(-1,1),0,-LV().half+2.6)],'back',1); }

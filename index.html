@@ -827,13 +827,18 @@ function animateCat(c,dt,t){
   if(c.trap>0)c.trap-=dt;
   if(warn){ swish=0.45; swSpd=9; earOut=Math.max(earOut,0.7); }
   if(c.flick>0){ c.flick-=dt; swish=0.5; swSpd=10; tailUp=0.9; }
+  // sprint gait (zoomies / laser / fleeing): a bounding gallop with a flight phase, not a sped-up walk
+  let stretch=0, gal=false;
+  if(moving&&c.speed>2.0&&!c.carried&&c.jump<0.05){ gal=true; c.galPh=(c.galPh||0)+dt*(9+c.speed*1.6); const ph=c.galPh, s1=Math.sin(ph), c1=Math.cos(ph);
+    legA=[-1.15*s1-0.1,-1.15*s1+0.15,1.05*s1+0.1,1.05*s1-0.15]; rx=0.24*c1; coreY=0.43; stretch=0.12*s1;
+    baseY+=Math.max(0,Math.sin(ph-0.6))*0.17*c.g.scale.x; tailUp=0.15; swish=0.04; earOut=Math.max(earOut,0.4); hx=-0.15; eye=Math.min(eye,0.85); }
   const k=Math.min(1,dt*8);
-  c.core.position.y=lerp(c.core.position.y,coreY+(moving?Math.abs(Math.sin(c.phase))*0.025:0),k);
-  c.core.rotation.x=lerp(c.core.rotation.x,rx,k); c.core.rotation.z=lerp(c.core.rotation.z,rz,Math.min(1,dt*(c.carried?14:5)));
-  c.bodyM.scale.y=0.33*(warn?1+Math.sin(t*45)*0.02:1)*(1+arch);
+  c.core.position.y=lerp(c.core.position.y,coreY+(moving&&!gal?Math.abs(Math.sin(c.phase))*0.025:0),k);
+  c.core.rotation.x=gal?rx:lerp(c.core.rotation.x,rx,k); c.core.rotation.z=lerp(c.core.rotation.z,rz,Math.min(1,dt*(c.carried?14:5)));
+  c.bodyM.scale.y=0.33*(warn?1+Math.sin(t*45)*0.02:1)*(1+arch); c.bodyM.scale.z=0.58*(1+stretch);
   c.head.rotation.x=lerp(c.head.rotation.x,hx,k); c.head.rotation.z=lerp(c.head.rotation.z,hz,k); c.head.rotation.y=lerp(c.head.rotation.y,hy,Math.min(1,dt*(c.snap>0?20:5)));
   c.legs.forEach((L,i)=>{ L.rotation.x=lerp(L.rotation.x,legA[i],moving||c.carried?1:k); });
-  c.g.position.y=lerp(c.g.position.y,baseY+c.jump,Math.min(1,dt*(c.carried?14:12)));
+  c.g.position.y=gal?baseY:lerp(c.g.position.y,baseY+c.jump,Math.min(1,dt*(c.carried?14:12)));
   c.g.rotation.y=c.heading;
   c.blinkT-=dt; if(c.blinkT<=0){ c.blink=0.13; c.blinkT=rand(2.5,6); } c.blink-=dt;
   if(c.slowBlink>0){ c.slowBlink-=dt; const ph=1-c.slowBlink/1.9; eye=Math.min(eye,ph<0.35?1-ph/0.35*0.92:ph<0.6?0.08:0.08+(ph-0.6)/0.4*0.92); }

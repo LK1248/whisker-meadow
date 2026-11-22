@@ -1412,7 +1412,7 @@ tag.el.innerHTML=`<div class="tn" id="tName"></div><div id="tTrait"></div>
 function tagFor(c,sec){ if(tag.c!==c)W.tagShows=(W.tagShows||0)+1; tag.c=c; tag.t=Math.max(tag.t,sec); }
 function updateTag(dt){
   if(tag.c){ tag.t-=dt; if(tag.t<=0&&!(tag.c.petT>0&&handOn(tag.c)))tag.c=null; }
-  const c=tag.c; if(!c||c.away>0||c.leaving||!W.started||W.paused||!$('#modal').hidden){ tag.el.hidden=true; return; }
+  const c=tag.c; if(!c||intro.c||c.away>0||c.leaving||!W.started||W.paused||!$('#modal').hidden){ tag.el.hidden=true; return; }
   const top=c.g.position.clone(); top.y+=1.25*c.g.scale.x+0.35; const s=toScreen(top); if(!s.ok){ tag.el.hidden=true; return; }
   tag.el.hidden=false; const w=tag.el.offsetWidth, hh=tag.el.offsetHeight; const x=clamp(s.x-w/2,8,innerWidth-w-8), y=clamp(s.y-hh,60,innerHeight-hh-90);
   tag.el.style.transform=`translate(${x}px,${y}px)`;

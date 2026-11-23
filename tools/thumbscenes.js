@@ -16,7 +16,7 @@ export const SCENES = {
     const bx = TS.cardboardBox(1.5, 0.82, 1.1); add(scene, bx);
     const inner = TS.blanket(1.4, 1.0, 0xf08fab, 0.05); inner.position.set(0, 0.32, 0); add(scene, inner);
     const drape = TS.blanket(0.8, 0.42, 0xf08fab, 0.5); drape.position.set(-0.3, 0.86, 0.58); drape.rotation.y = 0.1; add(scene, drape);
-    const k = TS.cat(COAT('orange', 'tabby', 0x8fd14f), { age: 0.75, state: 'idle', at: [0.05, 0.28, -0.1], yaw: -0.15 }); add(scene, k.g);
+    const k = TS.cat(COAT('orange', 'tabby', 0x8fd14f), { age: 0.75, state: 'idle', at: [0.05, 0.28, -0.1], yaw: -0.15, head: window.HEAD || 1.3 }); add(scene, k.g);
     TS.point(scene, [1.8, 1.8, 2.4], 0xffc98a, 2.2, 9, true);
     TS.point(scene, [-1.4, 1.2, -1.2], 0x9f8cff, 3, 6);
     for (let i = 0; i < 9; i++) { const p = TS.pine(rr(1.0, 1.8), 0x2d4a45); p.position.set(rr(-10, 10), 0, rr(-16, -10)); add(scene, p); }

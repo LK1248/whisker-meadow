@@ -50,6 +50,7 @@ export function cat(coat, o = {}) {
   const i = w.W.cats.indexOf(c); if (i >= 0) w.W.cats.splice(i, 1);
   if (c.g.parent) c.g.parent.remove(c.g);
   pose(c, o.state || 'idle', o);
+  if (o.head) c.head.scale.multiplyScalar(o.head); // bigger head reads better at thumbnail size
   upgrade(c.g, o);
   if (o.at) c.g.position.set(...o.at);
   if (o.yaw !== undefined) c.g.rotation.y = o.yaw;

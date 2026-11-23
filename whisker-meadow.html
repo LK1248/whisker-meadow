@@ -202,6 +202,14 @@ body.intro .dock,body.intro #hud,body.intro .top{opacity:.25;pointer-events:none
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
 .pc{background:#fff;border-radius:12px;padding:6px 6px 8px;box-shadow:0 3px 10px rgba(74,52,38,.15);transform:rotate(-1deg)}
 .pc:nth-child(2n){transform:rotate(1.2deg)}
+.wall{background:#c99560 radial-gradient(#b7834f 1px,transparent 1.6px) 0 0/9px 9px;border:10px solid #8a5a3b;border-radius:14px;padding:14px;box-shadow:inset 0 2px 8px rgba(0,0,0,.25)}
+.wall .cards{gap:14px}
+button.pc{border:0;font:inherit;color:inherit;text-align:left;cursor:pointer;position:relative;transition:transform .15s}
+button.pc:hover,button.pc:focus-visible{transform:rotate(0) scale(1.04);z-index:1}
+.wall .pc::before{content:'';position:absolute;top:-5px;left:50%;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#e0507a;box-shadow:0 2px 3px rgba(0,0,0,.3)}
+.wall .pc:nth-child(3n)::before{background:#f6c443}.wall .pc:nth-child(3n+1)::before{background:#5b9be6}
+.wempty{font-size:54px;text-align:center;padding:30px 0;opacity:.6}
+h3 .cnt{color:#e0507a;font-size:20px;margin-left:6px}
 .pc img{width:100%;border-radius:8px;display:block;aspect-ratio:4/3;object-fit:cover;background:#f3e7d6}
 .pc b{display:block;font:600 14px var(--display);margin-top:5px}
 .pc span{font:700 11.5px/1.3 var(--body);color:var(--muted)}
@@ -496,6 +504,41 @@ function bigDecor(grp){ const A=area(), k=(A-200)/100; W.decoObst=[]; if(k<=0)re
 function treeMesh(s){ const g=new THREE.Group(); g.scale.setScalar(s); const fc=pick([0x6fbf5a,0x5eae4f,0x83c766,0x76b85c]);
   g.add(mesh(G.cyl,0x9b6b43,{p:[0,0.8,0],s:[0.18,1.6,0.18]})); g.add(mesh(G.sph,fc,{p:[0,2.1,0],s:[1,0.9,1]}));
   g.add(mesh(G.sph,fc,{p:[0.6,1.8,0.2],s:[0.7,0.6,0.7]})); g.add(mesh(G.sph,fc,{p:[-0.55,1.85,-0.2],s:[0.65,0.6,0.65]})); return g; }
+// ---- adoption card wall: thank-you postcards pinned on a corkboard by the house ----
+let cardBoard=null, boardSig='', boardT=0; const boardImgs={};
+function boardRand(a){ return ()=>{ a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function cardOn(hm,i){ return !hm.noCard&&!!hm.img&&!W.postQ.some(q=>q.i===i); }
+function wallCards(){ return W.homes.map((hm,i)=>({hm,i})).filter(o=>cardOn(o.hm,o.i)).reverse(); }
+function drawBoard(){ if(!cardBoard)return; const cv=cardBoard.userData.cv, x=cv.getContext('2d'), w=cv.width, h=cv.height;
+  x.fillStyle='#c99560'; x.fillRect(0,0,w,h); const rr=boardRand(7); x.fillStyle='rgba(120,75,35,.25)'; for(let i=0;i<500;i++){ x.beginPath(); x.arc(rr()*w,rr()*h,1+rr()*1.6,0,7); x.fill(); }
+  x.strokeStyle='#8a5a3b'; x.lineWidth=22; x.strokeRect(11,11,w-22,h-22);
+  const L=wallCards().slice(0,12), n=L.length, cols=n<=4?2:n<=9?3:4, rows=n<=4?2:3, cw=(w-60)/cols, ch=(h-60)/rows, pins=['#e0507a','#f6c443','#5b9be6'];
+  if(!L.length){ x.font='700 120px sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.globalAlpha=.35; x.fillStyle='#fff'; x.fillText('♥',w/2,h/2+6); x.globalAlpha=1; }
+  L.forEach((o,k)=>{ const r2=boardRand(o.i*31+5), cx=30+cw*(k%cols)+cw/2+(r2()-.5)*10, cy=30+ch*Math.floor(k/cols)+ch/2+(r2()-.5)*8, a=(r2()-.5)*0.22, pw=cw*0.86, ph=ch*0.86;
+    x.save(); x.translate(cx,cy); x.rotate(a); x.shadowColor='rgba(0,0,0,.35)'; x.shadowBlur=8; x.shadowOffsetY=3; x.fillStyle='#fff'; x.fillRect(-pw/2,-ph/2,pw,ph); x.shadowColor='transparent';
+    const im=boardImgs[o.i]; if(im&&im.complete&&im.naturalWidth){ const iw=pw-12, ih=ph-12; const sr=Math.max(iw/im.naturalWidth,ih/im.naturalHeight), sw=iw/sr, sh=ih/sr;
+      x.drawImage(im,(im.naturalWidth-sw)/2,(im.naturalHeight-sh)/2,sw,sh,-iw/2,-ih/2,iw,ih); } else { x.fillStyle='#f3e7d6'; x.fillRect(-pw/2+6,-ph/2+6,pw-12,ph-12); }
+    x.fillStyle=pins[k%3]; x.beginPath(); x.arc(0,-ph/2+4,7,0,7); x.fill(); x.restore(); });
+  cardBoard.material.map.needsUpdate=true; }
+function boardSync(force){ const L=wallCards(); let wait=false;
+  for(const o of L.slice(0,12))if(!boardImgs[o.i]||boardImgs[o.i].src!==o.hm.img){ const im=new Image(); im.onload=()=>{ boardSig=''; }; im.src=o.hm.img; boardImgs[o.i]=im; wait=true; }
+  const sig=L.slice(0,12).map(o=>o.i+(boardImgs[o.i]&&boardImgs[o.i].complete?'y':'n')).join(',');
+  if(force||sig!==boardSig){ boardSig=sig; drawBoard(); } }
+function cardBoardMesh(){ const g=new THREE.Group(); g.position.set(2.65,0,0.5); g.rotation.y=-0.22;
+  for(const sx of [-0.78,0.78]) g.add(mesh(G.box,0x8a5a3b,{p:[sx,1.05,-0.03],s:[0.1,2.1,0.1]}));
+  g.add(mesh(G.box,0xa5754a,{p:[0,2.14,0.02],s:[1.8,0.08,0.3]}));
+  const cv=document.createElement('canvas'); cv.width=640; cv.height=480; const tex=new THREE.CanvasTexture(cv); if(renderer.capabilities)tex.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+  const b=new THREE.Mesh(new THREE.PlaneGeometry(1.5,1.125),new THREE.MeshBasicMaterial({map:tex})); b.position.set(0,1.5,0.03); b.userData.cv=cv; g.add(b);
+  g.add(mesh(G.box,0x8a5a3b,{p:[0,1.5,0],s:[1.56,1.18,0.04]}));
+  cardBoard=b; boardSig=''; boardSync(true); return g; }
+function tapBoard(e){ if(!cardBoard)return false; setRay(e); if(!ray.intersectObject(cardBoard,false).length)return false; Snd.ding(); openWall(); return true; }
+function cardHTML(hm){ return `<div class="postcard">${hm.thanks?`<b class="ty">Thank you!</b>`:''}${hm.img?`<img src="${hm.img}" alt="${hm.name} in a new home">`:''}<p>${hm.thanks?`Thank you for ${hm.name}! `:''}${hm.line}</p><small>Love, the ${hm.fam} family</small></div>`; }
+function openCard(i,back){ const hm=W.homes[i]; if(!hm)return; openModal(cardHTML(hm)+`<button class="big" id="pcBack" aria-label="Back to the card wall">↩</button>`,true); $('#pcBack').onclick=back||closeModal; }
+function bindCards(back){ document.querySelectorAll('#mbox [data-hi]').forEach(b=>b.onclick=()=>{ Snd.ding(); openCard(+b.dataset.hi,back); }); }
+function openWall(){ const L=wallCards();
+  openModal(`<h3>Happy Tails<span class="cnt">♥ ${L.length}</span></h3><div class="wall">${L.length?`<div class="cards">${L.map(o=>`<button class="pc" data-hi="${o.i}"><img src="${o.hm.img}" alt="${o.hm.name} at home"><b>${o.hm.name}</b><span>with the ${o.hm.fam} family</span></button>`).join('')}</div>`:'<div class="wempty">\u{1F48C}</div>'}</div>`);
+  bindCards(openWall); }
+function boardPop(){ boardSync(true); if(!cardBoard)return; const p=cardBoard.getWorldPosition(new V3()); p.y+=0.2; spawnFx('spark',p,8,.6); spawnFx('h',p,3,.4); }
 function sanctuaryHouse(){
   const g=new THREE.Group();
   g.add(mesh(G.box,0xfff1dc,{p:[0,1,0],s:[3.4,2,2.4]}));
@@ -515,6 +558,7 @@ function sanctuaryHouse(){
   board.position.set(0,1.08,0.06); sign.add(board); sign.add(mesh(G.box,0xa5754a,{p:[0,1.08,0],s:[2.2,0.78,0.08]})); g.add(sign);
   // redraw once the web fonts have loaded so the measured width matches the real lettering
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{ board.material.map=signTex(); board.material.needsUpdate=true; });
+  g.add(cardBoardMesh());
   // bench, mailbox, hay
   const bench=new THREE.Group(); bench.position.set(2.5,0,1.5); bench.add(mesh(G.box,0xc99a6b,{p:[0,0.42,0],s:[1.2,0.08,0.4]})); bench.add(mesh(G.box,0xc99a6b,{p:[0,0.7,-0.18],s:[1.2,0.3,0.06]}));
   for(const sx of [-0.5,0.5]) bench.add(mesh(G.box,0x8a5a3b,{p:[sx,0.2,0],s:[0.08,0.4,0.36]})); g.add(bench);
@@ -1460,7 +1504,7 @@ function endPointer(e){
   if(P.mode==='catPending'&&!P.moved){ const c=P.cat; if(c.state==='hiding')foundCat(c); else if(W.runaway&&W.runaway.c===c&&c.pathEnd==='hide')caughtEarly(c); else if(W.collarPick){ setCollar(c,W.collarPick); W.collarPick=null; tagFor(c,3); spawnFx('spark',c.g.position.clone().setY(.8),5,.3); Snd.chime(); floatWorld(c.g.position.clone().setY(1.3),'Looking sharp!'); } else if(W.pickHome)pickForHome(c); else if(!lessonOn()&&!(c.blinkBackT>0)&&(!cam.close||cam.close.c!==c)&&catScreenH(c)<75)focusClose(c); else if(P.zone==='rump'&&!(c.blinkBackT>0))buttTap(c); else { tagFor(c,5); if(c.blinkBackT>0)blinkBack(c); else Snd.meow(rand(1.05,1.3),0.25); } }
   else if(P.mode==='carry')dropCat(P.cat);
   else if(P.mode==='item'&&!P.moved)useItem(P.item);
-  else if(P.mode==='pan'&&!P.moved){ if(W.collarPick){ const pr=W.collarPrice||15; W.money+=pr; W.collarPick=null; hud(); toast(`Collar returned: $${pr} back`); } else if(!tapWildlife(e)){ tag.c=null; leaveClose(true); } }
+  else if(P.mode==='pan'&&!P.moved){ if(W.collarPick){ const pr=W.collarPrice||15; W.money+=pr; W.collarPick=null; hud(); toast(`Collar returned: $${pr} back`); } else if(!tapWildlife(e)&&!tapBoard(e)){ tag.c=null; leaveClose(true); } }
   else if(P.mode==='wand')wandUp(e);
   S.cat=null; P.mode=null; handVis();
 }
@@ -1687,10 +1731,10 @@ function openBadges(tab='badges'){
   const tabs=`<div class="tabs"><button data-tab="badges" class="${tab==='badges'?'on':''}">Badges</button><button data-tab="tails" class="${tab==='tails'?'on':''}">Happy Tails · ${W.homes.length}</button><button data-tab="goals" class="${tab==='goals'?'on':''}">Goals</button></div>`;
   let body='';
   if(tab==='badges') body=`<div class="grid">${ACH.map(([id,n,d,f,th])=>{ const t=W.achT[id]||0, v=f(), nx=th[t]; return `<div class="badge-i ${t?'t'+t:''}"><div class="medal">${t?'★':'?'}</div><div><b>${n}</b><span>${d}</span><div class="pips">${nx!==undefined?`${Math.min(v,nx)} / ${nx}`:'Gold!'}</div></div></div>`; }).join('')}</div>`;
-  else if(tab==='tails') body=W.homes.length?`<div class="cards">${W.homes.slice().reverse().map(hm=>`<div class="pc">${hm.img?`<img src="${hm.img}" alt="${hm.name} at home">`:'<img alt="">'}<b>${hm.name}</b><span>with the ${hm.fam} family</span></div>`).join('')}</div>`:'<p class="center" style="color:var(--muted);font:700 15px var(--body)">Cats who find loving homes send postcards here.</p>';
+  else if(tab==='tails') body=W.homes.length?`<div class="cards">${W.homes.map((hm,i)=>({hm,i})).reverse().map(({hm,i})=>{ const on=cardOn(hm,i), t=on?'button':'div'; return `<${t} class="pc"${on?` data-hi="${i}"`:''}>${hm.img?`<img src="${hm.img}" alt="${hm.name} at home">`:'<img alt="">'}<b>${hm.name}</b><span>with the ${hm.fam} family</span></${t}>`; }).join('')}</div>`:'<p class="center" style="color:var(--muted);font:700 15px var(--body)">Cats who find loving homes send postcards here.</p>';
   else body=W.goals.map(g=>{ const [n,f,tg]=GOALS[g.i]; const v=Math.max(0,Math.min(tg,f()-g.base)); return `<div class="goal ${g.done?'done':''}">${g.done?'✓ ':''}${n}<span>${g.done?'+$15':`${v} / ${tg}`}</span></div>`; }).join('');
   openModal(`<h3>Sanctuary ${'★'.repeat(W.stars)}</h3>${tabs}${tab==='badges'?`<p style="margin:-4px 0 10px;color:var(--muted);font:700 13px var(--body)">Bronze +$10 \u00b7 Silver +$25 \u00b7 Gold +$60. Gold badges unlock special collars.</p>`:''}${body}`);
-  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>openBadges(b.dataset.tab)); }
+  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>openBadges(b.dataset.tab)); if(tab==='tails')bindCards(()=>openBadges('tails')); }
 $('#bShop').onclick=()=>openShop(curHint&&curHint.el==='#bShop'?guidePick(curHint.id):null); $('#bBadges').onclick=()=>openBadges(); $('#bSnap').onclick=()=>{ Snd.shutter(); snapshot(); };
 $('#bMusic').onclick=()=>{ Snd.toggleMusic(); $('#bMusic').classList.toggle('off',!Snd.musicOn); };
 $('#bDay').onclick=()=>{ W.dayOn=!W.dayOn; store.set('wm_daynight',W.dayOn); $('#bDay').classList.toggle('off',!W.dayOn); toast(W.dayOn?'Day & night: on':'Always daytime'); };
@@ -1708,7 +1752,7 @@ function openHelp(){
   ${sec('Daily care',`<ul><li>Tap a bowl to fill it (uses premium food first, then kibble).</li><li>Tap the litter box to scoop it; dirty boxes make the meadow smelly.</li><li>A rain roof keeps cats dry in showers.</li><li>Helpers fill bowls, scoop and pet cats, for $6 a minute. Unpaid helpers rest.</li><li>The donation jar by the gate collects money when your cats are happy.</li></ul>`)}
   ${sec('Cat fair',`<p>A grown cat with <b>Trust 55+, Love 50+ and Health 60+</b> gets a <b>Fair!</b> button on its tag. Every cat wins a category (Best Purr, Fluffiest Coat, Most Improved, Bravest Rescue, Best Dressed...) and prize money. Winning moves you up to bigger fairs.</p>`)}
   ${sec('New cats & kittens',`<ul><li>Rescuers drive up and drop off strays, sometimes a mama with kittens.</li><li>Close friends touch noses and lick each other. A happy, bonded, unrelated pair may have <b>one</b> litter, then both get a vet visit.</li><li>Kittens stay near mum until they grow up (about 3 minutes).</li></ul>`)}
-  ${sec('Adoption',`<ul><li>A cat is <b>ready for a home</b> after settling in (about 2½ minutes) with Trust 50+ and Health 55+. Looks and ribbons don't matter.</li><li>Families drive up and say what they'd love (a calm cat, a playful cat...). Tap <b>Pick a cat</b>, then a cat with a little house. A good personality match goes home; best friends go together.</li><li>No money changes hands. Postcards arrive later; see them in Badges → Happy Tails.</li><li>Tap <b>Keep</b> on a cat to keep it forever. Tap × to send a family off.</li></ul>`)}
+  ${sec('Adoption',`<ul><li>A cat is <b>ready for a home</b> after settling in (about 2½ minutes) with Trust 50+ and Health 55+. Looks and ribbons don't matter.</li><li>Families drive up and say what they'd love (a calm cat, a playful cat...). Tap <b>Pick a cat</b>, then a cat with a little house. A good personality match goes home; best friends go together.</li><li>No money changes hands. Postcards arrive later and get pinned on the card board by the house: tap it to see them all. They're also in Badges → Happy Tails.</li><li>Tap <b>Keep</b> on a cat to keep it forever. Tap × to send a family off.</li></ul>`)}
   ${sec('Runaways',`<p>A cat with very low trust may slip out the gate. Catch it before the "missing" notice for the <b>Quick Paws</b> badge, or press <b>Go look</b>, follow the paw prints and listen: meows get louder as you get closer. Tap it to bring it home (trust goes up).</p>`)}
   ${sec('Stars, shop & badges',`<ul><li>Sanctuary stars (1-5) come from homes found, rescues, ribbons and happiness. Stars unlock bigger meadows and item upgrades (cat castle, fountain, sunroom...).</li><li>At 5 stars the sanctuary keeps growing: new wings with ponds open as you find more cats homes (3, 6, 10, 16 homes).</li><li>Badges have bronze, silver and gold, and pay $10 / $25 / $60. Gold badges unlock special collars (rainbow, starry, blossom). Three small goals per visit pay $15 each (Badges → Goals).</li><li>Collars and premium food are in the shop.</li><li>Progress saves automatically on this device.</li></ul>`)}
   ${sec('Controls',`<ul><li>Drag the grass to move around; pinch or mouse wheel to zoom; right-drag to rotate (desktop).</li><li>Tap the cat counter (top left) to jump between cats.</li><li>Keys 1-4 pick tools on desktop.</li><li>The moon button turns the day &amp; night cycle on or off. At night cats get sleepy and fireflies come out.</li></ul>`)}
@@ -2170,7 +2214,8 @@ function extraUpdate(dt){
       if(f.walking&&!f.cats.some(k=>W.cats.includes(k))&&f.members.every(arrived))removeFamily(); }
     else if(f.state==='leaving'){ f.msgT-=dt; if(f.msgT<=0)$('#family').hidden=true; if(f.members.every(arrived))removeFamily(); }
     else if((f.state==='arrive'||f.state==='wait')&&f.t>110&&!W.pickHome)familyLeave("We'll come back!"); }
-  if(W.postQ.length&&W.postQ[0].t<=W.time&&$('#modal').hidden&&!W.paused){ const pq=W.postQ.shift(), hm=W.homes[pq.i]; if(hm){ if(hm.scene)W.stat.cards=[...new Set([...(W.stat.cards||[]),hm.scene])]; openModal(`<div class="postcard">${hm.thanks?`<b class="ty">Thank you!</b>`:''}${hm.img?`<img src="${hm.img}" alt="${hm.name} in a new home">`:''}<p>${hm.thanks?`Thank you for ${hm.name}! `:''}${hm.line}</p><small>Love, the ${hm.fam} family</small></div><button class="big" id="pcOk">Aww</button>`,true); $('#pcOk').onclick=closeModal; Snd.chime(); } }
+  if(W.postQ.length&&W.postQ[0].t<=W.time&&$('#modal').hidden&&!W.paused){ const pq=W.postQ.shift(), hm=W.homes[pq.i]; if(hm){ if(hm.scene)W.stat.cards=[...new Set([...(W.stat.cards||[]),hm.scene])]; openModal(cardHTML(hm)+`<button class="big" id="pcOk">Aww</button>`,true); $('#pcOk').onclick=()=>{ closeModal(); boardPop(); }; Snd.chime(); } }
+  if((boardT-=dt)<=0){ boardT=2; boardSync(); }
   extraT-=dt; if(extraT<=0){ extraT=1; checkCollection(); updateStars(); updateAch(); updateGoals(); hud(); }
 }
 function buildWandToy(){ const f=wand.fm; while(f.children.length)f.remove(f.children[0]); const T=W.tier.wand||1;
@@ -2442,6 +2487,6 @@ function begin(){ Snd.init(); $('#start').hidden=true; W.started=true; cam.theta
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); }catch(e){} begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>

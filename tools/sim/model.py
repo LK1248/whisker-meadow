@@ -26,7 +26,6 @@ for k, r in base.items():
     for l in sorted(lt)[1:]: xs += [lt[l]/60, lt[l]/60]; ys += [ys[-1], l]
     xs.append(min(60, r['log'][-1]['t']/60)); ys.append(ys[-1])
     ax.plot(xs, ys, color=COL[arch(k)], alpha=.75, lw=2, label=arch(k).capitalize() if k.endswith('_1') else None)
-ax.axvspan(15, 45, color='#f6c443', alpha=.12, label='Target session 15–45 min')
 ax.set_xlim(0, 60); ax.set_xlabel('Minutes played'); ax.set_ylabel('Meadow level (1–8)'); ax.set_title('How fast players grow the sanctuary (sim, no ads)')
 ax.legend(frameon=False, loc='lower right'); fig.tight_layout(); fig.savefig(FIG/'01_progression.png'); plt.close(fig)
 

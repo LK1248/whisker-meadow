@@ -17,7 +17,9 @@
 - Runs: 3 casual, 4 engaged (one 120 min), 2 optimizer (one 90 min), plus 3 "what if" runs with rewarded ads.
 - Limits: the bot skips the tutorial, never makes mistakes with the controls, and a real player's attention is messier. Treat the numbers as a shape, not as exact minutes.
 
-## 2. Pacing today: already on target
+## 2. Pacing today
+
+There is no target session length here: longer play is better. The aim is to understand how monetization, playtime and the player's experience affect each other. (A rough guess was that the current mechanics hold a typical player for 15–45 minutes before returns start to diminish. Nothing has measured that, so it is only a starting point.)
 
 Median minutes to reach each meadow level (no ads):
 
@@ -27,7 +29,7 @@ Median minutes to reach each meadow level (no ads):
 | Engaged | 2.9 | 6.2 | 10.6 | 16.9 | 33.2 | 42.5 | 57.8 (1 of 4 runs) |
 | Optimizer | 2.1 | 5.1 | 8.5 | 16.5 | 24.0 | 37.8 | 59.1 |
 
-A new room every 3–10 minutes early on, then every 8–15 minutes. That fits a 15–45 minute session well. **Recommendation: keep the current costs and timings.**
+A new room every 3–10 minutes early on, then every 8–15 minutes. The pace itself feels steady. The problem is that it **stops**: an engaged player has unlocked everything after about an hour, and money stops mattering well before that (section 4). That is where returns diminish, and it is the first thing to fix if the goal is longer play. Costs and timings are unchanged for now, as asked.
 
 ## 3. What actually holds players back
 
@@ -75,7 +77,16 @@ Today the meadow ends at level 8 (52 cats). Regular players will run out of goal
 
 The accelerating curve turns into a hopeless grind by L14–L16. A linear requirement, with family visits scaling with meadow size, keeps each new acre at roughly 15–25 minutes forever. The rewarded ad then feels like a shortcut, not an escape hatch.
 
-## 7. Poki rules that shape all of this
+## 7. How monetization, playtime and experience pull on each other
+
+- **Speed-up ads and playtime work against each other while the game has an end.** With only 8 levels, a "call a family now" ad gets an engaged player to the last room about 12 minutes sooner, so they run out of goals sooner too. Every speed-up shortens the game.
+- **With endless acres they stop working against each other.** If there is always another acre, saving 15 minutes on one acre just moves the player on to the next. Playtime stays, ad revenue goes up, and the ad feels like a kindness instead of a toll.
+- **Commercial breaks cost experience directly.** Every break interrupts a calm game. Placed at natural pauses they cost little; placed mid-petting they hurt the game's main feeling. Poki sets how often they play, so the game's job is to offer good moments, not more moments.
+- **Rewarded ads that fix a felt problem improve the experience.** Waiting for a family while a cat is ready is the most passive moment in the game. An optional "call a family" ad turns that wait into a choice. An ad that only gives money fixes nothing, because money isn't scarce.
+- **What gets players to come back is goals, not speed.** Returning players need something new: more acres, decor to spend money on, a collection to complete (like the card wall), and events. Each of these adds playtime without adding ads, and gives more natural moments for the ads that exist.
+- **Caveat:** the bot doesn't get bored. Real players may quit at a wall long before the bot does, so the walls in section 3 matter more for real players than the minutes suggest. Real Poki data (average playtime, return rate) is the only way to see where interest actually drops.
+
+## 8. Poki rules that shape all of this
 
 - No in-app purchases, no currency or "remove ads" purchases. Only Poki's own ads.
 - The game must not run its own ad timers. It calls `commercialBreak()` at natural pauses and Poki decides whether an ad actually plays.
@@ -84,7 +95,7 @@ The accelerating curve turns into a hopeless grind by L14–L16. A linear requir
 
 Sources: [Poki HTML5 SDK](https://sdk.poki.com/html5.html), [new requirements](https://sdk.poki.com/new-requirements), [monetization guide](https://developers.poki.com/guide/monetization), [SDK docs](https://sdk.poki.com/sdk-documentation.html).
 
-## 8. Illustrative revenue per 1,000 players
+## 9. Illustrative revenue per 1,000 players
 
 **These are assumptions, not Poki data.** Poki does not publish its revenue share or eCPMs.
 
@@ -101,10 +112,10 @@ Sources: [Poki HTML5 SDK](https://sdk.poki.com/html5.html), [new requirements](h
 
 Rewarded offers roughly double to quadruple revenue, and they come mostly from the players who stay longest. Those are the same players who need a reason to keep going, so retention and revenue point the same way.
 
-## 9. Recommendations
+## 10. Recommendations
 
 **Keep as is**
-- Current costs and timings for L1–L8.
+- Current costs and timings for L1–L8 for now (the issue is that progression ends, not its pace).
 - No money for adoptions (keeps the game from feeling like selling cats).
 
 **Ads, in a way that does not break the game**
@@ -128,7 +139,7 @@ Rewarded offers roughly double to quadruple revenue, and they come mostly from t
 - Casual players' cats sit at 40–50 happiness because they get less attention. Fine, but helpers could do a bit more.
 - A hungry cat that is being petted never leaves to eat. A real player could starve a cat by accident.
 
-## 10. Files
+## 11. Files
 
 - Charts: `docs/monetization/01_progression.png` to `06_revenue.png`; raw figures in `numbers.json`.
 - Presentation: `docs/monetization/Whisker-Meadow-Monetization.pptx` (opens in Google Slides).

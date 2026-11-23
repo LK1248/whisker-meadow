@@ -73,7 +73,7 @@ notes(s, 'All numbers come from a copy of the real game driven by a scripted pla
 
 # 2 summary
 s = slide(); title(s, 'Four things to take away')
-items = [('15–45 min', 'Pacing is already on target. Keep today\'s costs and timings.'),
+items = [('~1 hour', 'An engaged player has unlocked everything by then. Progress doesn\'t slow down, it stops.'),
          ('$0', 'Money is almost never the gate. Stars and adoptions are. Selling money is pointless.'),
          ('−12 min', 'A "call a family now" rewarded ad gets engaged players to L8 about 12 minutes sooner.'),
          ('4.9 h vs 15.4 h', 'Endless acres to level 20: linear need with more families, vs today\'s accelerating curve.')]
@@ -87,7 +87,7 @@ for i, (big, small) in enumerate(items):
 s = slide(); title(s, 'Players reach a new room every 3–15 minutes', 'Median minutes to each meadow level, no ads (3 casual, 4 engaged, 2 optimizer runs)')
 pic(s, '01_progression.png', 0.5, 1.85, w=8.2)
 text(s, 9.1, 2.0, 3.7, 4.8, ['Casual: L4 at 15 min, L6 at 38 min', 'Engaged: L5 at 17 min, L7 at 43 min', 'Optimizer: L8 at 59 min',
-     'Fits the 15–45 minute session target: keep the numbers as they are.'], size=16, bullets=True, space=12)
+     'The pace is steady. The issue is that it ends at L8 (unchanged for now)'], size=16, bullets=True, space=12)
 notes(s, 'Treat these as a shape, not exact minutes: the bot never fumbles controls and skips the tutorial.')
 
 # 4 gates
@@ -110,6 +110,19 @@ text(s, 9.1, 2.0, 3.7, 4.8, ['Engaged + family ad: L6 at 21 min instead of 33, 1
      'Casual + family ad backfired: fewer cats meant fewer donations, so money became the gate',
      '"Smart" offer that helps with whatever blocks the next room: a steady, modest gain'], size=16, bullets=True, space=12)
 notes(s, 'Gains are about 10–15 minutes per hour: helpful, never an escape from a grind.')
+
+# 6b interplay
+s = slide(); title(s, 'Speed-up ads only cost playtime if the game ends', 'No playtime target: longer is better. How the three pull on each other')
+pairs = [('Finite meadow (today)', ROSE, ['A family ad gets players to L8 ~12 min sooner', 'They then run out of goals sooner', 'Every speed-up shortens the game']),
+         ('Endless acres', FOREST, ['Saving time on one acre just moves players to the next', 'Playtime stays, ad revenue grows', 'The ad feels like a kindness, not a toll'])]
+for i, (h_, col, bl) in enumerate(pairs):
+    x = 0.6 + i * 6.15
+    card(s, x, 1.85, 5.9, 3.3)
+    text(s, x + 0.35, 2.1, 5.2, 0.5, h_, size=22, color=col, font=HEAD, bold=True)
+    text(s, x + 0.35, 2.8, 5.2, 2.3, bl, size=16, bullets=True, space=10)
+text(s, 0.6, 5.5, 12.1, 1.5, ['Commercial breaks always cost some calm: offer natural pauses only', 'Returning players come back for goals, not speed: acres, decor, the card wall, events',
+     'The bot never gets bored: only real Poki data shows where interest actually drops'], size=16, bullets=True, space=8)
+notes(s, 'The earlier 15-45 minute figure was a rough guess at when returns diminish, not a goal. Real playtime and return-rate data from Poki will show where players actually leave.')
 
 # 7 poki rules
 s = slide(); title(s, 'Poki\'s rules decide what is possible', 'From the Poki SDK docs and requirements')
@@ -156,7 +169,7 @@ for i, (h_, bl) in enumerate(cols):
 # 11 next steps
 s = slide(True)
 text(s, 0.9, 1.0, 11.5, 0.9, 'Suggested next steps', size=40, color=WHITE, font=HEAD, bold=True)
-text(s, 0.9, 2.2, 11.5, 4.5, ['1.  Keep levels 1–8 exactly as they are',
+text(s, 0.9, 2.2, 11.5, 4.5, ['1.  Keep levels 1–8 as they are for now',
      '2.  Wire in the Poki SDK: gameplayStart/Stop and commercialBreak at natural pauses',
      '3.  Add one rewarded offer: "a family is on the way"',
      '4.  Add endless acres after level 8, then decor as a money sink',

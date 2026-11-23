@@ -98,7 +98,7 @@ body.intro .dock,body.intro #hud,body.intro .top{opacity:.25;pointer-events:none
 #hint{position:fixed;left:0;top:0;pointer-events:none;z-index:6}
 #hint .hh{position:absolute;left:-30px;top:-22px;width:60px;height:60px}
 #hint .hh svg{width:100%;height:100%;filter:drop-shadow(0 4px 4px rgba(74,52,38,.3))}
-#hint .lab{position:absolute;left:0;top:-70px;transform:translateX(-50%);white-space:nowrap;background:var(--cream);padding:7px 14px;border-radius:999px;font:600 18px var(--display);box-shadow:0 3px 0 rgba(74,52,38,.12),0 8px 18px rgba(74,52,38,.2)}
+#hint .lab{position:absolute;left:0;top:-70px;display:flex;align-items:center;gap:4px;line-height:0;transform:translateX(-50%);white-space:nowrap;background:var(--cream);padding:7px 14px;border-radius:999px;font:600 18px var(--display);box-shadow:0 3px 0 rgba(74,52,38,.12),0 8px 18px rgba(74,52,38,.2)}
 #hint .rip{position:absolute;left:-22px;top:-22px;width:44px;height:44px;border-radius:50%;border:4px solid var(--pink);opacity:0}
 #hint.g-stroke .hh{animation:hstroke 3s ease-in-out infinite}
 @keyframes hstroke{0%{transform:translate(-30px,0);opacity:1}30%{transform:translate(30px,0);opacity:1}42%{transform:translate(30px,-14px);opacity:.35}88%{transform:translate(-30px,-14px);opacity:.35}100%{transform:translate(-30px,0);opacity:1}}
@@ -251,7 +251,7 @@ h3 .cnt{color:#e0507a;font-size:20px;margin-left:6px}
 
 <div class="dock pill" id="dock">
   <button class="tool on" data-tool="hand" aria-label="Pet"><svg viewBox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="16" rx="5" ry="4.2"/><circle cx="5.6" cy="10" r="2.3"/><circle cx="9.6" cy="6.3" r="2.3"/><circle cx="14.4" cy="6.3" r="2.3"/><circle cx="18.4" cy="10" r="2.3"/></svg>Pet</button>
-  <button class="tool" data-tool="brush" aria-label="Brush"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20l7-7"/><rect x="11" y="4" width="9" height="9" rx="2.5" transform="rotate(45 15.5 8.5)" fill="currentColor" stroke="none"/><path d="M13 3.5l-1.5 1.5M16.5 2.5l-1 2M19.5 4l-2 1"/></svg>Brush</button>
+  <button class="tool" data-tool="brush" aria-label="Brush"><svg viewBox="0 0 24 24"><g transform="rotate(-35 12 12)"><rect x="2.5" y="6.5" width="12.5" height="6.2" rx="2.6" fill="currentColor"/><path d="M4.6 13.6v3.4M7.3 13.6v3.4M10 13.6v3.4M12.7 13.6v3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M15 9.6h6.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></g></svg>Brush</button>
   <button class="tool" data-tool="wand" aria-label="Feather wand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 21L14 6"/><path d="M14 6c3-3 6-3 7-2-1 3-3 6-7 6" fill="currentColor"/><path d="M14 6c-1 3 0 6 2 7"/></svg>Wand</button>
   <button class="tool locked" data-tool="laser" aria-label="Laser pointer"><span class="lock">$25</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="13" width="11" height="5" rx="2.5" transform="rotate(-35 8 15.5)" fill="currentColor" fill-opacity=".3"/><path d="M13 10l5-3.5"/><circle cx="20" cy="5.5" r="2.2" fill="#e2574c" stroke="none"/></svg>Laser</button>
 </div>
@@ -1157,7 +1157,10 @@ function animateCat(c,dt,t){
     if(Math.random()<dt/(wetNow?14:weather.raining?24:110)) c.shake=0.65; }
   if(c.shake>0){ c.shake-=dt; const k=Math.sin(clamp(1-c.shake/0.65,0,1)*Math.PI); hz=Math.sin(t*38)*0.55*k; hy+=Math.sin(t*38+1)*0.25*k; earOut=Math.max(earOut,k); eye=Math.min(eye,1-0.8*k); }
   // gaze up at the player + slow blink
-  if(c.gaze>0&&!c.carried){ c.gaze-=dt; const p=c.g.position; const yaw=angDiff(c.heading,Math.atan2(camera.position.x-p.x,camera.position.z-p.z)); hy=clamp(yaw,-1.1,1.1); hx=Math.min(hx,-0.45);
+  if(c.gaze>0&&!c.carried){ c.gaze-=dt; const p=c.g.position; const yaw=angDiff(c.heading,Math.atan2(camera.position.x-p.x,camera.position.z-p.z));
+    // turn the body part way round, so the blink reads face-on (the head does the rest)
+    if(['idle','watch','shelter'].includes(c.state)&&!(c.hopT>0)){ const ex=yaw-clamp(yaw,-0.35,0.35); c.heading+=ex*Math.min(1,dt*2.2); }
+    hy=clamp(angDiff(c.heading,Math.atan2(camera.position.x-p.x,camera.position.z-p.z)),-1.1,1.1); hx=Math.min(hx,-0.45);
     if(!c.gazeBl&&c.gaze<(c.leaving?2.1:9)){ c.gazeBl=true; c.slowBlink=1.9; showIcon(c,'blink',c.leaving?2.2:8.5); }
     if(!c.leaving&&c.gazeBl&&!c.gazeBl2&&c.gaze<4.5){ c.gazeBl2=true; c.slowBlink=1.9; } }
   let arch=0;
@@ -1422,7 +1425,7 @@ function pickAt(e){ setRay(e); const objs=[]; for(const c of W.cats)if(c.away<=0
 const P={mode:null,pointers:new Map(),start:{x:0,y:0},last:{x:0,y:0},t0:0,moved:false,cat:null,item:null,grab:new V3(),pinch:0,hx:-200,hy:-200,over:false,hoverCat:null,hoverT:0,type:'mouse',down:false};
 const S={cat:null,len:0,zones:{},dir:null,t0:0,last:0};
 const SCRUFF_SVG='<svg viewBox="0 0 32 32" width="30" height="30"><g fill="#d9c7a0"><circle cx="11" cy="19" r="7"/><circle cx="20" cy="16" r="8"/><circle cx="24" cy="23" r="5.5"/><circle cx="14" cy="25" r="5"/></g><path d="M5 9q7-5 12 1-7 4-12-1z" fill="#d9a23a"/><path d="M19 6l9 4M24 8l1-4" stroke="#7a5232" stroke-width="2" stroke-linecap="round"/></svg>',
-  BRUSH_HINT='<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#4a3426" stroke-width="2.2" stroke-linecap="round"><path d="M4 20l7-7"/><rect x="11" y="4" width="9" height="9" rx="2.5" transform="rotate(45 15.5 8.5)" fill="#4a3426" stroke="none"/><path d="M13 3.5l-1.5 1.5M16.5 2.5l-1 2M19.5 4l-2 1"/></svg>';
+  BRUSH_HINT='<svg viewBox="0 0 24 24" width="30" height="30" style="color:#4a3426"><g transform="rotate(-35 12 12)"><rect x="2.5" y="6.5" width="12.5" height="6.2" rx="2.6" fill="currentColor"/><path d="M4.6 13.6v3.4M7.3 13.6v3.4M10 13.6v3.4M12.7 13.6v3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M15 9.6h6.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></g></svg>';
 // a scruffy coat: one tier below SCRUFF_AT. burrCount = how much brushing is still needed (the brush tutorial and fair use it)
 const SCRUFF_AT=35, DULL_ZONES=['back','belly','chest','head','cheek','chin','leg','tail'], PINKS=[0xf4a0a8,0xf6b7c0];
 function burrCount(c){ const g=c.s.groom; return g>=SCRUFF_AT?0:Math.min(5,Math.ceil((SCRUFF_AT-g)/7)); }
@@ -1795,6 +1798,15 @@ function guidePick(why){ const can=id=>{ const it=SHOP.find(x=>x.id===id); if(!i
   if(n>countItems('bowl')*3&&can('bowl'))return 'bowl';
   if(!countItems('bed')&&can('bed'))return 'bed';
   if(can('ball'))return 'ball'; return 'food'; }
+// hint bubble icons (wordless)
+const hIco=(inner,w=30)=>`<svg viewBox="0 0 24 24" width="${w}" height="${w}" style="vertical-align:middle">${inner}</svg>`;
+const sized=(svg,w,h)=>svg.replace('<svg ',`<svg width="${w}" height="${h}" style="vertical-align:middle" `);
+const toolIco=t=>{ const e=$(`[data-tool=${t}] svg`); return e?sized(e.outerHTML.replace(/ width="[^"]*"| height="[^"]*"/g,''),30,30).replace('style="','style="color:#4a3426;'):''; };
+const H_HEART='<path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="#ff6f99"/>';
+const H_LOOK='<circle cx="10" cy="10" r="6" fill="#fff6ea" stroke="#4a3426" stroke-width="2.4"/><path d="M14.5 14.5L20 20" stroke="#4a3426" stroke-width="3" stroke-linecap="round"/>';
+const H_EYES='<svg viewBox="0 0 72 30" width="54" height="23" style="vertical-align:middle"><g fill="none" stroke="#4a3426" stroke-width="5" stroke-linecap="round"><path d="M6 10q12 12 24 0"/><path d="M42 10q12 12 24 0"/></g></svg>';
+const H_BAG='<path d="M4 9h16l-1.5 11h-13z" fill="#ff8fb1"/><path d="M8 9V7a4 4 0 0 1 8 0v2" fill="none" stroke="#4a3426" stroke-width="2.2"/>';
+const H_SWAY='<span style="font-size:24px;vertical-align:middle"> ⇆</span>';
 const GUIDE_LABEL={food:'Buy food',shelter:'Rain roof',litter:'Litter box',bowl:'Food bowl',bed:'Cozy bed',ball:'Buy a toy',expand:'More room',laser:'Laser'};
 function openShop(guide){
   const cards=SHOP.filter(it=>it.id!=='fire'||helpers.length).map(it=>{ const avail=it.avail?it.avail():true, max=it.max?it.max():Infinity, have=it.id==='helper'?helpers.length:it.max?countItems(it.id):0, cost=it.cost(), need=it.need?it.need():0, starOk=W.stars>=need;
@@ -1854,23 +1866,23 @@ const bodyOf=c=>c?c.core.localToWorld(new V3(0,0.2,0)):null;
 const elC=sel=>{ const r=$(sel).getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2}; };
 function scruffiest(){ return active().filter(c=>burrCount(c)>0&&!c.carried&&!c.outside).sort((a,b)=>a.s.groom-b.s.groom)[0]||null; }
 const HINTS=[
-  {id:'pet',when:()=>W.time>1,at:()=>headOf(anyCat()),g:'stroke',label:'Stroke gently',done:()=>W.stat.good>=3},
-  {id:'find',when:()=>W.runaway&&W.runaway.notified&&W.runaway.c.state==='hiding',at:()=>W.runaway&&W.runaway.trailMid,g:'tap',label:()=>'Find '+(W.runaway?W.runaway.c.name:''),done:()=>!W.runaway||W.runaway.c.state!=='hiding',auto:10,again:true},
-  {id:'pick',when:()=>W.pickHome&&W.cats.some(readyHome),at:()=>headOf(W.cats.find(readyHome)),g:'tap',label:'Pick a cat',done:()=>!W.pickHome},
-  {id:'feed',when:()=>W.time>40||(W.time>15&&W.cats.some(c=>c.s.full<60)),at:()=>{ const b=items.find(i=>i.kind==='bowl'&&i.portions<i.cap)||items.find(i=>i.kind==='bowl'); return b&&b.pos.clone().setY(0.2); },g:'tap',label:'Feed',done:()=>W.stat.fills>0},
-  {id:'blink',when:()=>W.cats.some(c=>c.blinkBackT>0.5&&c.away<=0),at:()=>headOf(W.cats.find(c=>c.blinkBackT>0)),g:'tap',label:'Blink back!',done:()=>W.stat.blinkBack>0,auto:9,again:true},
-  {id:'carry',when:()=>W.time>60,at:()=>bodyOf(anyCat()),g:'hold',label:'Hold to carry',done:()=>W.stat.drops>0},
-  {id:'litter',when:()=>items.some(i=>i.kind==='litter'&&i.dirt>=2),at:()=>{ const l=items.find(i=>i.kind==='litter'&&i.dirt>=2); return l&&l.pos.clone().setY(0.3); },g:'tap',label:'Scoop',done:()=>W.stat.cleaned>0},
-  {id:'shop',when:()=>W.time>80&&W.money>=12,el:'#bShop',g:'tap',label:()=>GUIDE_LABEL[guidePick('shop')]||'Shop',done:()=>W.stat.buys>0},
-  {id:'wand',when:()=>W.time>100,el:'[data-tool=wand]',g:'tap',label:'Play',done:()=>W.tool==='wand'},
-  {id:'wand2',when:()=>W.tool==='wand',at:()=>wand.tip.clone().setY(0.2),g:'stroke',label:'Drag · Flick · Hold',done:()=>W.stat.pounces>=3},
+  {id:'pet',when:()=>W.time>1,at:()=>headOf(anyCat()),g:'stroke',label:()=>sized(HOURGLASS,22,26)+hIco(H_HEART,26),done:()=>W.stat.good>=3},
+  {id:'find',when:()=>W.runaway&&W.runaway.notified&&W.runaway.c.state==='hiding',at:()=>W.runaway&&W.runaway.trailMid,g:'tap',label:()=>hIco(H_LOOK)+sized(PAWS_SVG,34,26),done:()=>!W.runaway||W.runaway.c.state!=='hiding',auto:10,again:true},
+  {id:'pick',when:()=>W.pickHome&&W.cats.some(readyHome),at:()=>headOf(W.cats.find(readyHome)),g:'tap',label:()=>sized(FAM_SVG,40,30)+hIco(H_HEART,24),done:()=>!W.pickHome},
+  {id:'feed',when:()=>W.time>40||(W.time>15&&W.cats.some(c=>c.s.full<60)),at:()=>{ const b=items.find(i=>i.kind==='bowl'&&i.portions<i.cap)||items.find(i=>i.kind==='bowl'); return b&&b.pos.clone().setY(0.2); },g:'tap',label:()=>hIco(IC.food),done:()=>W.stat.fills>0},
+  {id:'blink',when:()=>W.cats.some(c=>c.blinkBackT>0.5&&c.away<=0),at:()=>headOf(W.cats.find(c=>c.blinkBackT>0)),g:'tap',label:()=>H_EYES+hIco(H_HEART,24),done:()=>W.stat.blinkBack>0,auto:9,again:true},
+  {id:'carry',when:()=>W.time>60,at:()=>bodyOf(anyCat()),g:'hold',label:()=>`<svg viewBox="0 0 64 50" width="42" height="33" style="vertical-align:middle">${catFace(22,'#f3a64a').replace('translate(22,25)','translate(22,30)')}<path d="M50 42V12m-8 8l8-8 8 8" fill="none" stroke="#4a3426" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,done:()=>W.stat.drops>0},
+  {id:'litter',when:()=>items.some(i=>i.kind==='litter'&&i.dirt>=2),at:()=>{ const l=items.find(i=>i.kind==='litter'&&i.dirt>=2); return l&&l.pos.clone().setY(0.3); },g:'tap',label:()=>hIco(IC.litter),done:()=>W.stat.cleaned>0},
+  {id:'shop',when:()=>W.time>80&&W.money>=12,el:'#bShop',g:'tap',label:()=>hIco(IC[guidePick('shop')]||H_BAG),done:()=>W.stat.buys>0},
+  {id:'wand',when:()=>W.time>100,el:'[data-tool=wand]',g:'tap',label:()=>toolIco('wand'),done:()=>W.tool==='wand'},
+  {id:'wand2',when:()=>W.tool==='wand',at:()=>wand.tip.clone().setY(0.2),g:'stroke',label:()=>toolIco('wand')+H_SWAY,done:()=>W.stat.pounces>=3},
   {id:'brush',when:()=>W.time>100&&W.tool!=='brush'&&!!scruffiest(),el:'[data-tool=brush]',g:'tap',label:()=>BRUSH_HINT,done:()=>W.tool==='brush'},
   {id:'brush2',when:()=>W.tool==='brush'&&!!scruffiest(),at:()=>{ const c=scruffiest(); return c&&bodyOf(c); },g:'stroke',label:()=>BRUSH_HINT+'<span style="font-size:24px;vertical-align:8px"> ⇆</span>',done:()=>W.stat.brush>=4},
-  {id:'show0',when:()=>W.tool!=='hand'&&!W.stat.shows&&W.cats.some(showReady),el:'[data-tool=hand]',g:'tap',label:'Pet',done:()=>W.tool==='hand',redo:true},
-  {id:'show',when:()=>W.tool==='hand'&&W.cats.some(showReady),at:()=>headOf(W.cats.find(showReady)),g:'tap',label:'Cat fair!',done:()=>W.stat.shows>0},
+  {id:'show0',when:()=>W.tool!=='hand'&&!W.stat.shows&&W.cats.some(showReady),el:'[data-tool=hand]',g:'tap',label:()=>toolIco('hand'),done:()=>W.tool==='hand',redo:true},
+  {id:'show',when:()=>W.tool==='hand'&&W.cats.some(showReady),at:()=>headOf(W.cats.find(showReady)),g:'tap',label:()=>fairBadge(0,30),done:()=>W.stat.shows>0},
   {id:'belly',when:()=>false&&W.cats.some(c=>c.state==='flop'&&c.offer&&c.s.trust<75),at:()=>{ const c=W.cats.find(c=>c.state==='flop'&&c.offer); return c&&bodyOf(c); },g:'none',label:'Belly? Careful!',auto:4},
-  {id:'roof',when:()=>weather.raining&&!countItems('shelter'),el:'#bShop',g:'tap',label:'Rain roof',done:()=>countItems('shelter')>0||!weather.raining},
-  {id:'space',when:()=>W.cats.length>=LV().cap&&W.level<4,el:'#bShop',g:'tap',label:'More room',done:()=>W.cats.length<LV().cap},
+  {id:'roof',when:()=>weather.raining&&!countItems('shelter'),el:'#bShop',g:'tap',label:()=>hIco(IC.shelter),done:()=>countItems('shelter')>0||!weather.raining},
+  {id:'space',when:()=>W.cats.length>=LV().cap&&W.level<4,el:'#bShop',g:'tap',label:()=>hIco(IC.expand),done:()=>W.cats.length<LV().cap},
 ];
 const hintDone=new Set(), hintRetry={}; let curHint=null, hintT=0, hintGap=0;
 function hideHint(){ curHint=null; hintEl.hidden=true; hintGap=4; }
@@ -2484,7 +2496,7 @@ function endBlinkTut(ok){ const c=bt.c; if(!c)return; bt.c=null; cam.want=Math.m
   hintGap=6; }
 // ---- lesson 4: grooming. A scruffy cat, the brush, scrub until it shines ----
 const br={c:null,t:0,stage:'tool'};
-const BRUSH_ICON='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#4a3426" stroke-width="2.2" stroke-linecap="round"><path d="M4 20l7-7"/><rect x="11" y="4" width="9" height="9" rx="2.5" transform="rotate(45 15.5 8.5)" fill="#4a3426" stroke="none"/></svg>';
+const BRUSH_ICON='<svg viewBox="0 0 24 24" width="34" height="34" style="color:#4a3426"><g transform="rotate(-35 12 12)"><rect x="2.5" y="6.5" width="12.5" height="6.2" rx="2.6" fill="currentColor"/><path d="M4.6 13.6v3.4M7.3 13.6v3.4M10 13.6v3.4M12.7 13.6v3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M15 9.6h6.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></g></svg>';
 const SHINE_ICON='<svg viewBox="0 0 24 24" width="34" height="34"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z" fill="#f2c94c"/></svg>';
 function brushReady(){ return !br.c&&!br.done&&W.stat.pairDone&&!W.stat.brushTut&&!intro.c&&!bt.c&&!pl.a&&!firstAdopt()&&W.started&&!W.paused&&$('#modal').hidden&&!W.runaway&&W.time>(W.stat.pairDoneT!=null?W.stat.pairDoneT+25:200); }
 function startBrushTut(){ let c=scruffiest(); if(!c){ c=active().filter(k=>!k.carried&&!k.outside&&k.age>=0.5&&['idle','walk','sit','watch'].includes(k.state)).sort((a,b)=>a.s.groom-b.s.groom)[0]; if(!c)return; c.s.groom=Math.min(c.s.groom,22); }
@@ -2580,7 +2592,7 @@ const BELLY_TIP=`<svg viewBox="0 0 160 84">${trustIco(4,2,36)}${ARROW(20)}${HEAR
 const BUTT_TIP=`<svg viewBox="0 0 160 46">${HEART(36,22,1.8)}<path d="M72 36l14-26" stroke="#b9a89a" stroke-width="4" stroke-linecap="round"/><g fill="none" stroke="#e0505f" stroke-width="4" stroke-linecap="round"><path d="M110 14q6 6 0 12"/><path d="M128 14q-6 6 0 12"/><path d="M113 32q6-6 12 0"/></g></svg>`;
 const FLEA_TIP=`<svg viewBox="0 0 160 60"><circle cx="26" cy="26" r="18" fill="#fff6ea" stroke="#b9a89a" stroke-width="4"/><path d="M39 39l11 11" stroke="#b9a89a" stroke-width="6" stroke-linecap="round"/>`+
   `<g fill="#2a1e1a"><circle cx="16" cy="33" r="2.4"/><circle cx="34" cy="20" r="2.4"/><circle cx="30" cy="35" r="2.4"/><circle cx="22" cy="21" r="2"/></g><path d="M17 31q5-13 11-5" fill="none" stroke="#e0505f" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 3"/>`+
-  `${ARROW(30)}<g transform="translate(92 6) scale(2)" fill="none" stroke="#8a6a52" stroke-width="2.2" stroke-linecap="round"><path d="M4 20l7-7"/><rect x="11" y="4" width="9" height="9" rx="2.5" transform="rotate(45 15.5 8.5)" fill="#8a6a52" stroke="none"/><path d="M13 3.5l-1.5 1.5M16.5 2.5l-1 2M19.5 4l-2 1"/></g></svg>`;
+  `${ARROW(30)}<g transform="translate(92 6) scale(2)" color="#8a6a52"><g transform="rotate(-35 12 12)"><rect x="2.5" y="6.5" width="12.5" height="6.2" rx="2.6" fill="currentColor"/><path d="M4.6 13.6v3.4M7.3 13.6v3.4M10 13.6v3.4M12.7 13.6v3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M15 9.6h6.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></g></g></svg>`;
 function showTip(kind,c,svg,dur,tap){ tips.cur={kind,c,dur,tap}; tips.t=0; $('#tip').innerHTML=svg; $('#tip').hidden=false; $('#tip').style.opacity=1; if(tap){ const gh=$('#ghost'); gh.innerHTML=`<svg viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`; gh.classList.add('tap'); gh.hidden=false; } W.stat[kind+'Tip']=1; }
 function endTip(){ if(!tips.cur)return; if(tips.cur.tap){ $('#ghost').hidden=true; $('#ghost').classList.remove('tap'); } tips.cur=null; $('#tip').hidden=true; }
 function updateTips(dt){ const busy=tutQuiet()||br.c||firstAdopt()||intro.c||bt.c||pl.a||!W.started||W.paused||!$('#modal').hidden;
@@ -2601,6 +2613,6 @@ const musT={b:$('#bMusic')}; musT.home=musT.b.parentElement; musT.next=musT.b.ne
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); }catch(e){} begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={Snd,showReady,updateTag,lessonOn,TREES,fadeTrees,tips,showTip,FLEA_TIP,owls,boopOwl,owlTrees,ensureBurrs,updateScruff,dustPuff,updateFleas,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={Snd,HINTS,showReady,updateTag,lessonOn,TREES,fadeTrees,tips,showTip,FLEA_TIP,owls,boopOwl,owlTrees,ensureBurrs,updateScruff,dustPuff,updateFleas,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>

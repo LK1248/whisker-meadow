@@ -2160,7 +2160,7 @@ function spawnFamily(){ const ready=W.cats.filter(readyHome); if(!ready.length)r
   const want=Math.random()<0.7?pick(ready).trait:pick(TRAITS); const n=Math.random()<0.5?2:3; const members=[];
   for(let i=0;i<n;i++){ const kid=i===2||(n===2&&i===1&&Math.random()<0.4); const m=personMesh({scale:kid?0.68:1}); m.g.visible=false; m.g.position.set(-3.6+i*0.3,0,-h-8.3); m.target=m.g.position.clone(); m.route=[]; m.heading=0; m.face=0; m.speed=0; m.phase=0; scene.add(m.g); members.push(m); }
   const car=carVisit(()=>{ members.forEach((m,i)=>{ m.g.visible=true; m.route=routeIn(h,i,n); }); });
-  W.family={members,want,tries:0,t:0,name:pick(FAM_NAMES),state:'arrive',car}; Snd.chime(); renderFamily(); }
+  W.family={members,want,tries:0,t:0,name:pick(FAM_NAMES),state:'arrive',car,atGate:false}; $('#family').hidden=true; }
 function renderFamily(msg,noX){ const f=W.family, el=$('#family'); if(!f){ el.hidden=true; return; } el.hidden=false;
   const x=noX?'':'<button class="fx" id="fX" aria-label="Send them off">&times;</button>';
   if(msg) el.innerHTML=`${x}<div class="fam">${FAM_SVG}<div class="want">${msg}</div></div>`;
@@ -2299,6 +2299,7 @@ function extraUpdate(dt){
   const f=W.family;
   if(!f){ if(W.cats.some(readyHome)&&!W.runaway&&(W.night||0)<0.55&&!tutQuiet()){ visitT-=dt; if(visitT<=0)spawnFamily(); } }
   else { f.t+=dt;
+    if(!f.atGate&&f.state==='arrive'&&f.members.every(m=>m.g.visible&&m.route&&arrived(m))){ f.atGate=true; Snd.chime(); renderFamily(); }
     if(f.state==='walking'&&f.cat&&f.cat.state!=='path'){ f.state='wait'; f.cat=null; renderFamily(); }
     if(W.pickHome&&!W.cats.some(readyHome)){ W.pickHome=false; renderFamily(); }
     if(!['bye','leaving'].includes(f.state)&&f.t>150)familyLeave("We'll come back!");

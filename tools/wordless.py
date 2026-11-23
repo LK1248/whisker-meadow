@@ -99,7 +99,7 @@ rep("const cats=[['Best Purr',s.aff],['Fluffiest Coat',s.groom],['Healthiest',s.
 rep("if(COATS[c.coat.base].rare)cats.push(['Rarest Coat',80]); if(c.collar)cats.push(['Best Dressed',74]);", "if(COATS[c.coat.base].rare)cats.push(['💎',80]); if(c.collar)cats.push(['🎀',74]);")
 rep("lbl=place+['','st','nd','rd'][place];", "lbl=String(place);")
 rep("<h3 class=\"center\" style=\"margin:0\">${c.name}</h3><div class=\"center\" style=\"font:600 19px var(--display);color:var(--pinkd)\">${cat}</div><div class=\"prize\">+$${prize}</div><button class=\"big\" id=\"collect\">Collect</button>",
-    "<div class=\"center\" style=\"font-size:34px\">${cat}</div><div class=\"prize\">+$${prize}</div><button class=\"big\" id=\"collect\" aria-label=\"Collect\">✓</button>")
+    "<div class=\"center\" style=\"font-size:64px;line-height:1.1\" aria-hidden=\"true\">🏆</div><div class=\"prize\">+$${prize}</div><button class=\"big\" id=\"collect\" aria-label=\"Collect\">✓</button>")
 
 # ---------------- meet sheet (new arrivals) ----------------
 rep("$('#mName').textContent=m.c.name;", "$('#mName').textContent='';")

@@ -408,13 +408,14 @@ function setShadowBounds(){ const h=ext()+6, sc=sun.shadow.camera; sc.left=-h; s
 const gradTex=(()=>{ const d=new Uint8Array([125,195,255]); const t=new THREE.DataTexture(d,3,1,THREE.LuminanceFormat); t.minFilter=t.magFilter=THREE.NearestFilter; t.generateMipmaps=false; t.needsUpdate=true; return t; })();
 const matCache={}, TREES=[];
 function M(c){ return matCache[c]||(matCache[c]=new THREE.MeshToonMaterial({color:c,gradientMap:gradTex})); }
-// glossy coat: the same toon material plus a specular highlight (a crisp stepped spot and a soft lobe around it)
+// groomed coat: the same toon material plus a soft sheen (a wide, coat-tinted lobe and a faint velvety rim; no crisp highlight, so it never looks wet)
 const GLOSS_SPEC='reflectedLight.directDiffuse += irradiance * BRDF_Diffuse_Lambert( material.diffuseColor );';
 const glossCache={};
 function MG(c){ if(glossCache[c])return glossCache[c]; const m=new THREE.MeshToonMaterial({color:c,gradientMap:gradTex});
   m.onBeforeCompile=sh=>{ sh.fragmentShader=sh.fragmentShader.replace('#include <lights_toon_pars_fragment>',THREE.ShaderChunk.lights_toon_pars_fragment.replace(GLOSS_SPEC,GLOSS_SPEC+
-    ' vec3 hv=normalize(directLight.direction+geometry.viewDir); float nh=max(dot(geometry.normal,hv),0.0); float sp=pow(nh,90.0); float soft=pow(nh,16.0);'+
-    ' reflectedLight.directDiffuse += directLight.color*(smoothstep(0.3,0.5,sp)*0.5+soft*0.12);')); };
+    ' vec3 hv=normalize(directLight.direction+geometry.viewDir); float nh=max(dot(geometry.normal,hv),0.0); float nl=max(dot(geometry.normal,directLight.direction),0.0);'+
+    ' float rim=pow(1.0-max(dot(geometry.normal,geometry.viewDir),0.0),3.0); vec3 tint=mix(vec3(0.5),material.diffuseColor,0.55);'+
+    ' reflectedLight.directDiffuse += directLight.color*tint*(pow(nh,8.0)*0.1+rim*nl*0.16);')); };
   m.customProgramCacheKey=()=>'gloss'; return glossCache[c]=m; }
 const G={sph:new THREE.SphereGeometry(1,24,18),sphLo:new THREE.SphereGeometry(1,10,8),cyl:new THREE.CylinderGeometry(1,1,1,16),cone:new THREE.ConeGeometry(1,1,14),box:new THREE.BoxGeometry(1,1,1)};
 function mesh(geo,color,o={}){ const m=new THREE.Mesh(geo,typeof color==='number'?M(color):color); if(o.p)m.position.set(...o.p); if(o.s)m.scale.set(...o.s); if(o.r)m.rotation.set(...o.r);

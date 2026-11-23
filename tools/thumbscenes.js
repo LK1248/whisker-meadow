@@ -26,6 +26,42 @@ export const SCENES = {
     return { scene, cam: TS.camAt(30, [0.5, 1.55, 4.6], [0, 0.72, 0]), post: { bloom: 0.3, vignette: 0.42, sat: 1.2 } };
   },
 
+  // A2. Box close-up: higher camera, the kitten looking almost straight at you, head filling the frame.
+  // o.style: 'facet' (low-poly), 'smooth' (the game's round shapes, soft shading), 'toon' (the game's stepped toon shading, lit for stills)
+  // o.eye / o.ear: eye and ear scale; o.dist: camera distance to the face; o.el: camera elevation (rad); o.look: gaze offset (rad)
+  boxClose(o = {}) {
+    rnd(11);
+    const style = o.style || 'smooth', smooth = style !== 'facet';
+    const { scene } = TS.stage({ sky: TS.skyTex([[0, '#2a2458'], [0.45, '#5a4588'], [0.8, '#c9807f'], [1, '#f3b487']]), fog: [0x6a4f86, 5, 16],
+      hemi: [0xc9b8ff, 0x3a2f4a, style === 'toon' ? 0.45 : 0.62], sun: { hex: 0xffb37a, i: 1.0, p: [-4, 4.5, -5], shadow: 3 }, exposure: style === 'toon' ? 0.85 : 1.02 });
+    add(scene, TS.ground(40, [0x3f6b4a, 0x466f4c, 0x3a6345, 0x4a7650], 30, 0.08));
+    const bx = TS.cardboardBox(1.5, 0.82, 1.1); add(scene, bx);
+    const inner = TS.blanket(1.4, 1.0, 0xf08fab, 0.05); inner.position.set(0, 0.36, 0); add(scene, inner);
+    const drape = TS.blanket(0.62, 0.42, 0xf08fab, 0.5); drape.position.set(-0.42, 0.86, 0.58); drape.rotation.y = 0.1; add(scene, drape);
+    const az = o.az ?? 0.18, el = o.el ?? 0.62, look = o.look ?? 0.12;
+    const k = TS.cat(COAT(o.base || 'orange', o.pattern || 'tabby', o.eyeCol || 0x8fd14f), { age: 0.75, state: 'idle', at: [0.05, o.y ?? 0.34, 0.05], yaw: az - look, head: o.head || 1.3,
+      facet: !smooth, lowSph: !smooth, rough: smooth ? 0.72 : 0.78 });
+    const eye = o.eye || 1, ear = o.ear || 1;
+    k.eyes.forEach(e => { e.scale.multiplyScalar(eye); e.position.y += 0.012 * (eye - 1); });
+    k.ears.forEach(e => e.scale.multiplyScalar(ear));
+    k.head.rotation.set(o.tiltX ?? -0.18, o.headYaw ?? 0, o.tilt ?? 0.12);
+    if (k.tail && k.tail[0]) k.tail[0].parent.visible = !!o.tail; // the tail tip pokes up behind the head from this angle
+    add(scene, k.g);
+    TS.point(scene, [1.6, 2.6, 2.6], 0xffc98a, 2.4, 9, true);
+    TS.point(scene, [-1.6, 1.4, -1.0], 0x9f8cff, 3.2, 6);
+    TS.point(scene, [-0.4, 1.2, 2.2], 0xffe6cc, 0.9, 5);
+    for (let i = 0; i < 9; i++) { const p = TS.pine(rr(1.0, 1.8), 0x2d4a45); p.position.set(rr(-10, 10), 0, rr(-16, -10)); add(scene, p); }
+    add(scene, TS.grassTufts(60, 4, [0, 0], 1.1, 0x3f7a4a));
+    fireflies(scene, 14, [-2.2, 2.2, 0.5, 2.0, -2.5, 1.0]);
+    add(scene, TS.stars(40, 30, 10));
+    if (style === 'toon') toonify(scene);
+    scene.updateMatrixWorld(true);
+    const h = new T.Vector3(); k.head.getWorldPosition(h); h.y += (o.aimY ?? -0.02);
+    const d = o.dist ?? 2.2, cp = [h.x + Math.sin(az) * Math.cos(el) * d, h.y + Math.sin(el) * d, h.z + Math.cos(az) * Math.cos(el) * d];
+    const cam = TS.camAt(o.fov || 30, cp, [h.x + (o.shiftX ?? -0.07), h.y + (o.shiftY ?? -0.12), h.z]);
+    return { scene, cam, post: style === 'toon' ? { bloom: 0.1, vignette: 0.36, sat: 1.25, contrast: 1.12 } : { bloom: 0.26, vignette: 0.36, sat: 1.18 }, cat: k };
+  },
+
   // B. Sunny diorama: the whole sanctuary on a floating island, tilt-shift
   diorama() {
     rnd(23);
@@ -157,3 +193,12 @@ export const SCENES = {
     return { scene, cam: TS.camAt(32, [0.8, 1.7, 5.2], [0, 0.95, 0]), post: { bloom: 0.26, vignette: 0.4, sat: 1.25 } };
   },
 };
+
+// the game's stepped toon shading (4 bands), keeping shadows and the stills lighting
+const TOON_GRAD = (() => { const d = new Uint8Array([70, 135, 200, 255]); const t = new T.DataTexture(d, 4, 1, T.LuminanceFormat); t.minFilter = t.magFilter = T.NearestFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; })();
+export function toonify(root) {
+  const cache = new Map();
+  root.traverse(m => { if (!m.isMesh || !m.material || !m.material.isMeshStandardMaterial || m.material.vertexColors) return;
+    const src = m.material; if (!cache.has(src)) cache.set(src, new T.MeshToonMaterial({ color: src.color, gradientMap: TOON_GRAD, side: src.side, transparent: src.transparent, opacity: src.opacity, emissive: src.emissive, emissiveIntensity: src.emissiveIntensity }));
+    m.material = cache.get(src); });
+}

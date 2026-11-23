@@ -1,0 +1,23 @@
+<!doctype html><meta charset="utf-8"><title>Icon render</title>
+<style>body{margin:0;background:#222;color:#eee;font:14px system-ui;padding:16px}img{margin:8px;border-radius:22%;vertical-align:middle}</style>
+<!-- Renders the app icon from the dusk thumbnail drafts (thumbnail-v2.html): kitten in a box, blanket, fireflies, no hand.
+     window.renderIcons(cat) returns PNG data URLs at 512 and 192. -->
+<div id="g" hidden></div><div id="out"></div>
+<script>
+(async () => {
+  const html = await (await fetch('../thumbnail-v2.html')).text();
+  const js = html.split('<script>')[1].split('</' + 'script>')[0];
+  (0, eval)(js.replace(/function svg\(/, 'window.svg=function(').replace(/\nconst V=[\s\S]*$/, ''));
+  async function png(svgText, size) {
+    const img = new Image(); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" '));
+    await img.decode(); const cv = document.createElement('canvas'); cv.width = cv.height = size;
+    const x = cv.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(img, 0, 0, size, size); return cv.toDataURL('image/png');
+  }
+  window.renderIcons = async (cat) => { const s = svg('I' + cat, { cat, blanket: true, hand: false });
+    return { s512: await png(s, 512), s192: await png(s, 192), s96: await png(s, 96) }; };
+  const out = document.getElementById('out');
+  for (const cat of ['orange', 'tux', 'grey']) { const r = await renderIcons(cat);
+    out.insertAdjacentHTML('beforeend', `<p>${cat}: <img src="${r.s192}" width="192"><img src="${r.s96}" width="96"><img src="${r.s96}" width="48"></p>`); }
+  window.ready = true;
+})();
+</script>

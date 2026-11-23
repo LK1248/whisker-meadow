@@ -1645,7 +1645,9 @@ function birth(a,b){
   a.breedCD=b.breedCD=200; a.litters=b.litters=1; a.fixed=b.fixed=true; setTimeout(()=>{ showIcon(a,'vet',2.5); showIcon(b,'vet',2.5); },3000); spawnFx('h',mid.clone().setY(.8),8,.6,0.5); Snd.chime(); W.stat.kittens+=n;
   unlock('first_kitten'); checkCollection(); hud();
 }
-let strayT=rand(100,140);
+let strayT=rand(60,80);
+// time to the next stray: short while there's lots of room, longer as the sanctuary fills
+function strayGap(){ const f=W.cats.length/LV().cap; return f<0.5?rand(45,70):f<0.8?rand(75,110):rand(110,150); }
 function arriveStray(){
   const h=LV().half, room=LV().cap-W.cats.length; if(room<=0)return;
   if(room>=3&&Math.random()<0.25){ const mama=makeCat({sex:'f',coat:randomCoat(),age:1,origin:'stray',fixed:true,x:0,z:-h+0.45,s:{trust:rand(15,25),aff:rand(15,25),full:35,fun:40,groom:20,health:50,clean:70}}); mama.litters=1; mama.heading=0; goTo(mama,0,-h+2.2,null);
@@ -2441,7 +2443,8 @@ function update(dt){
       if(hush){} else if(getBond(a,b)>10&&canBoop(a)&&canBoop(b)&&Math.random()<0.09)boop(a,b); else if(getBond(a,b)>15&&Math.random()<0.05)heartBetween(a,b);
       if(!hush&&act.length>LV().cap&&getBond(a,b)<20&&Math.random()<0.03){ showIcon(a,'angry',1.5); showIcon(b,'angry',1.5); Snd.hiss(); } } } }
   famT-=dt; if(famT<=0){ famT=5; tryFamily(); }
-  strayT-=dt; if(strayT<=0&&firstBye())strayT=8; if(strayT<=0){ strayT=rand(110,170); const act=active(); const avgH=act.reduce((a,c)=>a+c.s.health,0)/Math.max(1,act.length); if(W.cats.length<LV().cap&&avgH>=50)startDropoff(); }
+  strayT-=dt; if(strayT<=0){ const act=active(); const avgH=act.reduce((a,c)=>a+c.s.health,0)/Math.max(1,act.length);
+    if(!firstBye()&&W.cats.length<LV().cap&&avgH>=50)startDropoff(); strayT=W.dropoff&&!W.dropoff.gift?strayGap():rand(6,10); }
   birdT-=dt; if(birdT<=0){ birdT=rand(6,14); if(birds.length<3+W.level&&!weather.raining)makeBird(); }
   slowT-=dt; if(slowT<=0){ slowT=0.3; hud(); const a=active(); if(a.length>=4&&a.every(c=>c.s.health>=80))unlock('bliss'); }
   if(W.aidT>0)W.aidT-=dt; $('#hAid').style.opacity=W.aidT>0?1:0;
@@ -2630,7 +2633,7 @@ const musT={b:$('#bMusic')}; musT.home=musT.b.parentElement; musT.next=musT.b.ne
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); }catch(e){} begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={Snd,setShot:(y,c,a)=>{ SHOT_YAW=y; SHOT_CAM=c; SHOT_AT=a; },firstBye,cars,pickForHome,HINTS,showReady,updateTag,lessonOn,TREES,fadeTrees,tips,showTip,FLEA_TIP,owls,boopOwl,owlTrees,ensureBurrs,updateScruff,dustPuff,updateFleas,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={Snd,strayGap,getStrayT:()=>strayT,setShot:(y,c,a)=>{ SHOT_YAW=y; SHOT_CAM=c; SHOT_AT=a; },firstBye,cars,pickForHome,HINTS,showReady,updateTag,lessonOn,TREES,fadeTrees,tips,showTip,FLEA_TIP,owls,boopOwl,owlTrees,ensureBurrs,updateScruff,dustPuff,updateFleas,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>
 

@@ -1,0 +1,16 @@
+{
+  "name": "Whisker Meadow",
+  "short_name": "Whisker Meadow",
+  "description": "A cozy cat sanctuary: care for rescued cats and find them loving homes",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#bfe8f7",
+  "theme_color": "#5fb35a",
+  "icons": [
+    { "src": "img/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "img/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "img/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -969,7 +969,7 @@ function belly(c,frantic){
 }
 function overReact(c){
   const s=c.s; c.over=0; c.streak=0;
-  if(s.trust>=50){ showIcon(c,'huff',1.5); s.aff=Math.max(0,s.aff-1); walkAway(c,Math.random()<0.5); }
+  if(s.trust>=50){ showIcon(c,'huff',1.5); if(W.tool==='brush')Snd.meow(0.75,1); s.aff=Math.max(0,s.aff-1); walkAway(c,Math.random()<0.5); }
   else { c.snap=0.4; s.trust=Math.max(0,s.trust-4); s.aff=Math.max(0,s.aff-2); handScratch(c); setTimeout(()=>walkAway(c),300); }
 }
 function handScratch(c){ Snd.hiss(); showIcon(c,'angry',2); cam.shake=0.25; W.aidT=45; handFx('jerk'); $('#hScr').style.opacity=1; setTimeout(()=>$('#hScr').style.opacity=0,1100);
@@ -1456,6 +1456,12 @@ function brushScrub(c,len,zone){
   if(c.away>0||c.carried||c.leaveT>0||c.outside||c.leaving||['boop','path','greet','bye','flop'].includes(c.state))return;
   c.petT=3; tagFor(c,3); if(!['sleep','pet','eat','litter','perch','shelter'].includes(c.state))setState(c,'pet');
   if(zone==='tail'){ c.flick=0.4; return; }
+  // speed: looser than petting, and it grows with Love (a wary rescue only puts up with very slow brushing)
+  { const D=2.5*Math.max(60,Math.min(400,catScreenH(c))), loveF=br.c===c?Math.max(1,clamp((c.s.trust-10)/60,0.4,1.3)):clamp((c.s.trust-10)/60,0.4,1.3), vMax=D*0.7*1.4*loveF*(c.trait==='shy'?0.87:1), v=S.v||0, now=W.time, hy=P.hy-(P.type==='mouse'?62:112);
+    if(v>vMax*2.2){ const hard=v>vMax*4.5; c.over+=len/D*(hard?1.2:0.5);
+      if(now>(c.hgT||0)){ c.hgT=now+(hard?0.9:1.1); floatHourglass(P.hx,hy,hard); slowNag.n++; if(slowNag.n>=4&&now>slowNag.next){ slowNag.n=0; slowNag.next=now+40; showSlow(); } }
+      if(c.over>=1.5&&now>(c.grumbleT||0)){ c.grumbleT=now+2.5; showIcon(c,'angry',1.4); c.earFlat=1; Snd.meow(0.78,0.9); }
+      return; } }
   c.scrub=(c.scrub||0)+len; if(c.scrub<160)return; c.scrub=0; c.lastStroke=W.time;
   const s=c.s, top=c.g.position.clone().setY(0.8*c.g.scale.y), before=burrCount(c);
   if(s.groom>=97){ spawnFx('spark',top,1,0.3,0.12); return; }
@@ -1496,7 +1502,7 @@ function finishStroke(){ if(S.cat&&S.len>=40&&W.tool!=='brush'&&W.tool!=='hand')
 function strokeMove(e,dx,dy){
   const h=pickAt(e), now=performance.now();
   const len0=Math.hypot(dx,dy), dtm=Math.max(0.008,(now-(S.tm||now-16))/1000); S.tm=now;
-  if(W.tool==='hand'){ const sm=S.samp||(S.samp=[]); sm.push([now,e.clientX,e.clientY]); while(sm.length>1&&now-sm[0][0]>500)sm.shift();
+  if(W.tool==='hand'||W.tool==='brush'){ const sm=S.samp||(S.samp=[]); sm.push([now,e.clientX,e.clientY]); while(sm.length>1&&now-sm[0][0]>500)sm.shift();
     let path=0,x0=1e9,x1=-1e9,y0=1e9,y1=-1e9; for(let i=0;i<sm.length;i++){ const q=sm[i]; if(i)path+=Math.hypot(q[1]-sm[i-1][1],q[2]-sm[i-1][2]); if(now-q[0]<=200){ x0=Math.min(x0,q[1]); x1=Math.max(x1,q[1]); y0=Math.min(y0,q[2]); y1=Math.max(y1,q[2]); } }
     S.v=path/Math.max(0.25,(now-sm[0][0])/1000); S.moving=Math.hypot(x1-x0,y1-y0)>=5; }
   else { const inst=len0/dtm; S.v=S.v==null?inst:lerp(S.v,inst,0.35); }
@@ -1810,7 +1816,7 @@ function openHelp(){
   ${sec(ICO_A+ICO_T+ICO_H+' The three stats',`<ul><li><b>Love</b> (heart): gentle on-beat petting, playing, feeding, blinking back, butt taps (for cats who like them), premium food. Drops when you scratch the wrong spot, pet too fast, or hold a nervous cat too long. Kittens warm up faster.</li><li><b>Groom</b> (brush): a clean, shiny coat. It fades slowly; brush to bring it back. Fair judges care a lot, families a little. A very scruffy cat catches <b>fleas</b> (tiny black dots, lots of scratching and grumbling): brush them off.</li><li><b>Health</b> (leaf): full belly, fun, a groomed coat and a clean litter box. Naps on cushions and the water fountain help.</li></ul><p>Tap a cat to see its stats above its head.</p>`)}
   ${sec('Petting rhythm',`<ul><li>Drag across the cat: one smooth stroke, then <b>wait</b>.</li><li>Keep stroking slowly: the ring by your hand fills while your hand moves over the cat, and every full ring is a happy purr. Holding still doesn't fill it, and after a few seconds of stillness the cat gets bored and wanders off.</li><li>An hourglass = slow down (a shaking one = way too fast; too much of that and the cat has had enough).</li><li>Too many fast strokes overstimulate a cat: watch for a twitching tail and sideways ears. Then it walks off, or, if it doesn't trust you yet, it scratches (band-aid!).</li></ul>`)}
   ${sec('Where to pet',`<ul><li><b>Head, cheeks, chin</b>: favourites.</li><li><b>Back</b>: fine. <b>Tail</b>: no!</li><li><b>Belly</b>: only when a cat rolls over and has Love 75+. Otherwise it's a trap.</li><li><b>Butt taps</b>: tap the rump once. Some cats love it, some don't: find out!</li><li>Happy cats headbutt your hand, knead, lean in and slow-blink. When a cat looks up and slowly blinks at you, <b>tap it to blink back</b>.</li></ul>`)}
-  ${sec('Tools',`<ul><li><b>Pet</b>: stroke; press and hold a cat to carry it (relaxed cats flop, nervous ones wiggle free). Drop it next to another cat to introduce them.</li><li><b>Brush</b>: scrub back and forth to clean the coat. A scruffy cat (Groom under 35) looks dull and dusty, with bed-head, muddy socks and bits of leaf and twig in its fur; brushing cleans it up, and a really clean coat shines. Love comes from petting; brushing raises Groom (it helps health, wins fairs and gets rid of fleas). Cats also groom themselves a little when happy and fed.</li><li><b>Wand</b>: drag to move, flick to toss, tap to make it jump, hold still to raise it so cats leap.</li><li><b>Laser</b> (shop): cats sprint and pounce. Upgraded, it ends on a treat.</li><li>Bowls and litter boxes can be tapped with any tool.</li></ul>`)}
+  ${sec('Tools',`<ul><li><b>Pet</b>: stroke; press and hold a cat to carry it (relaxed cats flop, nervous ones wiggle free). Drop it next to another cat to introduce them.</li><li><b>Brush</b>: scrub back and forth, gently, to clean the coat. Too fast and the cat grumbles, then leaves or scratches. Cats that don't love you yet only tolerate very slow brushing, so pet a new rescue first. A scruffy cat (Groom under 35) looks dull and dusty, with bed-head, muddy socks and bits of leaf and twig in its fur; brushing cleans it up, and a really clean coat shines. Love comes from petting; brushing raises Groom (it helps health, wins fairs and gets rid of fleas). Cats also groom themselves a little when happy and fed.</li><li><b>Wand</b>: drag to move, flick to toss, tap to make it jump, hold still to raise it so cats leap.</li><li><b>Laser</b> (shop): cats sprint and pounce. Upgraded, it ends on a treat.</li><li>Bowls and litter boxes can be tapped with any tool.</li></ul>`)}
   ${sec('Daily care',`<ul><li>Tap a bowl to fill it (uses premium food first, then kibble).</li><li>Tap the litter box to scoop it; dirty boxes make the meadow smelly.</li><li>A rain roof keeps cats dry in showers.</li><li>Helpers fill bowls, scoop and pet cats, for $6 a minute. Unpaid helpers rest.</li><li>The donation jar by the gate collects money when your cats are happy.</li></ul>`)}
   ${sec('Cat fair',`<p>A grown cat with <b>Love 55+, Groom 50+ and Health 60+</b> gets a <b>Fair!</b> button on its tag. The better groomed, the higher it places and the bigger the prize. Every cat wins a category (Best Purr, Fluffiest Coat, Most Improved, Bravest Rescue, Best Dressed...) and prize money. Winning moves you up to bigger fairs.</p>`)}
   ${sec('New cats & kittens',`<ul><li>Rescuers drive up and drop off strays, sometimes a mama with kittens.</li><li>Close friends touch noses and lick each other. A happy, bonded, unrelated pair may have <b>one</b> litter, then both get a vet visit.</li><li>Kittens stay near mum until they grow up (about 3 minutes).</li></ul>`)}

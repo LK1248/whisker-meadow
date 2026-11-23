@@ -1849,7 +1849,8 @@ const HINTS=[
   {id:'wand2',when:()=>W.tool==='wand',at:()=>wand.tip.clone().setY(0.2),g:'stroke',label:'Drag · Flick · Hold',done:()=>W.stat.pounces>=3},
   {id:'brush',when:()=>W.time>100&&W.tool!=='brush'&&!!scruffiest(),el:'[data-tool=brush]',g:'tap',label:()=>BURR_SVG,done:()=>W.tool==='brush'},
   {id:'brush2',when:()=>W.tool==='brush'&&!!scruffiest(),at:()=>{ const c=scruffiest(); return c&&bodyOf(c); },g:'stroke',label:()=>BURR_SVG+'<span style="font-size:24px;vertical-align:8px"> ⇆</span>',done:()=>W.stat.brush>=4},
-  {id:'show',when:()=>W.cats.some(showReady),at:()=>headOf(W.cats.find(showReady)),g:'tap',label:'Cat fair!',done:()=>W.stat.shows>0},
+  {id:'show0',when:()=>W.tool!=='hand'&&!W.stat.shows&&W.cats.some(showReady),el:'[data-tool=hand]',g:'tap',label:'Pet',done:()=>W.tool==='hand',redo:true},
+  {id:'show',when:()=>W.tool==='hand'&&W.cats.some(showReady),at:()=>headOf(W.cats.find(showReady)),g:'tap',label:'Cat fair!',done:()=>W.stat.shows>0},
   {id:'belly',when:()=>false&&W.cats.some(c=>c.state==='flop'&&c.offer&&c.s.trust<75),at:()=>{ const c=W.cats.find(c=>c.state==='flop'&&c.offer); return c&&bodyOf(c); },g:'none',label:'Belly? Careful!',auto:4},
   {id:'roof',when:()=>weather.raining&&!countItems('shelter'),el:'#bShop',g:'tap',label:'Rain roof',done:()=>countItems('shelter')>0||!weather.raining},
   {id:'space',when:()=>W.cats.length>=LV().cap&&W.level<4,el:'#bShop',g:'tap',label:'More room',done:()=>W.cats.length<LV().cap},
@@ -1858,7 +1859,7 @@ const hintDone=new Set(), hintRetry={}; let curHint=null, hintT=0, hintGap=0;
 function hideHint(){ curHint=null; hintEl.hidden=true; hintGap=4; }
 function updateHints(dt){ if(tutQuiet()||intro.c||bt.c||pl.a||br.c||(firstAdopt()&&W.family.cat)){ hintEl.hidden=true; return; }
   if(curHint){ hintT+=dt; const h=curHint;
-    if(h.done&&h.done()){ hintDone.add(h.id); hideHint(); return; }
+    if(h.done&&h.done()){ if(!h.redo)hintDone.add(h.id); hideHint(); return; }
     if(h.auto&&hintT>h.auto){ if(!h.again)hintDone.add(h.id); else hintRetry[h.id]=W.time+20; hideHint(); return; }
     if(hintT>22){ hintRetry[h.id]=W.time+50; hideHint(); return; }
     let x,y; if(h.el){ ({x,y}=elC(h.el)); } else { const v=h.at(); if(!v){ hideHint(); return; } const s=toScreen(v); if(!s.ok){ hintEl.hidden=true; return; } x=s.x; y=s.y; }

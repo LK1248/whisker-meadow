@@ -1,0 +1,365 @@
+{
+ "median_level_minutes": {
+  "casual": {
+   "2": [
+    3.4,
+    "3/3"
+   ],
+   "3": [
+    7.3,
+    "3/3"
+   ],
+   "4": [
+    14.8,
+    "3/3"
+   ],
+   "5": [
+    30.3,
+    "3/3"
+   ],
+   "6": [
+    38.4,
+    "3/3"
+   ],
+   "7": [
+    48.9,
+    "1/3"
+   ],
+   "8": [
+    null,
+    "0/3"
+   ]
+  },
+  "engaged": {
+   "2": [
+    2.9,
+    "4/4"
+   ],
+   "3": [
+    6.2,
+    "4/4"
+   ],
+   "4": [
+    10.6,
+    "4/4"
+   ],
+   "5": [
+    16.9,
+    "4/4"
+   ],
+   "6": [
+    33.2,
+    "4/4"
+   ],
+   "7": [
+    42.5,
+    "3/4"
+   ],
+   "8": [
+    57.8,
+    "1/4"
+   ]
+  },
+  "optimizer": {
+   "2": [
+    2.1,
+    "2/2"
+   ],
+   "3": [
+    5.1,
+    "2/2"
+   ],
+   "4": [
+    8.5,
+    "2/2"
+   ],
+   "5": [
+    16.5,
+    "2/2"
+   ],
+   "6": [
+    24.0,
+    "2/2"
+   ],
+   "7": [
+    37.8,
+    "2/2"
+   ],
+   "8": [
+    59.1,
+    "1/2"
+   ]
+  }
+ },
+ "gate_minutes_avg": {
+  "casual": {
+   "2": {
+    "money": 0.0,
+    "stars": 3.8,
+    "homes": 0.0
+   },
+   "3": {
+    "money": 0.2,
+    "stars": 4.3,
+    "homes": 0.0
+   },
+   "4": {
+    "money": 0.5,
+    "stars": 5.2,
+    "homes": 0.0
+   },
+   "5": {
+    "money": 2.2,
+    "stars": 9.2,
+    "homes": 2.0
+   },
+   "6": {
+    "money": 4.7,
+    "stars": 0.0,
+    "homes": 5.0
+   },
+   "7": {
+    "money": 0.0,
+    "stars": 0.0,
+    "homes": 3.5
+   },
+   "8": {
+    "money": 0.0,
+    "stars": 0.0,
+    "homes": 0.0
+   }
+  },
+  "engaged": {
+   "2": {
+    "money": 0.0,
+    "stars": 3.2,
+    "homes": 0.0
+   },
+   "3": {
+    "money": 0.0,
+    "stars": 3.1,
+    "homes": 0.0
+   },
+   "4": {
+    "money": 0.0,
+    "stars": 4.2,
+    "homes": 0.0
+   },
+   "5": {
+    "money": 0.0,
+    "stars": 6.4,
+    "homes": 0.1
+   },
+   "6": {
+    "money": 0.0,
+    "stars": 0.0,
+    "homes": 16.0
+   },
+   "7": {
+    "money": 0.0,
+    "stars": 0.0,
+    "homes": 8.6
+   },
+   "8": {
+    "money": 0.0,
+    "stars": 0.0,
+    "homes": 5.5
+   }
+  },
+  "optimizer": {
+   "2": {
+    "money": 0.2,
+    "stars": 2.2,
+    "homes": 0.0
+   },
+   "3": {
+    "money": 0.0,
+    "stars": 2.8,
+    "homes": 0.0
+   },
+   "4": {
+    "money": 0.0,
+    "stars": 3.5,
+    "homes": 0.0
+   },
+   "5": {
+    "money": 0.0,
+    "stars": 3.8,
+    "homes": 4.0
+   },
+   "6": {
+    "money": 0.0,
+    "stars": 0.0,
+    "homes": 7.5
+   },
+   "7": {
+    "money": 0.0,
+    "stars": 0.0,
+    "homes": 13.5
+   },
+   "8": {
+    "money": 0.0,
+    "stars": 0.0,
+    "homes": 10.0
+   }
+  }
+ },
+ "earned_60": {
+  "casual_1": 9549,
+  "casual_2": 8700,
+  "casual_3": 10129,
+  "engaged_1": 58050,
+  "engaged_2": 25449,
+  "engaged_3": 45395,
+  "engaged_4": 58929,
+  "optimizer_1": 148674,
+  "optimizer_2": 139210
+ },
+ "fairs": {
+  "casual_1": 30,
+  "casual_2": 22,
+  "casual_3": 34,
+  "engaged_1": 461,
+  "engaged_2": 105,
+  "engaged_3": 218,
+  "engaged_4": 278,
+  "optimizer_1": 1255,
+  "optimizer_2": 640
+ },
+ "variants": [
+  [
+   "casual_1",
+   4,
+   6,
+   7,
+   11,
+   0
+  ],
+  [
+   "casual_2",
+   5,
+   6,
+   6,
+   7,
+   0
+  ],
+  [
+   "casual_3",
+   4,
+   6,
+   6,
+   9,
+   0
+  ],
+  [
+   "casual_adfam5",
+   4,
+   5,
+   6,
+   13,
+   8
+  ],
+  [
+   "casual_smart4",
+   4,
+   6,
+   7,
+   13,
+   14
+  ],
+  [
+   "engaged_1",
+   6,
+   7,
+   8,
+   17,
+   0
+  ],
+  [
+   "engaged_2",
+   5,
+   6,
+   7,
+   10,
+   0
+  ],
+  [
+   "engaged_3",
+   5,
+   7,
+   7,
+   14,
+   0
+  ],
+  [
+   "engaged_4",
+   5,
+   6,
+   6,
+   9,
+   0
+  ],
+  [
+   "engaged_adfam3",
+   7,
+   7,
+   8,
+   19,
+   17
+  ],
+  [
+   "optimizer_1",
+   6,
+   7,
+   8,
+   17,
+   0
+  ],
+  [
+   "optimizer_2",
+   6,
+   7,
+   7,
+   15,
+   0
+  ]
+ ],
+ "adoptions_per_min_second_half": {
+  "casual": 0.147,
+  "engaged": 0.246,
+  "optimizer": 0.322
+ },
+ "endless_cum_hours_to_L12_L16_L20": {
+  "Today's pattern continued (need grows faster each acre)": [
+   3.0,
+   8.1,
+   15.4
+  ],
+  "Flat need: +8 adoptions per acre": [
+   2.2,
+   4.3,
+   6.5
+  ],
+  "Growing need, but more families visit as the meadow grows": [
+   1.6,
+   3.3,
+   4.9
+  ],
+  "Same, plus an optional \"call a family\" rewarded ad": [
+   1.0,
+   2.0,
+   3.0
+  ]
+ },
+ "revenue_per_1000_players_gross": {
+  "Commercial breaks only | low": 1.45,
+  "Commercial breaks only | mid": 3.63,
+  "Commercial breaks only | high": 7.26,
+  "Light rewarded (gate offers, ~6/h) | low": 3.66,
+  "Light rewarded (gate offers, ~6/h) | mid": 8.04,
+  "Light rewarded (gate offers, ~6/h) | high": 15.53,
+  "Heavier rewarded (~14/h) | low": 6.6,
+  "Heavier rewarded (~14/h) | mid": 13.93,
+  "Heavier rewarded (~14/h) | high": 26.57
+ }
+}

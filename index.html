@@ -1611,8 +1611,18 @@ const ACH=[['rhythm','Gentle Hands','On-beat strokes',()=>W.stat.good,[10,60,250
   ['found','Welcome Home','Runaways found',()=>W.stat.found,[1,3,8]],['quick','Quick Paws','Caught a runaway at the gate',()=>W.stat.quick||0,[1,3,6]],['ribbons','Ribbon Collector','Fair ribbons',()=>W.ribbons,[1,10,30]],['kittens','Little Paws','Kittens born here',()=>W.stat.kittens,[1,4,10]],
   ['belly','Belly Rub Legend','Trusted belly rubs',()=>W.stat.belly,[3,20,60]],['butt','Butt Tap Expert','Happy butt taps',()=>W.stat.butt,[3,20,60]],['family','Big Happy Family','Most cats living here together',()=>W.maxCats||0,[6,12,20]],
   ['coats','Rainbow Meadow','Different coats at once',()=>W.stat.coatsMax||0,[4,6,9]],['cards','Postcard Collector','Different postcards from new homes',()=>(W.stat.cards||[]).length,[3,6,10]],['rare','Rare Coat','Rare coats and breeds',()=>W.stat.rare||0,[1,3,6]],['breeds','Exotic Friends','Different breeds rescued',()=>(W.stat.breedSeen||[]).length,[1,3,6]],['spotless','Spotless','Litter scoops',()=>W.stat.cleaned,[10,50,150]],
-  ['zoomies','Zoomies','Laser pounces',()=>W.stat.laserP,[25,150,500]],['deluxe','Deluxe Living','Upgrades bought',()=>W.stat.upgrades,[1,5,12]],['ouch','Band-Aid Club','Scratches (oops)',()=>W.stat.scratches,[1,5,15]]];
+  ['zoomies','Zoomies','Laser pounces',()=>W.stat.laserP,[25,150,500]],['deluxe','Deluxe Living','Upgrades bought',()=>W.stat.upgrades,[1,5,12]],['ouch','Band-Aid Club','Scratches (oops)',()=>W.stat.scratches,[1,5,15]],
+  ['herd','Herding Cats','Cats led together with the wand or laser',()=>W.stat.herd||0,[3,6,10]]];
 const TIER_N=['','Bronze','Silver','Gold'];
+// herding: each following cat remembers where it joined; it counts once it has travelled 3 m with the lure and is still with it
+let herdT=0, herdShow=0;
+function herdTick(dt){ herdT-=dt; if(herdT>0)return; herdT=0.25;
+  const lure=W.tool==='wand'&&wand.active?wand.feather:W.tool==='laser'&&laser.active?laser.pos:null, st=W.tool==='wand'?'chase':'laser'; let n=0;
+  for(const c of W.cats){ const on=lure&&(c.state===st||c.state==='pounce')&&!c.outside&&!c.leaving;
+    if(!on){ c.herdOff=(c.herdOff||0)+0.25; if(c.herdOff>2||!lure)c.herdFrom=null; continue; } c.herdOff=0;
+    if(!c.herdFrom)c.herdFrom=c.g.position.clone(); if(dist2(c.g.position,c.herdFrom)>=3&&dist2(c.g.position,lure)<3)n++; }
+  if(n>(W.stat.herd||0))W.stat.herd=n;
+  if(n>=3&&n>herdShow){ herdShow=n; floatWorld(lure.clone().setY(1.2),'🐾×'+n); } if(n<3)herdShow=0; }
 function unlock(){}
 function updateAch(){ for(const [id,n,,f,th] of ACH){ const v=f(); let t=0; th.forEach((x,i)=>{ if(v>=x)t=i+1; }); if(t>(W.achT[id]||0)){ const rw=[0,10,25,60][t]-[0,10,25,60][W.achT[id]||0]; W.achT[id]=t; W.money+=rw; W.earned+=rw; hud(); Snd.chime(); toast(`★ ${n} · ${TIER_N[t]} +$${rw}`,'badge',3400); } } }
 const GOALS=[['Pet on the beat',()=>W.stat.good,15],['Scoop the litter',()=>W.stat.cleaned,3],['Fill the bowls',()=>W.stat.fills,3],['Brush a coat',()=>W.stat.brush,8],['Blink back',()=>W.stat.blinkBack,2],
@@ -2229,7 +2239,7 @@ function extraUpdate(dt){
     else if((f.state==='arrive'||f.state==='wait')&&f.t>110&&!W.pickHome)familyLeave("We'll come back!"); }
   if(W.postQ.length&&W.postQ[0].t<=W.time&&$('#modal').hidden&&!W.paused){ const pq=W.postQ.shift(), hm=W.homes[pq.i]; if(hm){ if(hm.scene)W.stat.cards=[...new Set([...(W.stat.cards||[]),hm.scene])]; openModal(cardHTML(hm)+`<button class="big" id="pcOk">Aww</button>`,true); $('#pcOk').onclick=()=>{ closeModal(); boardPop(); }; Snd.chime(); } }
   if((boardT-=dt)<=0){ boardT=2; boardSync(); }
-  extraT-=dt; if(extraT<=0){ extraT=1; checkCollection(); updateStars(); updateAch(); updateGoals(); hud(); }
+  herdTick(dt); extraT-=dt; if(extraT<=0){ extraT=1; checkCollection(); updateStars(); updateAch(); updateGoals(); hud(); }
 }
 function buildWandToy(){ const f=wand.fm; while(f.children.length)f.remove(f.children[0]); const T=W.tier.wand||1;
   if(T===1){ f.add(mesh(G.cone,0xff8fb1,{p:[0,-0.1,0],s:[0.05,0.22,0.05],r:[Math.PI,0,0.3]})); f.add(mesh(G.cone,0x7fd1ff,{p:[0.04,-0.1,0],s:[0.045,0.2,0.045],r:[Math.PI,0,-0.3]})); f.add(mesh(G.sph,0xffd84d,{s:[0.045,0.045,0.045]})); }
@@ -2503,7 +2513,7 @@ const musT={b:$('#bMusic')}; musT.home=musT.b.parentElement; musT.next=musT.b.ne
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); }catch(e){} begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={Snd,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={Snd,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>
 

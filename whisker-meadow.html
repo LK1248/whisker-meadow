@@ -234,26 +234,26 @@ h3 .cnt{color:#e0507a;font-size:20px;margin-left:6px}
 <div id="stage"></div>
 
 <div class="hud-l">
-  <div class="chip pill" title="Money"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#f6c443" stroke="#d99a1e" stroke-width="2"/><text x="12" y="16.6" font-size="13" text-anchor="middle" fill="#8a5a00" font-weight="800" font-family="Nunito,sans-serif">$</text></svg><b id="hMoney">0</b></div>
-  <div class="chip pill" title="Meals in storage"><svg viewBox="0 0 24 24"><path d="M2.5 12c3-5.2 9.3-6.3 13.4-3.1L21 5.8v12.4l-5.1-3.1C11.8 18.3 5.5 17.2 2.5 12z" fill="#7fc4e8"/><circle cx="8" cy="11" r="1.4" fill="#24415a"/></svg><b id="hFood">0</b></div>
-  <button class="chip pill btn" id="bCats" title="Show me each cat"><svg viewBox="0 0 24 24" fill="#ff7aa2"><ellipse cx="12" cy="16" rx="5" ry="4.2"/><circle cx="5.6" cy="10" r="2.3"/><circle cx="9.6" cy="6.3" r="2.3"/><circle cx="14.4" cy="6.3" r="2.3"/><circle cx="18.4" cy="10" r="2.3"/></svg><b id="hCats">0</b><span class="away" id="hAway" hidden><svg viewBox="0 0 24 24"><path d="M8 13l-3 9 4-2 2 3 2-8zM16 13l3 9-4-2-2 3-2-8z" fill="#5b8def"/><circle cx="12" cy="9" r="6.5" fill="#ffcf3f"/></svg><i id="hAwayN"></i></span></button>
-  <div class="chip pill" title="Ribbons"><svg viewBox="0 0 24 24"><path d="M8 13l-3 9 4-2 2 3 2-8zM16 13l3 9-4-2-2 3-2-8z" fill="#5b8def"/><circle cx="12" cy="9" r="6.5" fill="#ffcf3f" stroke="#e0a400" stroke-width="1.5"/></svg><b id="hRib">0</b></div>
-  <div class="chip pill" title="Sanctuary stars"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17l-5.9 3.3 1.3-6.5L2.5 9.3l6.6-.8z" fill="#f6c443" stroke="#d99a1e" stroke-width="1.5" stroke-linejoin="round"/></svg><b id="hStars">1</b></div>
+  <div class="chip pill"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#f6c443" stroke="#d99a1e" stroke-width="2"/><text x="12" y="16.6" font-size="13" text-anchor="middle" fill="#8a5a00" font-weight="800" font-family="Nunito,sans-serif">$</text></svg><b id="hMoney">0</b></div>
+  <div class="chip pill"><svg viewBox="0 0 24 24"><path d="M2.5 12c3-5.2 9.3-6.3 13.4-3.1L21 5.8v12.4l-5.1-3.1C11.8 18.3 5.5 17.2 2.5 12z" fill="#7fc4e8"/><circle cx="8" cy="11" r="1.4" fill="#24415a"/></svg><b id="hFood">0</b></div>
+  <button class="chip pill btn" id="bCats"><svg viewBox="0 0 24 24" fill="#ff7aa2"><ellipse cx="12" cy="16" rx="5" ry="4.2"/><circle cx="5.6" cy="10" r="2.3"/><circle cx="9.6" cy="6.3" r="2.3"/><circle cx="14.4" cy="6.3" r="2.3"/><circle cx="18.4" cy="10" r="2.3"/></svg><b id="hCats">0</b><span class="away" id="hAway" hidden><svg viewBox="0 0 24 24"><path d="M8 13l-3 9 4-2 2 3 2-8zM16 13l3 9-4-2-2 3-2-8z" fill="#5b8def"/><circle cx="12" cy="9" r="6.5" fill="#ffcf3f"/></svg><i id="hAwayN"></i></span></button>
+  <div class="chip pill"><svg viewBox="0 0 24 24"><path d="M8 13l-3 9 4-2 2 3 2-8zM16 13l3 9-4-2-2 3-2-8z" fill="#5b8def"/><circle cx="12" cy="9" r="6.5" fill="#ffcf3f" stroke="#e0a400" stroke-width="1.5"/></svg><b id="hRib">0</b></div>
+  <div class="chip pill"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17l-5.9 3.3 1.3-6.5L2.5 9.3l6.6-.8z" fill="#f6c443" stroke="#d99a1e" stroke-width="1.5" stroke-linejoin="round"/></svg><b id="hStars">1</b></div>
 </div>
 <div class="hud-r">
-  <button class="hbtn pill primary" id="bShop" aria-label="Shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 9h16l-1.5 11h-13z" fill="currentColor" fill-opacity=".25"/><path d="M8 9V7a4 4 0 0 1 8 0v2"/></svg><span class="lbl">Shop</span></button>
-  <button class="hbtn pill" id="bBadges" aria-label="Badges"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17l-5.9 3.3 1.3-6.5L2.5 9.3l6.6-.8z" fill="#f6c443" stroke="#d99a1e" stroke-width="1.5" stroke-linejoin="round"/></svg><span class="lbl">Badges</span></button>
-  <button class="hbtn pill" id="bSnap" aria-label="Snapshot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6.5" width="18" height="13" rx="3"/><circle cx="12" cy="13" r="3.6"/><path d="M8.5 6.5l1.5-2.5h4l1.5 2.5"/></svg><span class="lbl">Snapshot</span></button>
-  <button class="hbtn pill icon" id="bHints" title="How to play" aria-label="How to play"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.4a2.8 2.8 0 1 1 3.8 2.6c-.8.4-1.1.9-1.1 1.8"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg></button>
-  <button class="hbtn pill icon" id="bDay" title="Day & night cycle on/off" aria-label="Day and night cycle on/off"><svg viewBox="0 0 24 24"><path d="M15.5 3.5a8.5 8.5 0 1 0 5 15.2A7 7 0 0 1 15.5 3.5z" fill="#8b6fd6"/><circle cx="7" cy="7" r="3.2" fill="#f6c443"/></svg></button>
-  <button class="hbtn pill icon" id="bMusic" title="Music on/off" aria-label="Music on/off"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 17.5V6l11-2v11.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="3"/><circle cx="17.5" cy="15.5" r="3"/></svg></button>
+  <button class="hbtn pill primary" id="bShop" aria-label="Shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 9h16l-1.5 11h-13z" fill="currentColor" fill-opacity=".25"/><path d="M8 9V7a4 4 0 0 1 8 0v2"/></svg></button>
+  <button class="hbtn pill" id="bBadges" aria-label="Badges"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17l-5.9 3.3 1.3-6.5L2.5 9.3l6.6-.8z" fill="#f6c443" stroke="#d99a1e" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
+  <button class="hbtn pill" id="bSnap" aria-label="Snapshot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6.5" width="18" height="13" rx="3"/><circle cx="12" cy="13" r="3.6"/><path d="M8.5 6.5l1.5-2.5h4l1.5 2.5"/></svg></button>
+  <button class="hbtn pill icon" id="bHints" aria-label="How to play"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.4a2.8 2.8 0 1 1 3.8 2.6c-.8.4-1.1.9-1.1 1.8"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg></button>
+  <button class="hbtn pill icon" id="bDay" aria-label="Day and night cycle on/off"><svg viewBox="0 0 24 24"><path d="M15.5 3.5a8.5 8.5 0 1 0 5 15.2A7 7 0 0 1 15.5 3.5z" fill="#8b6fd6"/><circle cx="7" cy="7" r="3.2" fill="#f6c443"/></svg></button>
+  <button class="hbtn pill icon" id="bMusic" aria-label="Music on/off"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 17.5V6l11-2v11.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="3"/><circle cx="17.5" cy="15.5" r="3"/></svg></button>
 </div>
 
 <div class="dock pill" id="dock">
-  <button class="tool on" data-tool="hand" aria-label="Pet"><svg viewBox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="16" rx="5" ry="4.2"/><circle cx="5.6" cy="10" r="2.3"/><circle cx="9.6" cy="6.3" r="2.3"/><circle cx="14.4" cy="6.3" r="2.3"/><circle cx="18.4" cy="10" r="2.3"/></svg>Pet</button>
-  <button class="tool" data-tool="brush" aria-label="Brush"><svg viewBox="0 0 24 24"><g transform="rotate(-35 12 12)"><rect x="2.5" y="6.5" width="12.5" height="6.2" rx="2.6" fill="currentColor"/><path d="M4.6 13.6v3.4M7.3 13.6v3.4M10 13.6v3.4M12.7 13.6v3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M15 9.6h6.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></g></svg>Brush</button>
-  <button class="tool" data-tool="wand" aria-label="Feather wand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 21L14 6"/><path d="M14 6c3-3 6-3 7-2-1 3-3 6-7 6" fill="currentColor"/><path d="M14 6c-1 3 0 6 2 7"/></svg>Wand</button>
-  <button class="tool locked" data-tool="laser" aria-label="Laser pointer"><span class="lock">$25</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="13" width="11" height="5" rx="2.5" transform="rotate(-35 8 15.5)" fill="currentColor" fill-opacity=".3"/><path d="M13 10l5-3.5"/><circle cx="20" cy="5.5" r="2.2" fill="#e2574c" stroke="none"/></svg>Laser</button>
+  <button class="tool on" data-tool="hand" aria-label="Pet"><svg viewBox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="16" rx="5" ry="4.2"/><circle cx="5.6" cy="10" r="2.3"/><circle cx="9.6" cy="6.3" r="2.3"/><circle cx="14.4" cy="6.3" r="2.3"/><circle cx="18.4" cy="10" r="2.3"/></svg></button>
+  <button class="tool" data-tool="brush" aria-label="Brush"><svg viewBox="0 0 24 24"><g transform="rotate(-35 12 12)"><rect x="2.5" y="6.5" width="12.5" height="6.2" rx="2.6" fill="currentColor"/><path d="M4.6 13.6v3.4M7.3 13.6v3.4M10 13.6v3.4M12.7 13.6v3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M15 9.6h6.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></g></svg></button>
+  <button class="tool" data-tool="wand" aria-label="Feather wand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 21L14 6"/><path d="M14 6c3-3 6-3 7-2-1 3-3 6-7 6" fill="currentColor"/><path d="M14 6c-1 3 0 6 2 7"/></svg></button>
+  <button class="tool locked" data-tool="laser" aria-label="Laser pointer"><span class="lock">$25</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="13" width="11" height="5" rx="2.5" transform="rotate(-35 8 15.5)" fill="currentColor" fill-opacity=".3"/><path d="M13 10l5-3.5"/><circle cx="20" cy="5.5" r="2.2" fill="#e2574c" stroke="none"/></svg></button>
 </div>
 
 <div id="tag" hidden></div><div id="intro" hidden></div><div id="ghost" hidden></div><div id="pips" hidden></div><div id="tip" hidden></div><div id="scratch"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><g fill="none" stroke="#d81e3a" stroke-linecap="round" filter="drop-shadow(0 0 1px rgba(120,0,20,.6))"><path pathLength="1" stroke-width="3.6" d="M18 8 Q42 46 74 92"/><path pathLength="1" stroke-width="4.4" d="M30 4 Q54 44 86 90"/><path pathLength="1" stroke-width="3.2" d="M42 2 Q64 40 96 84"/></g></svg></div><div id="tapRing"></div><button id="introSkip" hidden aria-label="Skip">&#9197;</button>
@@ -277,13 +277,12 @@ h3 .cnt{color:#e0507a;font-size:20px;margin-left:6px}
 <div id="toasts"></div>
 <div id="modal" hidden><div class="box" id="mbox"></div></div>
 <div id="family" hidden></div>
-<div id="meet" hidden><div class="sheet"><div class="nm" id="mName"></div><div class="org" id="mOrg"></div><div class="roster" id="mRoster"></div><button class="big" id="mOk">Hello!</button></div></div>
+<div id="meet" hidden><div class="sheet"><div class="nm" id="mName"></div><div class="org" id="mOrg"></div><div class="roster" id="mRoster"></div><button class="big" id="mOk" aria-label="OK">👋</button></div></div>
 
 <div id="start">
   <div class="card">
-    <h1>Whisker <em>Meadow</em></h1>
-    <p>Make shy cats happy.</p>
-    <button class="play" id="bPlay">Play</button><br><button class="play new" id="bNew" hidden>New meadow</button>
+    <svg viewBox="0 0 160 110" width="200" height="138" style="display:block;margin:0 auto 6px" aria-label="Whisker Meadow"><g transform="translate(80,62) scale(2.3)"><path d="M-13 -3L-12 -18-3 -11zM13 -3L12 -18 3 -11z" fill="#f3a64a"/><circle r="13" fill="#f3a64a"/><path d="M-4 -1q-2.5 2.5-5 0M9 -1q-2.5 2.5-5 0" stroke="#4a3426" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M-2 4h4l-2 2z" fill="#ff8fa3"/></g><path transform="translate(136,26) scale(1.3)" d="M0 9s-8.5-5.2-8.5-11a4.5 4.5 0 0 1 8.5-2.5 4.5 4.5 0 0 1 8.5 2.5c0 5.8-8.5 11-8.5 11z" fill="#ff6f99"/><path transform="translate(24,30) scale(0.9)" d="M0 9s-8.5-5.2-8.5-11a4.5 4.5 0 0 1 8.5-2.5 4.5 4.5 0 0 1 8.5 2.5c0 5.8-8.5 11-8.5 11z" fill="#ff9ec0"/></svg>
+    <button class="play" id="bPlay" aria-label="Play">▶</button><br><button class="play new" id="bNew" hidden aria-label="New meadow">✚</button>
     <div class="last" id="lastRun"></div>
   </div>
 </div>
@@ -483,7 +482,7 @@ function buildEnclosure(){
   for(const sx of [-1,1]) fenceGroup.add(mesh(G.box,0xa5754a,{p:[sx*0.62,0.7,-h],s:[0.18,1.4,0.18]}));
   fenceGroup.add(mesh(G.box,0xa5754a,{p:[0,1.42,-h],s:[1.5,0.14,0.16]}));
   const gate=mesh(G.box,0xe8c89c,{p:[0,0.4,-h],s:[1.06,0.62,0.05]}); fenceGroup.add(gate);
-  const arch=new THREE.Mesh(new THREE.PlaneGeometry(1.1,0.36),new THREE.MeshBasicMaterial({map:textTex([['Welcome!','700 96px Fredoka, sans-serif','#4a3426',100]],512,192)}));
+  const arch=new THREE.Mesh(new THREE.PlaneGeometry(1.1,0.36),new THREE.MeshBasicMaterial({map:textTex([['🐾 ♥ 🐾','700 96px sans-serif','#e0577f',104]],512,192)}));
   arch.position.set(0,1.68,-h+0.01); fenceGroup.add(arch);
   scene.add(fenceGroup); setShadowBounds();
 }
@@ -541,11 +540,11 @@ function cardBoardMesh(){ const g=new THREE.Group(); g.position.set(2.65,0,0.5);
   g.add(mesh(G.box,0x8a5a3b,{p:[0,1.5,0],s:[1.56,1.18,0.04]}));
   cardBoard=b; boardSig=''; boardSync(true); return g; }
 function tapBoard(e){ if(!cardBoard)return false; setRay(e); if(!ray.intersectObject(cardBoard,false).length)return false; Snd.ding(); openWall(); return true; }
-function cardHTML(hm){ return `<div class="postcard">${hm.thanks?`<b class="ty">Thank you!</b>`:''}${hm.img?`<img src="${hm.img}" alt="${hm.name} in a new home">`:''}<p>${hm.thanks?`Thank you for ${hm.name}! `:''}${hm.line}</p><small>Love, the ${hm.fam} family</small></div>`; }
+function cardHTML(hm){ return `<div class="postcard">${hm.thanks?`<b class="ty">♥</b>`:''}${hm.img?`<img src="${hm.img}" alt="">`:''}<p style="text-align:center">${FAM_SVG.replace('<svg ','<svg width="52" height="40" ')} ♥</p></div>`; }
 function openCard(i,back){ const hm=W.homes[i]; if(!hm)return; openModal(cardHTML(hm)+`<button class="big" id="pcBack" aria-label="Back to the card wall">↩</button>`,true); $('#pcBack').onclick=back||closeModal; }
 function bindCards(back){ document.querySelectorAll('#mbox [data-hi]').forEach(b=>b.onclick=()=>{ Snd.ding(); openCard(+b.dataset.hi,back); }); }
 function openWall(){ const L=wallCards();
-  openModal(`<h3>Happy Tails<span class="cnt">♥ ${L.length}</span></h3><div class="wall">${L.length?`<div class="cards">${L.map(o=>`<button class="pc" data-hi="${o.i}"><img src="${o.hm.img}" alt="${o.hm.name} at home"><b>${o.hm.name}</b><span>with the ${o.hm.fam} family</span></button>`).join('')}</div>`:'<div class="wempty">\u{1F48C}</div>'}</div>`);
+  openModal(`<h3>💌<span class="cnt">♥ ${L.length}</span></h3><div class="wall">${L.length?`<div class="cards">${L.map(o=>`<button class="pc" data-hi="${o.i}"><img src="${o.hm.img}" alt=""></button>`).join('')}</div>`:'<div class="wempty">\u{1F48C}</div>'}</div>`);
   bindCards(openWall); }
 function boardPop(){ boardSync(true); if(!cardBoard)return; const p=cardBoard.getWorldPosition(new V3()); p.y+=0.2; spawnFx('spark',p,8,.6); spawnFx('h',p,3,.4); }
 function sanctuaryHouse(){
@@ -562,7 +561,7 @@ function sanctuaryHouse(){
   // sign on posts
   const sign=new THREE.Group(); sign.position.set(-2.6,0,1.6); sign.rotation.y=0.25;
   for(const sx of [-0.85,0.85]) sign.add(mesh(G.box,0xa5754a,{p:[sx,0.62,0],s:[0.1,1.24,0.1]}));
-  const signTex=()=>textTex([['Whisker Meadow','700 80px Fredoka, sans-serif','#4a3426',86],['Cat Sanctuary','700 58px Nunito, sans-serif','#e0577f',160]],680,224);
+  const signTex=()=>textTex([['🐈 ♥ 🐈','700 96px sans-serif','#e0577f',116]],680,224);
   const board=new THREE.Mesh(new THREE.PlaneGeometry(2.1,0.69),new THREE.MeshBasicMaterial({map:signTex()}));
   board.position.set(0,1.08,0.06); sign.add(board); sign.add(mesh(G.box,0xa5754a,{p:[0,1.08,0],s:[2.2,0.78,0.08]})); g.add(sign);
   // redraw once the web fonts have loaded so the measured width matches the real lettering
@@ -610,7 +609,7 @@ function iconTexture(kind){
     case 'spark': x.fillStyle='#fff6b0'; x.beginPath(); for(let i=0;i<8;i++){const a=i*Math.PI/4,r=i%2?16:52; x.lineTo(64+Math.cos(a)*r,64+Math.sin(a)*r);} x.fill(); break;
     case 'glow': { const g=x.createRadialGradient(64,64,4,64,64,62); g.addColorStop(0,'rgba(255,150,190,.9)'); g.addColorStop(.5,'rgba(255,150,190,.35)'); g.addColorStop(1,'rgba(255,150,190,0)'); x.fillStyle=g; x.fillRect(0,0,128,128); break; }
     case 'purr': x.fillStyle='#8b6fd6'; x.fillText('♪',64,60); break;
-    case 'zzz': x.fillStyle='#5b8def'; x.font='800 40px Nunito, sans-serif'; x.fillText('z',50,66); x.font='800 30px Nunito, sans-serif'; x.fillText('z',76,42); break;
+    case 'zzz': x.fillStyle='#5b8def'; x.font='800 64px sans-serif'; x.fillText('☾',64,60); break;
     case 'angry': x.fillStyle='#e2574c'; x.fillText('!',64,58); break;
     case 'huff': x.fillStyle='#b3a497'; [[46,62,14],[64,52,18],[82,62,14]].forEach(([a,b,r])=>{x.beginPath();x.arc(a,b,r,0,7);x.fill();}); break;
     case 'sniff': x.fillStyle='#f0a13a'; x.fillText('?',64,58); break;
@@ -663,9 +662,15 @@ const HOURGLASS='<svg viewBox="0 0 40 48"><path d="M8 4h24M8 44h24" stroke="#4a3
 const slowNag={n:0,next:0};
 function floatHourglass(x,y,fast){ const d=document.createElement('div'); d.className='float hg'+(fast?' fast':''); d.innerHTML=HOURGLASS; d.style.left=x+'px'; d.style.top=y+'px'; document.body.appendChild(d); setTimeout(()=>d.remove(),1450); }
 function showSlow(){ const d=document.createElement('div'); d.className='bigSlow'; d.innerHTML=HOURGLASS+'<b>Slow</b>'; document.body.appendChild(d); setTimeout(()=>d.remove(),2800); }
-function floatAt(x,y,text,cls=''){ const d=document.createElement('div'); d.className='float '+cls; d.textContent=text; d.style.left=x+'px'; d.style.top=y+'px'; document.body.appendChild(d); setTimeout(()=>d.remove(),1450); }
+// wordless: known phrases become symbols; anything else loses its letters (and is dropped if nothing is left)
+const WL={'Full':'✓','No food!':'🐟 0','Clean':'✨','Ouch!':'💢','Grown up!':'✨🐈✨','Treat!':'♥','To the fair!':'🏆','Forever home here':'🏠♥','Can find a home':'🏠',
+  'Home safe':'🏠♥','Found you!':'♥','Loves butt taps!':'♥♥','Not a fan':'✗','Keeping this one':'🏠♥','Not ready yet':'⏳','Needs a brush':'✗','Not quite':'✗',
+  'Purr!':'♥','Helpers back to work':'✓','Tap a cat to give it the collar':'👆🐈','Always daytime':'☀','Day & night: on':'☀☾','Bigger meadow!':'🌱⬆',
+  'No one is ready yet':'⏳',"We'll come back!":'👋',"We'll keep looking!":'👋','Maybe another day!':'👋','Saying hello…':'👋','Not enough for wages: helpers are resting':'$ ✗'};
+function wl(t){ t=String(t); if(WL[t]!=null)return WL[t]; const r=t.replace(/[A-Za-z\u00C0-\u024F]+(['’][A-Za-z]+)?/g,'').replace(/\s+/g,' ').trim(); return /[0-9$★♥✓✗×+\u{1F300}-\u{1FAFF}\u2600-\u27BF]/u.test(r)?r:''; }
+function floatAt(x,y,text,cls=''){ text=wl(text); if(!text)return; const d=document.createElement('div'); d.className='float '+cls; d.textContent=text; d.style.left=x+'px'; d.style.top=y+'px'; document.body.appendChild(d); setTimeout(()=>d.remove(),1450); }
 function floatWorld(v,text){ const s=toScreen(v); if(s.ok)floatAt(s.x,s.y,text); }
-function toast(html,cls='',ms=2600){ const d=document.createElement('div'); d.className='toast '+cls; d.innerHTML=html; $('#toasts').appendChild(d); setTimeout(()=>d.remove(),ms); const all=$('#toasts').children; if(all.length>3)all[0].remove(); }
+function toast(html,cls='',ms=2600){ if(!/^</.test(html)){ html=wl(html); if(!html)return; } const d=document.createElement('div'); d.className='toast '+cls; d.innerHTML=html; $('#toasts').appendChild(d); setTimeout(()=>d.remove(),ms); const all=$('#toasts').children; if(all.length>3)all[0].remove(); }
 
 /* ================= ITEMS ================= */
 function placeSpot(minD=1.4,edge=0.9){ for(let k=0;k<160;k++){ const q=rIn(edge), x=q.x, z=q.z; if(Math.abs(x)<1&&z<-LV().half+1.2)continue; if(inPond(x,z,1))continue; if((W.decoObst||[]).some(([ox,oz,orr])=>Math.hypot(x-ox,z-oz)<orr+0.9))continue; if(items.every(it=>Math.hypot(it.pos.x-x,it.pos.z-z)>(it.kind==='shelter'?Math.max(minD,2):minD))) return new V3(x,0,z);} const q=rIn(edge); return new V3(q.x,0,q.z); }
@@ -958,7 +963,7 @@ function onStroke(c,zone,frantic,good){
       else { c.bat=0.5; handFx('bump'); } }
   } else { c.purr=Math.max(c.purr,0.25*like); s.aff=Math.min(100,s.aff+0.6*like); }
   { const fx=P.hx, fy=P.hy-(P.type==='mouse'?62:112);
-    if(rating==='good'){ slowNag.n=0; floatAt(fx,fy,c.streak>=2?`Purr! ×${c.streak}`:'Purr!','good'); }
+    if(rating==='good'){ slowNag.n=0; floatAt(fx,fy,c.streak>=2?`♥ ×${c.streak}`:'♥','good'); }
     else if(rating==='fast'||iv<(brush?0.8:1.55)*slow){ floatHourglass(fx,fy,rating==='fast'); slowNag.n++; if(slowNag.n>=4&&W.time>slowNag.next){ slowNag.n=0; slowNag.next=W.time+40; showSlow(); } } }
   if(rating!=='fast'&&!brush&&s.trust>=35&&s.fun<60&&Math.random()<0.2){ c.bat=0.5; handFx('bump'); }
   if(s.trust<30||s.aff<25){ c.patience--; if(c.patience<=0){ c.patience=2+Math.floor(Math.random()*3); showIcon(c,'huff',1.5); walkAway(c,false); } }
@@ -1577,7 +1582,7 @@ function endPointer(e){
   if(P.mode==='catPending'&&!P.moved){ const c=P.cat; if(c.state==='hiding')foundCat(c); else if(W.runaway&&W.runaway.c===c&&c.pathEnd==='hide')caughtEarly(c); else if(W.collarPick){ setCollar(c,W.collarPick); W.collarPick=null; tagFor(c,3); spawnFx('spark',c.g.position.clone().setY(.8),5,.3); Snd.chime(); floatWorld(c.g.position.clone().setY(1.3),'Looking sharp!'); } else if(W.pickHome)pickForHome(c); else if(!lessonOn()&&!(c.blinkBackT>0)&&(!cam.close||cam.close.c!==c)&&catScreenH(c)<75)focusClose(c); else if(P.zone==='rump'&&!(c.blinkBackT>0))buttTap(c); else { tagFor(c,5); if(c.blinkBackT>0)blinkBack(c); else Snd.meow(rand(1.05,1.3),0.25); } }
   else if(P.mode==='carry')dropCat(P.cat);
   else if(P.mode==='item'&&!P.moved)useItem(P.item);
-  else if(P.mode==='pan'&&!P.moved){ if(W.collarPick){ const pr=W.collarPrice||15; W.money+=pr; W.collarPick=null; hud(); toast(`Collar returned: $${pr} back`); } else if(!tapWildlife(e)&&!tapBoard(e)){ tag.c=null; leaveClose(true); } }
+  else if(P.mode==='pan'&&!P.moved){ if(W.collarPick){ const pr=W.collarPrice||15; W.money+=pr; W.collarPick=null; hud(); toast(`↩ $${pr}`); } else if(!tapWildlife(e)&&!tapBoard(e)){ tag.c=null; leaveClose(true); } }
   else if(P.mode==='wand')wandUp(e);
   S.cat=null; P.mode=null; handVis();
 }
@@ -1601,17 +1606,17 @@ function enterShow(c){ if(!showReady(c))return; if(c.useItem||c.state!=='idle')s
 function returnFromShow(c){
   const h=LV().half; c.g.position.set(rand(-1,1),0,-h+1.5); c.g.visible=true; setState(c,'idle',3);
   const s=c.s, bv=bestFriend(c)[1];
-  const cats=[['Best Purr',s.aff],['Fluffiest Coat',s.groom],['Healthiest',s.health],['Most Improved',Math.min(100,(s.trust-c.trust0)*2.2)],['Bravest Rescue',c.origin==='stray'?Math.min(100,s.trust+25):0],['Best Friends',bv]];
-  if(COATS[c.coat.base].rare)cats.push(['Rarest Coat',80]); if(c.collar)cats.push(['Best Dressed',74]);
+  const cats=[['♥',s.aff],['✨',s.groom],['🌿',s.health],['📈',Math.min(100,(s.trust-c.trust0)*2.2)],['🦁',c.origin==='stray'?Math.min(100,s.trust+25):0],['💞',bv]];
+  if(COATS[c.coat.base].rare)cats.push(['💎',80]); if(c.collar)cats.push(['🎀',74]);
   cats.sort((a,b)=>b[1]-a[1]); const cat=cats[0][0], val=cats[0][1], shiny=s.groom>=85, scruffy=burrCount(c)>0;
   const score=val*0.8+rand(0,28)-W.showTier*4+(s.groom-60)*0.35+(shiny?4:scruffy?-4:0); const place=score>=72?1:score>=55?2:3;
   const base=Math.round(25*(1+W.showTier*0.6)); const prize=Math.round([0,base*3,base*2,base*1.3][place]*(0.7+0.6*s.groom/100));
   if(place===1){ W.wins++; W.streak++; W.bestStreak=Math.max(W.bestStreak||0,W.streak); c.wins++; if(W.wins%2===0&&W.showTier<SHOWS.length-1)W.showTier++; } else W.streak=0;
   c.bestPlace=c.bestPlace?Math.min(c.bestPlace,place):place; W.ribbons++; W.money+=prize; W.earned+=prize; W.stat.showsBack++; s.groom=Math.max(20,s.groom-30); c.showCD=45; Snd.coin(); hud();
-  const col=['','#ffcf3f','#c9d3de','#e1a06a'][place], lbl=place+['','st','nd','rd'][place];
+  const col=['','#ffcf3f','#c9d3de','#e1a06a'][place], lbl=String(place);
   const shot=fairShot(c,place);
   openModal(`<div class="${shot?'fairpic':'center'}">${shot?`<img src="${shot}" alt="">`:''}${shot&&shiny?'<div class="shine"><i></i><i></i><i></i><i></i><i></i></div>':''}<svg ${shot?'class="fb"':''} viewBox="0 0 100 100" width="${shot?78:120}" height="${shot?78:120}"><path d="M34 52L20 96l16-8 10 12 8-40zM66 52l14 44-16-8-10 12-8-40z" fill="#5b8def"/><circle cx="50" cy="38" r="30" fill="${col}" stroke="rgba(0,0,0,.12)" stroke-width="4"/><text x="50" y="47" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="700" font-size="26" fill="#4a3426">${lbl}</text></svg></div>
-    <h3 class="center" style="margin:0">${c.name}</h3><div class="center" style="font:600 19px var(--display);color:var(--pinkd)">${cat}</div><div class="prize">+$${prize}</div><button class="big" id="collect">Collect</button>`,true);
+    <div class="center" style="font-size:34px">${cat}</div><div class="prize">+$${prize}</div><button class="big" id="collect" aria-label="Collect">✓</button>`,true);
   $('#collect').onclick=closeModal;
 }
 function inherit(x,y){ let base=Math.random()<0.5?x.base:y.base, pattern=Math.random()<0.5?x.pattern:y.pattern, eye=Math.random()<0.5?x.eye:y.eye;
@@ -1652,11 +1657,11 @@ function nextMeet(){
   const m=meetQ.shift();
   if(!m){ W.paused=false; cam.meet=null; $('#meet').hidden=true; if(meetSaved){ cam.want=meetSaved; meetSaved=null; } handVis(); return; }
   W.paused=true; if(!meetSaved)meetSaved=cam.want; cam.meet=m.c; cam.want=4.4; tag.c=null; hideHintTemp=true;
-  $('#mName').textContent=m.c.name;
+  $('#mName').textContent='';
   const heart='<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="#ff6f99"/></svg>';
   const gate='<svg viewBox="0 0 24 24" fill="none" stroke="#a5754a" stroke-width="2.2"><path d="M4 21V6M20 21V6M3 6h18M7 21v-9h10v9M7 15h10"/></svg>';
-  $('#mOrg').innerHTML=(m.origin==='born'?`${heart}<span>${m.parents[0].name} + ${m.parents[1].name}</span>`:m.origin==='mama'?`${gate}<span>A mama cat at the gate</span>`:m.origin==='withmama'?`${heart}<span>${m.parents[0].name}'s kitten</span>`:`${gate}<span>Found at the gate</span>`)+`<span>\u00b7 ${coatName(m.c.coat)}${m.c.age<1?' kitten':''} \u00b7 ${m.c.trait}</span>`;
-  $('#mRoster').innerHTML=W.cats.map(c=>`<div class="rc ${c===m.c?'new':''}"><b>${c.name}${c.age<1?' <small>kitten</small>':''}</b>
+  $('#mOrg').innerHTML=(m.origin==='born'||m.origin==='withmama'?heart:gate)+`<span style="font-size:20px">${m.c.age<1?'🍼':''}</span>${tsvg(m.c.trait)}`;
+  $('#mRoster').innerHTML=W.cats.map(c=>`<div class="rc ${c===m.c?'new':''}"><b>${c===m.c?'✨':''}${c.age<1?'🍼':''}</b>
     <div class="t3">${ICO_A}<div class="tb"><i style="width:${c.s.aff}%;background:#ff7aa2"></i></div></div>
     <div class="t3">${ICO_T}<div class="tb"><i style="width:${c.s.groom}%;background:#b98af0"></i></div></div>
     <div class="t3">${ICO_H}<div class="tb"><i style="width:${c.s.health}%;background:#5fb35a"></i></div></div></div>`).join('');
@@ -1673,7 +1678,9 @@ const ACH=[['rhythm','Gentle Hands','On-beat strokes',()=>W.stat.good,[10,60,250
   ['coats','Rainbow Meadow','Different coats at once',()=>W.stat.coatsMax||0,[4,6,9]],['cards','Postcard Collector','Different postcards from new homes',()=>(W.stat.cards||[]).length,[3,6,10]],['rare','Rare Coat','Rare coats and breeds',()=>W.stat.rare||0,[1,3,6]],['breeds','Exotic Friends','Different breeds rescued',()=>(W.stat.breedSeen||[]).length,[1,3,6]],['spotless','Spotless','Litter scoops',()=>W.stat.cleaned,[10,50,150]],
   ['zoomies','Zoomies','Laser pounces',()=>W.stat.laserP,[25,150,500]],['deluxe','Deluxe Living','Upgrades bought',()=>W.stat.upgrades,[1,5,12]],['ouch','Band-Aid Club','Scratches (oops)',()=>W.stat.scratches,[1,5,15]],
   ['herd','Herding Cats','Cats led together with the wand or laser',()=>W.stat.herd||0,[3,6,10]]];
-const TIER_N=['','Bronze','Silver','Gold'];
+const TIER_N=['','🥉','🥈','🥇'];
+const ACH_E={rhythm:'🎵',blink:'😌',homes:'🏡',pairs:'💞',patient:'🐢',rescues:'🚪',found:'🔦',quick:'⚡',ribbons:'🎀',kittens:'🍼',belly:'🤗',butt:'🍑',family:'🏘️',coats:'🌈',cards:'💌',rare:'💎',breeds:'🌍',spotless:'🧹',zoomies:'🔴',deluxe:'🛋️',ouch:'🩹',herd:'🐾'};
+const GOAL_E=['🎵','🧹','🥣','✨','😌','🪶','🤝','🎀','🏡','🍑'];
 const GROOM_HOME=30, GROOM_FAIR=50, FLEA_AT=20, FLEA_M=new THREE.MeshBasicMaterial({color:0x161010}), FLEA_M2=new THREE.MeshBasicMaterial({color:0xc8a27a});
 // fleas: tiny black dots that crawl over the back and hop now and then
 function updateFleas(c,dt){ const n=c.fleas||0; if(!n&&!c.fleaG)return;
@@ -1691,11 +1698,11 @@ function herdTick(dt){ herdT-=dt; if(herdT>0)return; herdT=0.25;
   if(n>(W.stat.herd||0))W.stat.herd=n;
   if(n>=3&&n>herdShow){ herdShow=n; floatWorld(lure.clone().setY(1.2),'🐾×'+n); } if(n<3)herdShow=0; }
 function unlock(){}
-function updateAch(){ for(const [id,n,,f,th] of ACH){ const v=f(); let t=0; th.forEach((x,i)=>{ if(v>=x)t=i+1; }); if(t>(W.achT[id]||0)){ const rw=[0,10,25,60][t]-[0,10,25,60][W.achT[id]||0]; W.achT[id]=t; W.money+=rw; W.earned+=rw; hud(); Snd.chime(); toast(`★ ${n} · ${TIER_N[t]} +$${rw}`,'badge',3400); } } }
+function updateAch(){ for(const [id,n,,f,th] of ACH){ const v=f(); let t=0; th.forEach((x,i)=>{ if(v>=x)t=i+1; }); if(t>(W.achT[id]||0)){ const rw=[0,10,25,60][t]-[0,10,25,60][W.achT[id]||0]; W.achT[id]=t; W.money+=rw; W.earned+=rw; hud(); Snd.chime(); toast(`${ACH_E[id]||'★'} ${TIER_N[t]} +$${rw}`,'badge',3400); } } }
 const GOALS=[['Pet on the beat',()=>W.stat.good,15],['Scoop the litter',()=>W.stat.cleaned,3],['Fill the bowls',()=>W.stat.fills,3],['Brush a coat',()=>W.stat.brush,8],['Blink back',()=>W.stat.blinkBack,2],
   ['Wand pounces',()=>W.stat.pounces,10],['Carry & introduce',()=>W.stat.drops,3],['Win a fair ribbon',()=>W.ribbons,1],['Find a home',()=>W.homes.length,1],['Happy butt taps',()=>W.stat.butt,2]];
 function pickGoals(){ const idx=[...GOALS.keys()].sort(()=>Math.random()-0.5).slice(0,3); W.goals=idx.map(i=>({i,base:GOALS[i][1](),done:false})); }
-function updateGoals(){ for(const g of W.goals){ if(g.done)continue; const [n,f,tg]=GOALS[g.i]; if(f()-g.base>=tg){ g.done=true; W.money+=15; hud(); toast(`✓ ${n} +$15`,'badge',3000); Snd.coin(); } } }
+function updateGoals(){ for(const g of W.goals){ if(g.done)continue; const [n,f,tg]=GOALS[g.i]; if(f()-g.base>=tg){ g.done=true; W.money+=15; hud(); toast(`✓ ${GOAL_E[g.i]} +$15`,'badge',3000); Snd.coin(); } } }
 
 /* ================= UI ================= */
 function hud(){ $('#hMoney').textContent=Math.floor(W.money); $('#hMoney').parentElement.classList.toggle('low',helpers.length>0&&W.money<helpers.length*3); $('#hFood').textContent=W.food+(W.premium>0?` +${W.premium}★`:''); const away=W.cats.filter(c=>c.away>0).length; $('#hCats').textContent=`${W.cats.length}/${LV().cap}`; $('#hAway').hidden=!away; $('#hAwayN').textContent=away; $('#hRib').textContent=W.ribbons; $('#hStars').textContent=W.stars; }
@@ -1741,7 +1748,7 @@ const STAY_SVG='<svg viewBox="0 0 24 24"><path d="M3 11L12 3l9 8v10H3z" fill="#f
 const tag={c:null,t:0,el:$('#tag'),prev:{}};
 tag.el.innerHTML=`<div class="tn" id="tName"></div><div id="tTrait"></div>
   <div class="ic3"><div class="ic" id="rA">${ICO_A}<span class="lb">Love</span></div><div class="ic" id="rT">${ICO_T}<span class="lb">Groom</span></div><div class="ic" id="rH">${ICO_H}<span class="lb">Health</span></div></div>
-  <div class="tbtns"><button id="tShow" hidden aria-label="Cat fair"></button><button id="tStay" hidden title="Keep this cat (not for adoption)">${STAY_SVG}Keep</button></div>`;
+  <div class="tbtns"><button id="tShow" hidden aria-label="Cat fair"></button><button id="tStay" hidden aria-label="Keep">${STAY_SVG}</button></div>`;
 function tagFor(c,sec){ if(tag.c!==c)W.tagShows=(W.tagShows||0)+1; tag.c=c; tag.t=Math.max(tag.t,sec); }
 function updateTag(dt){
   if(tag.c){ tag.t-=dt; if(tag.t<=0&&!(tag.c.petT>0&&handOn(tag.c)))tag.c=null; }
@@ -1749,9 +1756,9 @@ function updateTag(dt){
   const top=c.g.position.clone(); top.y+=1.25*c.g.scale.x+0.35; const s=toScreen(top); if(!s.ok){ tag.el.hidden=true; return; }
   tag.el.hidden=false; const w=tag.el.offsetWidth, hh=tag.el.offsetHeight; const x=clamp(s.x-w/2,8,innerWidth-w-8), y=clamp(s.y-hh,60,innerHeight-hh-90);
   tag.el.style.transform=`translate(${x}px,${y}px)`;
-  if(tag.lastC!==c){ tag.lastC=c; tag.prev={a:c.s.aff,t:c.s.groom,h:c.s.health}; $('#tName').innerHTML=`${c.name}${c.age<1?' <small>kitten</small>':''}`; }
-  const lab=(W.tagShows||0)<=6; for(const id of ['rA','rT','rH']){ const r=$('#'+id); r.querySelector('.lb').hidden=!lab; }
-  $('#tTrait').textContent=c.trait+(c.forever?' · stays here':readyHome(c)?' · ready for a home':'');
+  if(tag.lastC!==c){ tag.lastC=c; tag.prev={a:c.s.aff,t:c.s.groom,h:c.s.health}; $('#tName').innerHTML=c.age<1?'🍼':''; }
+  const lab=false; for(const id of ['rA','rT','rH']){ const r=$('#'+id); r.querySelector('.lb').hidden=!lab; }
+  $('#tTrait').innerHTML=tsvg(c.trait)+(c.forever?' 🏠♥':readyHome(c)?' 🏠':'');
   for(const [id,v] of [['rA',c.s.aff],['rT',c.s.groom],['rH',c.s.health]]){ const g=$('#'+id+' svg'); g.style.transform=`scale(${(0.25+v/100).toFixed(3)})`; g.style.opacity=(0.55+0.45*v/100).toFixed(2); }
   for(const [k,f,id] of [['a','aff','rA'],['t','groom','rT'],['h','health','rH']]){ const v=c.s[f]; if(v-tag.prev[k]>0.4){ const r=$('#'+id); r.classList.remove('pulse'); void r.offsetWidth; r.classList.add('pulse'); tag.prev[k]=v; } else if(v<tag.prev[k])tag.prev[k]=v; }
   const ts=$('#tShow'); ts.hidden=!showReady(c); if(!ts.hidden&&ts.dataset.b!==String(c.bestPlace||0)){ ts.dataset.b=String(c.bestPlace||0); ts.innerHTML=fairBadge(c.bestPlace||0,46); } const st=$('#tStay'); st.hidden=!(c.age>=1); st.classList.toggle('on',!!c.forever);
@@ -1812,53 +1819,54 @@ const H_EYES='<svg viewBox="0 0 72 30" width="54" height="23" style="vertical-al
 const H_BAG='<path d="M4 9h16l-1.5 11h-13z" fill="#ff8fb1"/><path d="M8 9V7a4 4 0 0 1 8 0v2" fill="none" stroke="#4a3426" stroke-width="2.2"/>';
 const H_SWAY='<span style="font-size:24px;vertical-align:middle"> ⇆</span>';
 const GUIDE_LABEL={food:'Buy food',shelter:'Rain roof',litter:'Litter box',bowl:'Food bowl',bed:'Cozy bed',ball:'Buy a toy',expand:'More room',laser:'Laser'};
+const SHOP_D={food:'+12',premium:'+12 ✨',fire:'−$6',helper:'−$6 ⏱'};
 function openShop(guide){
   const cards=SHOP.filter(it=>it.id!=='fire'||helpers.length).map(it=>{ const avail=it.avail?it.avail():true, max=it.max?it.max():Infinity, have=it.id==='helper'?helpers.length:it.max?countItems(it.id):0, cost=it.cost(), need=it.need?it.need():0, starOk=W.stars>=need;
-    const hn=it.homes?it.homes():0, hOk=W.homes.length>=hn; const can=avail&&have<max&&W.money>=cost&&starOk&&hOk; const lbl=!avail?(it.id==='laser'?'Owned':'Maxed'):have>=max?'Full':!starOk?`★${need} needed`:!hOk?`${hn} homes needed`:it.id==='fire'?'Let one go':`$${cost}`;
-    const desc=it.id==='expand'?(LEVELS[W.level+1]?`Room for ${LEVELS[W.level+1].cap} cats${LEVELS[W.level+1].ponds?' \u00b7 new pond':''}`:'Biggest already'):it.desc;
+    const hn=it.homes?it.homes():0, hOk=W.homes.length>=hn; const can=avail&&have<max&&W.money>=cost&&starOk&&hOk; const lbl=!avail?'✓':have>=max?'✓':!starOk?`🔒 ★${need}`:!hOk?`🔒 🏡${hn}`:it.id==='fire'?'−1':`$${cost}`;
+    const desc=it.id==='expand'?(LEVELS[W.level+1]?`🐈 ${LEVELS[W.level+1].cap}${LEVELS[W.level+1].ponds?' \u00b7 💧':''}`:''):(SHOP_D[it.id]||'');
     const gd=it.id===guide;
-    return `<div class="item${gd?' guide':''}"${gd?' data-guide':''}><div class="ico"><svg viewBox="0 0 24 24">${IC[it.id]}</svg></div><b>${it.name()}</b><span>${desc}${it.max&&max<99?` · ${have}/${max}`:''}</span><button data-buy="${it.id}" ${can?'':'disabled'}>${lbl}</button>${gd?`<svg class="gHand" viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`:''}</div>`; }).join('');
+    return `<div class="item${gd?' guide':''}"${gd?' data-guide':''}><div class="ico"><svg viewBox="0 0 24 24">${IC[it.id]}</svg></div><span>${[desc,it.max&&max<99?`${have}/${max}`:''].filter(Boolean).join(' · ')}</span><button data-buy="${it.id}" ${can?'':'disabled'}>${lbl}</button>${gd?`<svg class="gHand" viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`:''}</div>`; }).join('');
   const kinds=Object.keys(TIERS).filter(k=>k==='wand'||(k==='laser'?W.laser:countItems(k)>0)).filter(k=>W.tier[k]<TIERS[k].length);
   const ups=kinds.map(k=>{ const n=W.tier[k]+1, cost=upCost(k,n), sOk=W.stars>=starsFor(n), can=sOk&&W.money>=cost;
-    return `<div class="item"><div class="ico"><svg viewBox="0 0 24 24">${IC[k]}</svg></div><b>${TIERS[k][n-1]}</b><span>${TIER_DESC[k][n-1]}</span><button data-up="${k}" ${can?'':'disabled'}>${sOk?`$${cost}`:`★${starsFor(n)} needed`}</button></div>`; }).join('');
-  openModal(`<h3>Shop</h3><div class="grid">${cards}</div>${ups?`<h3 style="margin-top:18px">Upgrades</h3><div class="grid">${ups}</div>`:''}`);
+    return `<div class="item"><div class="ico"><svg viewBox="0 0 24 24">${IC[k]}</svg></div><span style="font-size:16px;letter-spacing:2px">${'●'.repeat(n)}${'○'.repeat(TIERS[k].length-n)}</span><button data-up="${k}" ${can?'':'disabled'}>${sOk?`$${cost}`:`🔒 ★${starsFor(n)}`}</button></div>`; }).join('');
+  openModal(`<h3 aria-label="Shop"><svg viewBox="0 0 24 24" width="34" height="34">${H_BAG}</svg></h3><div class="grid">${cards}</div>${ups?`<h3 style="margin-top:18px" aria-label="Upgrades">⬆</h3><div class="grid">${ups}</div>`:''}`);
   const gEl=document.querySelector('[data-guide]'); if(gEl)setTimeout(()=>gEl.scrollIntoView({block:'center',behavior:'smooth'}),60);
   document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{ const it=SHOP.find(x=>x.id===b.dataset.buy); const cost=it.cost(); if(W.money<cost)return; W.money-=cost; it.buy(); W.stat.buys++; Snd.coin(); hud(); if($('#modal').hidden)return; openShop(); });
   document.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{ const k=b.dataset.up, n=W.tier[k]+1, cost=upCost(k,n); if(W.money<cost||W.stars<starsFor(n))return; W.money-=cost; W.tier[k]=n; W.stat.upgrades++;
     for(const c of W.cats)if(c.useItem&&c.useItem.kind===k&&!c.carried)setState(c,'idle',1); for(const it of items)if(it.kind===k)buildItem(it); if(k==='wand')buildWandToy(); Snd.chime(); hud(); openShop(); });
 }
-function expand(){ const oh=LV().half; W.level++; if(W.level>=3){ W.exoticNext=true; setTimeout(()=>startDropoff(),20000); } shiftOutside(oh-LV().half); buildEnclosure(); buildDecor(); cam.want=LV().zoom; { const B=bnd(); cam.target.set((B.x0+B.x1)/2,0.3,(B.z0+B.z1)/2); } for(const c of W.cats){ const p=c.g.position; if(!c.outside&&!c.leaving&&inPond(p.x,p.z,0.4)){ const q=rIn(1); p.set(q.x,0,q.z); } } for(const it of items)if(inPond(it.pos.x,it.pos.z,0.8)){ const q=placeSpot(); it.pos.copy(q); } for(let i=0;i<2;i++)makeButterfly(); closeModal(); hud(); toast(LV().name?LV().name+' open!':'Bigger meadow!'); }
+function expand(){ const oh=LV().half; W.level++; if(W.level>=3){ W.exoticNext=true; setTimeout(()=>startDropoff(),20000); } shiftOutside(oh-LV().half); buildEnclosure(); buildDecor(); cam.want=LV().zoom; { const B=bnd(); cam.target.set((B.x0+B.x1)/2,0.3,(B.z0+B.z1)/2); } for(const c of W.cats){ const p=c.g.position; if(!c.outside&&!c.leaving&&inPond(p.x,p.z,0.4)){ const q=rIn(1); p.set(q.x,0,q.z); } } for(const it of items)if(inPond(it.pos.x,it.pos.z,0.8)){ const q=placeSpot(); it.pos.copy(q); } for(let i=0;i<2;i++)makeButterfly(); closeModal(); hud(); toast('🌱⬆'); }
 function openBadges(tab='badges'){
-  const tabs=`<div class="tabs"><button data-tab="badges" class="${tab==='badges'?'on':''}">Badges</button><button data-tab="tails" class="${tab==='tails'?'on':''}">Happy Tails · ${W.homes.length}</button><button data-tab="goals" class="${tab==='goals'?'on':''}">Goals</button></div>`;
+  const tabs=`<div class="tabs"><button data-tab="badges" class="${tab==='badges'?'on':''}" aria-label="Badges">🏅</button><button data-tab="tails" class="${tab==='tails'?'on':''}" aria-label="Postcards">💌 ${W.homes.length}</button><button data-tab="goals" class="${tab==='goals'?'on':''}" aria-label="Goals">🎯</button></div>`;
   let body='';
-  if(tab==='badges') body=`<div class="grid">${ACH.map(([id,n,d,f,th])=>{ const t=W.achT[id]||0, v=f(), nx=th[t]; return `<div class="badge-i ${t?'t'+t:''}"><div class="medal">${t?'★':'?'}</div><div><b>${n}</b><span>${d}</span><div class="pips">${nx!==undefined?`${Math.min(v,nx)} / ${nx}`:'Gold!'}</div></div></div>`; }).join('')}</div>`;
-  else if(tab==='tails') body=W.homes.length?`<div class="cards">${W.homes.map((hm,i)=>({hm,i})).reverse().map(({hm,i})=>{ const on=cardOn(hm,i), t=on?'button':'div'; return `<${t} class="pc"${on?` data-hi="${i}"`:''}>${hm.img?`<img src="${hm.img}" alt="${hm.name} at home">`:'<img alt="">'}<b>${hm.name}</b><span>with the ${hm.fam} family</span></${t}>`; }).join('')}</div>`:'<p class="center" style="color:var(--muted);font:700 15px var(--body)">Cats who find loving homes send postcards here.</p>';
-  else body=W.goals.map(g=>{ const [n,f,tg]=GOALS[g.i]; const v=Math.max(0,Math.min(tg,f()-g.base)); return `<div class="goal ${g.done?'done':''}">${g.done?'✓ ':''}${n}<span>${g.done?'+$15':`${v} / ${tg}`}</span></div>`; }).join('');
-  openModal(`<h3>Sanctuary ${'★'.repeat(W.stars)}</h3>${tabs}${tab==='badges'?`<p style="margin:-4px 0 10px;color:var(--muted);font:700 13px var(--body)">Bronze +$10 \u00b7 Silver +$25 \u00b7 Gold +$60. Gold badges unlock special collars.</p>`:''}${body}`);
+  if(tab==='badges') body=`<div class="grid">${ACH.map(([id,n,d,f,th])=>{ const t=W.achT[id]||0, v=f(), nx=th[t]; return `<div class="badge-i ${t?'t'+t:''}"><div class="medal" style="font-size:24px">${ACH_E[id]}</div><div><b style="font-size:22px">${TIER_N[t]||'·'}</b><div class="pips">${nx!==undefined?`${Math.min(v,nx)} / ${nx}`:'🥇'}</div></div></div>`; }).join('')}</div>`;
+  else if(tab==='tails') body=W.homes.length?`<div class="cards">${W.homes.map((hm,i)=>({hm,i})).reverse().map(({hm,i})=>{ const on=cardOn(hm,i), t=on?'button':'div'; return `<${t} class="pc"${on?` data-hi="${i}"`:''}>${hm.img?`<img src="${hm.img}" alt="">`:'<img alt="">'}<span>${FAM_SVG.replace('<svg ','<svg width="34" height="26" ')}</span></${t}>`; }).join('')}</div>`:'<p class="center" style="font-size:40px;margin:16px 0">💌</p>';
+  else body=W.goals.map(g=>{ const [n,f,tg]=GOALS[g.i]; const v=Math.max(0,Math.min(tg,f()-g.base)); return `<div class="goal ${g.done?'done':''}"><span style="font-size:22px">${g.done?'✓ ':''}${GOAL_E[g.i]}</span><span>${g.done?'+$15':`${v} / ${tg}`}</span></div>`; }).join('');
+  openModal(`<h3>${'★'.repeat(W.stars)}</h3>${tabs}${tab==='badges'?`<p style="margin:-4px 0 10px;color:var(--muted);font:700 15px var(--body)">🥉 +$10 \u00b7 🥈 +$25 \u00b7 🥇 +$60</p>`:''}${body}`);
   document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>openBadges(b.dataset.tab)); if(tab==='tails')bindCards(()=>openBadges('tails')); }
 $('#bShop').onclick=()=>openShop(curHint&&curHint.el==='#bShop'?guidePick(curHint.id):null); $('#bBadges').onclick=()=>openBadges(); $('#bSnap').onclick=()=>{ Snd.shutter(); snapshot(); };
 $('#bMusic').onclick=()=>{ Snd.toggleMusic(); $('#bMusic').classList.toggle('off',!Snd.musicOn); };
-$('#bDay').onclick=()=>{ W.dayOn=!W.dayOn; store.set('wm_daynight',W.dayOn); $('#bDay').classList.toggle('off',!W.dayOn); toast(W.dayOn?'Day & night: on':'Always daytime'); };
+$('#bDay').onclick=()=>{ W.dayOn=!W.dayOn; store.set('wm_daynight',W.dayOn); $('#bDay').classList.toggle('off',!W.dayOn); toast(W.dayOn?'☀☾':'☀'); };
 $('#bDay').classList.toggle('off',!W.dayOn);
 (()=>{ const st=document.createElement('style'); st.textContent='.help details{border:2px solid var(--line);border-radius:14px;padding:8px 12px;margin-bottom:6px}.help summary{font:600 17px var(--display);cursor:pointer;min-height:32px;display:flex;align-items:center;gap:8px}.help summary svg{width:20px;height:20px}.help p,.help li{font:600 14px/1.45 var(--body);margin:6px 0}.help ul{padding-left:18px;margin:4px 0}.help b{color:var(--ink)}.help .hrow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0 12px;font:700 14px var(--body);color:var(--muted)}.help .hrow button{min-height:40px;padding:0 16px;border-radius:999px;background:#f3e7d6;font:600 15px var(--display)}'; document.head.appendChild(st); })();
 function openHelp(){
-  const sec=(title,body,open)=>`<details${open?' open':''}><summary>${title}</summary>${body}</details>`;
-  openModal(`<h3>How to play</h3><div class="help">
-  <div class="hrow"><span>Pointing hints</span><button id="hTog">${W.hints?'On':'Off'}</button></div>
-  ${sec('The goal',`<p>You run a cat sanctuary. Shy rescue cats arrive; you earn their trust, keep them healthy and happy, and help them find loving homes. There is no losing: cats never get hurt, they just get grumpy when ignored.</p>`,true)}
-  ${sec(ICO_A+ICO_T+ICO_H+' The three stats',`<ul><li><b>Love</b> (heart): gentle on-beat petting, playing, feeding, blinking back, butt taps (for cats who like them), premium food. Drops when you scratch the wrong spot, pet too fast, or hold a nervous cat too long. Kittens warm up faster.</li><li><b>Groom</b> (brush): a clean, shiny coat. It fades slowly; brush to bring it back. Fair judges care a lot, families a little. A very scruffy cat catches <b>fleas</b> (tiny black dots, lots of scratching and grumbling): brush them off.</li><li><b>Health</b> (leaf): full belly, fun, a groomed coat and a clean litter box. Naps on cushions and the water fountain help.</li></ul><p>Tap a cat to see its stats above its head.</p>`)}
-  ${sec('Petting rhythm',`<ul><li>Drag across the cat: one smooth stroke, then <b>wait</b>.</li><li>Keep stroking slowly: the ring by your hand fills while your hand moves over the cat, and every full ring is a happy purr. Holding still doesn't fill it, and after a few seconds of stillness the cat gets bored and wanders off.</li><li>An hourglass = slow down (a shaking one = way too fast; too much of that and the cat has had enough).</li><li>Too many fast strokes overstimulate a cat: watch for a twitching tail and sideways ears. Then it walks off, or, if it doesn't trust you yet, it scratches (band-aid!).</li></ul>`)}
-  ${sec('Where to pet',`<ul><li><b>Head, cheeks, chin</b>: favourites.</li><li><b>Back</b>: fine. <b>Tail</b>: no!</li><li><b>Belly</b>: only when a cat rolls over and has Love 75+. Otherwise it's a trap.</li><li><b>Butt taps</b>: tap the rump once. Some cats love it, some don't: find out!</li><li>Happy cats headbutt your hand, knead, lean in and slow-blink. When a cat looks up and slowly blinks at you, <b>tap it to blink back</b>.</li></ul>`)}
-  ${sec('Tools',`<ul><li><b>Pet</b>: stroke; press and hold a cat to carry it (relaxed cats flop, nervous ones wiggle free). Drop it next to another cat to introduce them.</li><li><b>Brush</b>: scrub back and forth, gently, to clean the coat. Too fast and the cat grumbles, then leaves or scratches. Cats that don't love you yet only tolerate very slow brushing, so pet a new rescue first. A scruffy cat (Groom under 35) looks dull and dusty, with bed-head, muddy socks and bits of leaf and twig in its fur; brushing cleans it up, and a really clean coat shines. Love comes from petting; brushing raises Groom (it helps health, wins fairs and gets rid of fleas). Cats also groom themselves a little when happy and fed.</li><li><b>Wand</b>: drag to move, flick to toss, tap to make it jump, hold still to raise it so cats leap.</li><li><b>Laser</b> (shop): cats sprint and pounce. Upgraded, it ends on a treat.</li><li>Bowls and litter boxes can be tapped with any tool.</li></ul>`)}
-  ${sec('Daily care',`<ul><li>Tap a bowl to fill it (uses premium food first, then kibble).</li><li>Tap the litter box to scoop it; dirty boxes make the meadow smelly.</li><li>A rain roof keeps cats dry in showers.</li><li>Helpers fill bowls, scoop and pet cats, for $6 a minute. Unpaid helpers rest.</li><li>The donation jar by the gate collects money when your cats are happy.</li></ul>`)}
-  ${sec('Cat fair',`<p>A grown cat with <b>Love 55+, Groom 50+ and Health 60+</b> gets a <b>Fair!</b> button on its tag. The better groomed, the higher it places and the bigger the prize. Every cat wins a category (Best Purr, Fluffiest Coat, Most Improved, Bravest Rescue, Best Dressed...) and prize money. Winning moves you up to bigger fairs.</p>`)}
-  ${sec('New cats & kittens',`<ul><li>Rescuers drive up and drop off strays, sometimes a mama with kittens.</li><li>Close friends touch noses and lick each other. A happy, bonded, unrelated pair may have <b>one</b> litter, then both get a vet visit.</li><li>Kittens stay near mum until they grow up (about 3 minutes).</li></ul>`)}
-  ${sec('Adoption',`<ul><li>A cat is <b>ready for a home</b> after settling in (about 2½ minutes) with Love 50+ and Health 55+. Ribbons don't matter, but a family turns down a very scruffy cat (Groom under 30) unless it adores people (Love 90+).</li><li>Families drive up and say what they'd love (a calm cat, a playful cat...). Tap <b>Pick a cat</b>, then a cat with a little house. A good personality match goes home; best friends go together.</li><li>No money changes hands. Postcards arrive later and get pinned on the card board by the house: tap it to see them all. They're also in Badges → Happy Tails.</li><li>Tap <b>Keep</b> on a cat to keep it forever. Tap × to send a family off.</li></ul>`)}
-  ${sec('Runaways',`<p>A cat with very low love may slip out the gate. Catch it before the "missing" notice for the <b>Quick Paws</b> badge, or press <b>Go look</b>, follow the paw prints and listen: meows get louder as you get closer. Tap it to bring it home (love goes up).</p>`)}
-  ${sec('Stars, shop & badges',`<ul><li>Sanctuary stars (1-5) come from homes found, rescues, ribbons and happiness. Stars unlock bigger meadows and item upgrades (cat castle, fountain, sunroom...).</li><li>At 5 stars the sanctuary keeps growing: new wings with ponds open as you find more cats homes (3, 6, 10, 16 homes).</li><li>Badges have bronze, silver and gold, and pay $10 / $25 / $60. Gold badges unlock special collars (rainbow, starry, blossom). Three small goals per visit pay $15 each (Badges → Goals).</li><li>Collars and premium food are in the shop.</li><li>Progress saves automatically on this device.</li></ul>`)}
-  ${sec('Controls',`<ul><li>Drag the grass to move around; pinch or mouse wheel to zoom; right-drag to rotate (desktop).</li><li>Tap the cat counter (top left) to jump between cats.</li><li>Keys 1-4 pick tools on desktop.</li><li>The moon button turns the day &amp; night cycle on or off. At night cats get sleepy and fireflies come out.</li></ul>`)}
+  const row=(...a)=>`<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 6px;border-bottom:2px solid var(--line);flex-wrap:wrap">${a.join('')}</div>`;
+  const ic=(svg,w=30)=>svg.replace('<svg ',`<svg width="${w}" height="${w}" style="vertical-align:middle" `);
+  const big=t=>`<span style="font:700 22px var(--display)">${t}</span>`;
+  const eq=h=>h.replace('class="eq"','class="eq" style="display:flex;justify-content:center"').replace('viewBox="0 0 150 46"','viewBox="0 0 150 46" width="150" height="46"');
+  openModal(`<div class="help" style="max-width:420px;margin:auto">
+  <div class="hrow" style="justify-content:center"><span style="font-size:26px">👆</span><button id="hTog" aria-label="Hints on/off">${W.hints?'✓':'✗'}</button></div>
+  ${row(ic(HOURGLASS,26),big('→'),hIco(H_HEART,30))}
+  ${row(eq(BLINK_EQ))}
+  ${row(eq(PAIR_EQ))}
+  ${row(`<div class="eq eq3" style="display:flex;align-items:center;gap:6px">${SCRUFF_SVG}${big('+')}${BRUSH_ICON}${big('=')}${SHINE_ICON}</div>`)}
+  ${row(`<div style="width:160px">${BELLY_TIP}</div>`)}
+  ${row(`<div style="width:160px">${BUTT_TIP}</div>`)}
+  ${row(`<div style="width:160px">${FLEA_TIP}</div>`)}
+  ${row(ic(ICO_A),big('55'),ic(ICO_T),big('50'),ic(ICO_H),big('60'),big('→'),fairBadge(0,30))}
+  ${row(ic(ICO_A),big('50'),ic(ICO_H),big('55'),big('→'),ic(STAY_SVG,30),FAM_SVG.replace('<svg ','<svg width="40" height="30" style="vertical-align:middle" '))}
   </div>`);
-  $('#hTog').onclick=()=>{ W.hints=!W.hints; store.set('wm_hints',W.hints); $('#hTog').textContent=W.hints?'On':'Off'; if(!W.hints)hideHint(); };
+  $('#hTog').onclick=()=>{ W.hints=!W.hints; store.set('wm_hints',W.hints); $('#hTog').textContent=W.hints?'✓':'✗'; if(!W.hints)hideHint(); };
 }
 $('#bHints').onclick=openHelp;
 
@@ -1917,17 +1925,17 @@ function snapshot(){
   x.save(); x.beginPath(); x.roundRect?x.roundRect(40,40,1120,500,28):x.rect(40,40,1120,500); x.clip(); x.drawImage(canvas,(sw-cw)/2,(sh-ch)/2,cw,ch,40,40,1120,500); x.restore();
   Object.assign(cam,{dist:saved.d,want:saved.w,phi:saved.ph}); cam.target.copy(saved.t); wand.g.visible=wv; laser.g.visible=lv;
   const r=runStats(), prev=store.get('wm_last');
-  x.fillStyle='#4a3426'; x.font='700 46px Fredoka, sans-serif'; x.fillText('Whisker Meadow',48,610);
-  x.fillStyle='#ff7aa2'; x.font='700 30px Fredoka, sans-serif'; x.fillText(`Score ${r.score}`,48,656);
-  x.fillStyle='#8c7666'; x.font='700 22px Nunito, sans-serif'; x.fillText(`${r.minutes} min${prev?` · last time ${prev.score}`:''}`,48,694);
-  const cells=[['Cats',r.cats],['Homes',W.homes.length],['Health',r.health],['Love',r.trust],['Ribbons',r.ribbons],['Badges',`${r.badges}/${ACH.length}`]];
+  x.fillStyle='#4a3426'; x.font='700 46px Fredoka, sans-serif'; x.font='700 52px sans-serif'; x.fillText('🐈 ♥',48,612);
+  x.fillStyle='#ff7aa2'; x.font='700 30px Fredoka, sans-serif'; x.fillText(`🏆 ${r.score}`,48,660);
+  x.fillStyle='#8c7666'; x.font='700 22px Nunito, sans-serif'; x.fillText(`⏱ ${r.minutes}${prev?` · ↩ ${prev.score}`:''}`,48,700);
+  const cells=[['🐈',r.cats],['🏡',W.homes.length],['🌿',r.health],['♥',r.trust],['🎀',r.ribbons],['🏅',`${r.badges}/${ACH.length}`]];
   cells.forEach(([l,v],i)=>{ const cx=560+(i%3)*205, cy=596+Math.floor(i/3)*100; x.fillStyle='#f6ecdf'; x.beginPath(); x.roundRect?x.roundRect(cx,cy,190,84,18):x.rect(cx,cy,190,84); x.fill();
     x.fillStyle='#4a3426'; x.font='700 34px Fredoka, sans-serif'; x.fillText(String(v),cx+16,cy+44); x.fillStyle='#8c7666'; x.font='700 17px Nunito, sans-serif'; x.fillText(l,cx+16,cy+70); });
   const url=cv.toDataURL('image/png'); store.set('wm_last',r);
-  const summary=`My Whisker Meadow: ${r.cats} cats, ${r.ribbons} ribbons, score ${r.score}.`;
-  openModal(`<h3>My meadow</h3><img id="snapimg" alt="Snapshot of your cat meadow" src="${url}"><div class="row2"><button id="copySum">Copy</button><button id="keepPlay" style="background:var(--pink);color:#fff">Keep playing</button></div>`);
+  const summary=`🐈 ${r.cats} · 🎀 ${r.ribbons} · 🏆 ${r.score}`;
+  openModal(`<img id="snapimg" alt="Snapshot of your cat meadow" src="${url}"><div class="row2"><button id="copySum" aria-label="Copy">📋</button><button id="keepPlay" style="background:var(--pink);color:#fff" aria-label="Keep playing">▶</button></div>`);
   $('#keepPlay').onclick=closeModal;
-  $('#copySum').onclick=()=>{ const b=$('#copySum'); if(navigator.clipboard)navigator.clipboard.writeText(summary).then(()=>b.textContent='Copied!',()=>b.textContent=summary); else b.textContent=summary; };
+  $('#copySum').onclick=()=>{ const b=$('#copySum'); if(navigator.clipboard)navigator.clipboard.writeText(summary).then(()=>b.textContent='✓',()=>b.textContent=summary); else b.textContent=summary; };
 }
 
 /* ================= v3: rescue life ================= */
@@ -2166,9 +2174,9 @@ function runaway(c){ const h=LV().half; const sp=pick(W.hideSpots||[{p:[1.6,-h-2
   W.runaway={c,t:0,trail,pawI:0,lastPaw:null,pts,trailMid:pts[1].clone().setY(0.1),looking:false,notified:false}; W.lastRun=W.time; }
 function caughtEarly(c){ if(W.runaway&&W.runaway.notified){ W.stat.found++; c.s.trust=Math.min(100,c.s.trust+4); } else W.stat.quick=(W.stat.quick||0)+1; c.s.trust=Math.min(100,c.s.trust+2); spawnFx('h',c.g.position.clone().setY(0.9),3,.3); Snd.chirp(); floatWorld(c.g.position.clone().setY(1.2),'Got you!'); comeHome(c); }
 function renderMissing(){ const el=$('#missing'), R=W.runaway; if(!R||R.c.state==='path'&&R.c.pathEnd==='home'){ el.hidden=true; return; } el.hidden=false;
-  if(!R.looking){ el.innerHTML=`<div class="fam">${PAWS_SVG}<div><div class="want">${R.c.name} is missing!</div><div class="sub">slipped out the gate</div></div></div><button id="mGo">Go look</button>`;
+  if(!R.looking){ el.innerHTML=`<div class="fam">${PAWS_SVG}<div class="want" style="font-size:28px">🐈 ?</div></div><button id="mGo" aria-label="Go look">🔍</button>`;
     $('#mGo').onclick=()=>{ R.looking=true; cam.focus=null; cam.goTo=new V3(0,0.3,-LV().half-1.2); cam.want=Math.min(cam.want,7.5); renderMissing(); }; }
-  else el.innerHTML=`<div class="fam">${PAWS_SVG}<div><div class="want">Follow the paw prints</div><div class="sub">listen for meows</div></div></div>`; }
+  else el.innerHTML=`<div class="fam">${PAWS_SVG}<div class="want" style="font-size:28px">🐾 👂</div></div>`; }
 function clearTrail(){ if(W.runaway)for(const m of W.runaway.trail)scene.remove(m); }
 function foundCat(c){ if(c.state!=='hiding')return; c.s.trust=Math.min(100,c.s.trust+6); c.s.aff=Math.min(100,c.s.aff+3); W.stat.found++; spawnFx('h',c.g.position.clone().setY(0.9),5,.4); Snd.chirp(); floatWorld(c.g.position.clone().setY(1.2),'Found you!'); comeHome(c); }
 function comeHome(c){ const R=W.runaway, h=LV().half; clearTrail(); $('#missing').hidden=true; let back=[];
@@ -2183,9 +2191,9 @@ function spawnFamily(){ const ready=W.cats.filter(readyHome); if(!ready.length)r
   W.family={members,want,tries:0,t:0,name:pick(FAM_NAMES),state:'arrive',car,atGate:false}; $('#family').hidden=true; }
 function renderFamily(msg,noX){ const f=W.family, el=$('#family'); if(!f){ el.hidden=true; return; } el.hidden=false;
   const x=noX?'':'<button class="fx" id="fX" aria-label="Send them off">&times;</button>';
-  if(msg) el.innerHTML=`${x}<div class="fam">${FAM_SVG}<div class="want">${msg}</div></div>`;
-  else if(W.pickHome){ el.innerHTML=`${x}<div class="fam">${FAM_SVG}<div><div class="want">Tap a cat</div><div class="sub">one with a little house</div></div></div><div class="fb"><button id="fCancel">Back</button></div>`; $('#fCancel').onclick=()=>{ W.pickHome=false; renderFamily(); }; }
-  else { el.innerHTML=`${x}<div class="fam">${FAM_SVG}<div><div class="sub">The ${f.name} family would love</div><div class="want">${tsvg(f.want)} a ${f.want} cat</div></div></div><div class="fb"><button id="fNo">Not now</button><button class="go" id="fPick">Pick a cat</button></div>`;
+  if(msg) el.innerHTML=`${x}<div class="fam">${FAM_SVG}<div class="want" style="font-size:28px">${wl(msg)}</div></div>`;
+  else if(W.pickHome){ el.innerHTML=`${x}<div class="fam">${FAM_SVG}<div class="want" style="font-size:28px">👆 🏠</div></div><div class="fb"><button id="fCancel" aria-label="Back">↩</button></div>`; $('#fCancel').onclick=()=>{ W.pickHome=false; renderFamily(); }; }
+  else { el.innerHTML=`${x}<div class="fam">${FAM_SVG}<div class="want" style="font-size:26px">♥ ${tsvg(f.want).replace(/22px/g,'34px')}</div></div><div class="fb"><button id="fNo" aria-label="Not now">✗</button><button class="go" id="fPick" aria-label="Pick a cat">👆 🏠</button></div>`;
     $('#fPick').onclick=()=>{ if(!W.cats.some(readyHome)){ renderFamily('No one is ready yet'); setTimeout(()=>{ if(W.family&&W.family.state!=='leaving')renderFamily(); },1800); return; } W.pickHome=true; renderFamily(); }; $('#fNo').onclick=()=>familyLeave("We'll come back!"); }
   const bx=$('#fX'); if(bx)bx.onclick=()=>familyLeave('Maybe another day!'); }
 function pickForHome(c){ const f=W.family; if(!f){ W.pickHome=false; return; }
@@ -2294,7 +2302,7 @@ let runT=20, donT=25, extraT=0;
 const STAR_AT=[0,0,20,50,95,160];
 function updateStars(){ const a=active().filter(c=>!c.outside); const happy=a.length?a.reduce((s,c)=>s+(c.s.aff+c.s.health)/2,0)/a.length:0;
   const pts=W.homes.length*12+W.stat.rescues*4+W.ribbons*2+W.level*6+W.stat.kittens*2+W.stat.found*3+(happy>=70?10:happy>=55?5:0);
-  let st=1; for(let i=2;i<=5;i++)if(pts>=STAR_AT[i])st=i; if(st>W.stars){ W.stars=st; toast('★'.repeat(st)+' Sanctuary!','badge',3600); Snd.chime(); spawnFx('spark',new V3(0,2.5,-LV().half-3),12,1.5); } }
+  let st=1; for(let i=2;i<=5;i++)if(pts>=STAR_AT[i])st=i; if(st>W.stars){ W.stars=st; toast('★'.repeat(st),'badge',3600); Snd.chime(); spawnFx('spark',new V3(0,2.5,-LV().half-3),12,1.5); } }
 function extraUpdate(dt){
   for(const it of items){ if(it.kind==='ball'&&it.tier>1&&it.orb){ it.spin=Math.max(0,it.spin-dt*2); it.orb.rotation.y+=dt*(0.6+it.spin); } else if(it.kind==='bowl'&&it.water){ it.water.position.y=0.48+Math.sin(W.time*6)*0.025; } else if(it.kind==='litter'&&it.tier>=3&&it.dirt>0){ it.dirt=Math.max(0,it.dirt-dt/45); } else if(it.kind==='tree'&&it.toy){ it.toy.position.x=0.3+Math.sin(W.time*2)*0.04; } }
   updateBoops(dt); updateDropoff(dt);
@@ -2313,7 +2321,7 @@ function extraUpdate(dt){
     if(c.state==='hiding'){ R.meowT=(R.meowT||0)-dt; if(R.meowT<=0){ const urgency=Math.min(1,R.t/120); R.meowT=rand(3.2,5)*(1-0.45*urgency); const d=dist2(cam.target,c.g.position); const vol=clamp(1-d/18,0.06,1)*(0.7+1.1*urgency); Snd.meow(1.2-0.15*urgency,vol); if(d<6||urgency>0.6)showIcon(c,'sniff',1.6); } }
     if(!R.notified){ if(R.delay==null){ R.delay=(W.stat.runNotes||0)===0?5:rand(5,30); R.outT=0; }
       if(!inB(c.g.position.x,c.g.position.z,0))R.outT+=dt;
-      if(R.outT>=R.delay&&(c.pathEnd==='hide'||c.state==='hiding')){ R.notified=true; W.stat.runNotes=(W.stat.runNotes||0)+1; renderMissing(); toast(c.name+' slipped out!'); Snd.meow(0.95,0.6); } }
+      if(R.outT>=R.delay&&(c.pathEnd==='hide'||c.state==='hiding')){ R.notified=true; W.stat.runNotes=(W.stat.runNotes||0)+1; renderMissing(); toast('🐾 !'); Snd.meow(0.95,0.6); } }
     if(R.t>240&&c.state==='hiding')comeHome(c); }
   donT-=dt; if(donT<=0){ donT=25; const a=active().filter(c=>!c.outside); if(a.length){ const happy=a.reduce((s,c)=>s+(c.s.aff+c.s.health)/2,0)/a.length; const amt=Math.round(a.length*happy/100*2*(1+W.stars*0.2)); if(amt>0){ W.money+=amt; W.earned+=amt; if(W.jarPos)floatWorld(W.jarPos.clone().setY(1.2),'+$'+amt); hud(); } } }
   const f=W.family;
@@ -2367,8 +2375,8 @@ function setCollar(c,col){ if(c.collarM){ c.core.remove(c.collarM); c.collarM=nu
     for(let i=0;i<12;i++){ const a=i/12*6.28; g.add(mesh(G.sph,beads[i%beads.length],{p:[Math.cos(a)*0.245,Math.sin(a)*0.245,0.03],s:[0.032,0.032,0.032],cast:false})); } }
   g.traverse(o=>{ if(o.isMesh){ o.userData.cat=c; o.userData.zone='chest'; } }); c.core.add(g); c.collarM=g; }
 function openCollars(){ const g=golds();
-  openModal(`<h3>Choose a collar</h3><p style="margin:0 0 8px;color:var(--muted);font:700 14px var(--body)">$15, then tap a cat to put it on.</p><div class="sw">${COLLARS.map(col=>`<button data-col="${col}" style="background:#${col.toString(16).padStart(6,'0')}" aria-label="Collar color"></button>`).join('')}</div>
-  <p style="margin:12px 0 6px;color:var(--muted);font:700 14px var(--body)">Special collars ($30), unlocked by gold badges (you have ${g}):</p><div class="sw">${SPECIAL.map(sp=>`<button data-sp="${sp.id}" ${g>=sp.gold?'':'disabled'} title="${sp.name}${g>=sp.gold?'':' · '+sp.gold+' gold'}" style="background:${sp.css};${g>=sp.gold?'':'opacity:.35;filter:grayscale(1)'}" aria-label="${sp.name} collar"></button>`).join('')}</div>`);
+  openModal(`<h3 aria-label="Collars"><svg viewBox="0 0 24 24" width="34" height="34">${IC.collar}</svg></h3><p style="margin:0 0 8px;color:var(--muted);font:700 16px var(--body)">$15 → 👆🐈</p><div class="sw">${COLLARS.map(col=>`<button data-col="${col}" style="background:#${col.toString(16).padStart(6,'0')}" aria-label="Collar color"></button>`).join('')}</div>
+  <p style="margin:12px 0 6px;color:var(--muted);font:700 16px var(--body)">$30 · 🥇 ${g}</p><div class="sw">${SPECIAL.map(sp=>`<button data-sp="${sp.id}" ${g>=sp.gold?'':'disabled'} style="background:${sp.css};${g>=sp.gold?'':'opacity:.35;filter:grayscale(1)'}" aria-label="${sp.name} collar"></button>`).join('')}</div>`);
   const pickC=(col,price)=>{ if(W.money<price)return; W.money-=price; W.collarPick=col; W.collarPrice=price; hud(); closeModal(); toast('Tap a cat to give it the collar'); };
   document.querySelectorAll('[data-col]').forEach(b=>b.onclick=()=>pickC(+b.dataset.col,15));
   document.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>pickC(b.dataset.sp,30)); }
@@ -2462,11 +2470,11 @@ W.cats[0].gazeT=9;
 for(let i=0;i<4;i++)makeButterfly();
 for(let i=0;i<2;i++){ const b=makeBird(); b.g.position.copy(b.tgt).add(new V3(0,3,0)); }
 resize(); hud(); refreshDock(); $('#bHints').classList.toggle('off',!W.hints); requestAnimationFrame(frame);
-const prev=store.get('wm_last'); if(prev)$('#lastRun').textContent=`Last time: ${prev.cats} cats · score ${prev.score}`;
+const prev=store.get('wm_last'); if(prev)$('#lastRun').textContent=`🐈 ${prev.cats} · 🏆 ${prev.score}`;
 buildWandToy();
 const saved=(()=>{ try{ return JSON.parse(localStorage.getItem(SAVE)); }catch(e){ return null; } })();
 const hasSave=!!(saved&&saved.cats&&saved.cats.length);
-if(hasSave){ $('#bPlay').textContent='Continue'; $('#bNew').hidden=false; }
+if(hasSave){ $('#bNew').hidden=false; }
 // first-time intro: spotlight one friendly cat, a ghost hand shows the slow stroke, three hearts fill as the player does it
 const intro={c:null,t:0,g0:0};
 const PIP='<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/></svg>';

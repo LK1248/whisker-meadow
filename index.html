@@ -313,7 +313,7 @@ const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){retu
 const V3=THREE.Vector3, UP=new V3(0,1,0);
 const HAND_SVG=document.querySelector('#hand svg .hp').outerHTML;
 const ICO_A='<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="#ff6f99"/></svg>';
-const ICO_T='<svg viewBox="0 0 24 24"><path d="M1.5 14.5h4l4 1.8h5a1.6 1.6 0 0 1 0 3.2H10M5.5 21h8.5l7.2-3.6a1.6 1.6 0 0 0-1.5-2.8L15 16.3" fill="#d6e6fb" stroke="#5b9be6" stroke-width="1.6" stroke-linejoin="round"/><g fill="#5b9be6"><ellipse cx="13" cy="9.6" rx="3.1" ry="2.6"/><circle cx="9.2" cy="6.6" r="1.4"/><circle cx="11.7" cy="4.5" r="1.4"/><circle cx="14.4" cy="4.5" r="1.4"/><circle cx="16.9" cy="6.6" r="1.4"/></g></svg>';
+const ICO_T='<svg viewBox="0 0 24 24"><rect x="2.5" y="10.5" width="14" height="5" rx="2.5" fill="#b98af0"/><path d="M5 15.5v4M8 15.5v4M11 15.5v4M14 15.5v4" stroke="#7d55c7" stroke-width="1.6" stroke-linecap="round"/><path d="M15.5 12l5-6" stroke="#7d55c7" stroke-width="2.4" stroke-linecap="round"/><path d="M19 1.5l.8 1.7 1.7.8-1.7.8-.8 1.7-.8-1.7-1.7-.8 1.7-.8z" fill="#f6b800"/></svg>';
 const ICO_H='<svg viewBox="0 0 24 24"><path d="M4.5 19.5C4.5 10.5 10.5 4 20 4c0 9.5-6.5 15.5-15.5 15.5z" fill="#5fb35a"/><path d="M5 19L14 10" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>';
 
 /* ================= STATE ================= */
@@ -449,7 +449,7 @@ function pondSwipe(c,dt){ const pd=c.pondAt; if(!pd)return; c.swipeT=(c.swipeT??
   if(!c.lure||c.lure.flee>0){ c.lure=mine.sort((a,b)=>Math.hypot(a.g.position.x-edge.x,a.g.position.z-edge.z)-Math.hypot(b.g.position.x-edge.x,b.g.position.z-edge.z))[0]; }
   const f=c.lure; if(f.flee<=0&&c.swipeT<2.2){ f.tgt={x:edge.x,z:edge.z}; f.tease=2.5; }
   const fp=f.g.position; c.heading=angLerp(c.heading,Math.atan2(pd.px+fp.x-cp.x,pd.pz+fp.z-cp.z),dt*3); c.earTw=Math.max(c.earTw||0,0.1);
-  if(c.swipeT<=0){ c.swipeT=rand(2.5,4.5); const near=Math.hypot(fp.x-edge.x,fp.z-edge.z)<0.7;
+  if(c.swipeT<=0){ c.swipeT=rand(2.5,4.5); if(Math.random()<0.3)c.shake=0.65; const near=Math.hypot(fp.x-edge.x,fp.z-edge.z)<0.7;
     if(near){ c.bat=0.5; hop(c,0.08,0.25); const wp=new V3(pd.px+fp.x,0.1,pd.pz+fp.z); spawnFx('spark',wp,5,0.15,0.1);
       f.flee=1.2; const away=Math.atan2(fp.x-edge.x,fp.z-edge.z)+rand(-0.6,0.6); f.h=away; f.tgt={x:fp.x+Math.sin(away)*f.r*0.6,z:fp.z+Math.cos(away)*f.r*0.6};
       c.s.fun=Math.min(100,c.s.fun+3); if(Math.random()<0.4)showIcon(c,'huff',1); if(Snd.ac){ const t=Snd.ac.currentTime; Snd.note(320,t,0.06,0.12,'sine'); Snd.note(190,t+0.05,0.05,0.15,'sine'); } c.lure=null; } } }
@@ -622,6 +622,8 @@ function iconTexture(kind){
     case 'smell': x.strokeStyle='#7db04a'; x.lineWidth=7; x.lineCap='round'; for(let k=0;k<3;k++){ x.beginPath(); for(let i=0;i<=20;i++){ const yy=34+i*2.2, xx=44+k*20+Math.sin(i*0.6)*5; i?x.lineTo(xx,yy):x.moveTo(xx,yy);} x.stroke(); } break;
     case 'bored': x.fillStyle='#8c7666'; x.font='800 46px Nunito, sans-serif'; x.fillText('...',64,50); break;
     case 'rain': x.fillStyle='#5b9be6'; x.beginPath(); x.moveTo(64,26); x.quadraticCurveTo(88,62,64,80); x.quadraticCurveTo(40,62,64,26); x.fill(); break;
+    case 'itch': x.fillStyle='#2a1c18'; [[44,52],[70,40],[86,64],[58,76],[36,82]].forEach(([a,b])=>{x.beginPath();x.arc(a,b,6,0,7);x.fill();});
+      x.strokeStyle='#e2574c'; x.lineWidth=5; x.lineCap='round'; x.beginPath(); x.moveTo(18,34); x.lineTo(28,24); x.moveTo(100,32); x.lineTo(110,22); x.moveTo(100,94); x.lineTo(110,104); x.stroke(); break;
     case 'star': x.fillStyle='#f6b800'; x.beginPath(); for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?14:32; x.lineTo(64+Math.cos(a)*r,56+Math.sin(a)*r);} x.fill(); break;
     case 'glowY': { const g=x.createRadialGradient(64,64,2,64,64,62); g.addColorStop(0,'rgba(255,236,170,1)'); g.addColorStop(0.35,'rgba(255,205,120,.55)'); g.addColorStop(1,'rgba(255,190,100,0)'); x.fillStyle=g; x.fillRect(0,0,128,128); break; }
     case 'fly': { const g=x.createRadialGradient(64,64,1,64,64,60); g.addColorStop(0,'rgba(255,255,220,1)'); g.addColorStop(0.18,'rgba(230,255,120,.95)'); g.addColorStop(0.5,'rgba(190,255,90,.3)'); g.addColorStop(1,'rgba(160,255,80,0)'); x.fillStyle=g; x.fillRect(0,0,128,128); break; }
@@ -760,7 +762,9 @@ function makeCat(o){
     pace:rand(2.4,3.3),lastStroke:-99,over:0,streak:0,patience:2+Math.floor(Math.random()*3),hb:0,hbCD:2,bat:0,snap:0,flick:0,offer:false,
     gazeT:rand(12,30),gaze:0,blinkBackT:0,reach:0,lunge:0,crouch:0,trap:0,trait:o.trait||pick(TRAITS),fixed:!!o.fixed,litters:0,origin:o.origin||'founder',mother:o.mother||null,arrivedAt:W.time,forever:false,outside:false,stretchT:rand(15,40),stretch:0,stretchKind:'bow',path:null,buttLike:o.buttLike??Math.random()<0.5,boopCD:rand(10,25),lean:0,elev:0};
   if(o.name)used.add(o.name); cat.trust0=cat.s.trust; if(!o.loading&&COATS[o.coat.base].rare)W.stat.rare++;
-  buildCatMesh(cat); cat.g.position.set(o.x??rand(-2,2),0,o.z??rand(-2,2)); applyAge(cat); scene.add(cat.g); W.cats.push(cat); return cat;
+  buildCatMesh(cat); cat.g.position.set(o.x??rand(-2,2),0,o.z??rand(-2,2)); applyAge(cat); scene.add(cat.g); { const os=o.s||{}, st=cat.s; const love='trust' in os&&'aff' in os?Math.max(os.trust,os.aff):'trust' in os?os.trust:'aff' in os?os.aff:30;
+    delete st.aff; st.trust=love; Object.defineProperty(st,'aff',{get(){ return this.trust; },set(v){ this.trust=v; },enumerable:false,configurable:true}); }
+  W.cats.push(cat); return cat;
 }
 function buildCatMesh(cat){
   const C=COATS[cat.coat.base], pat=cat.coat.pattern;
@@ -985,10 +989,14 @@ function updateCat(c,dt){
   s.full=Math.max(0,s.full-dt*(adult?0.2:0.26));
   s.fun=Math.max(0,s.fun-dt*0.17*(crowded?1.6:1)*(wet?1.5:1)/enrich);
   s.groom=Math.max(0,s.groom-dt*0.04);
+  if(!c.fleas&&s.groom<FLEA_AT&&!c.outside&&Math.random()<dt/40)c.fleas=5+Math.floor(rand(0,4));
+  if(c.fleas&&s.groom>=40)c.fleas=0;
+  if(c.fleas&&!c.outside&&!c.carried){ if(['idle','walk'].includes(c.state)&&Math.random()<dt/9)setState(c,'itch',rand(1.4,2.2));
+    if(Math.random()<dt/12){ showIcon(c,'itch',1.6); if(Math.random()<0.6)Snd.meow(1.05,0.5); } }
   if(s.aff>30)s.aff-=dt*0.015;
   const ct=clamp(100-avgDirt()*14-(crowded?20:0),0,100); s.clean+=(ct-s.clean)*dt*0.03;
   if(c.nourT>0)c.nourT-=dt;
-  const ht=s.full*0.35+s.fun*0.25+s.groom*0.2+s.clean*0.2+(W.tier.bowl>=3?6:0)+(c.nourT>0?6:0); s.health=clamp(s.health+(ht-s.health)*dt*0.04,0,100);
+  const ht=s.full*0.35+s.fun*0.25+s.groom*0.2+s.clean*0.2+(W.tier.bowl>=3?6:0)+(c.nourT>0?6:0)-(c.fleas?10:0); s.health=clamp(s.health+(ht-s.health)*dt*0.04,0,100);
   if(!adult){ c.age=Math.min(1,c.age+dt/200); applyAge(c); if(c.age>=1)floatWorld(c.g.position.clone().setY(1.2),'Grown up!'); }
   c.litterNeed+=dt; c.breedCD-=dt; c.showCD-=dt; c.pounceT-=dt; c.hbCD-=dt; c.over=Math.max(0,c.over-dt*(c.trait==='calm'?0.6:0.35)); c.boopCD-=dt; c.blinkBackT-=dt; c.leaveT=(c.leaveT||0)-dt;
   if(c.hopT>0){ c.hopT-=dt; c.jump=Math.sin(clamp(1-c.hopT/c.hopDur,0,1)*Math.PI)*c.hopH; } else { c.jump=0; c.leap=false; }
@@ -1045,7 +1053,8 @@ function updateCat(c,dt){
       c.target.set(b.g.position.x,0,b.g.position.z); const d=dist2(c.g.position,b.g.position); c.crouch=0.15;
       if(d<1.25&&c.pounceT<=0){ hop(c,0.3*c.g.scale.x,0.5); c.lunge=0.45; c.pounceT=1.5; reward(c,7); birdFlee(b); setState(c,'idle',1.5); c.watchBird=b; }
       else moveToward(c,dt,0.45,1.1); break; }
-    case 'pondwatch': s.fun=Math.min(100,s.fun+dt*0.8); pondSwipe(c,dt); if(Math.random()<dt*0.2){ const a=c.heading+rand(-0.4,0.4); spawnFx('spark',new V3(c.g.position.x+Math.sin(a)*1.2,0.15,c.g.position.z+Math.cos(a)*1.2),2,.15); c.earTw=0.3; } if(c.stT<=0)setState(c,'idle',1); break;
+    case 'itch': if(c.stT<=0)setState(c,'idle',1); break;
+    case 'pondwatch': s.fun=Math.min(100,s.fun+dt*0.8); pondSwipe(c,dt); if(Math.random()<dt*0.2){ const a=c.heading+rand(-0.4,0.4); spawnFx('spark',new V3(c.g.position.x+Math.sin(a)*1.2,0.15,c.g.position.z+Math.cos(a)*1.2),2,.15); c.earTw=0.3; } if(c.stT<=0){ setState(c,'idle',1); if(Math.random()<0.7)c.shake=0.65; } break;
     case 'watch': { const b=c.watch; if(!b){ setState(c,'idle',1); break; } const bp=b.g.position, d=dist2(c.g.position,bp);
       c.target.set(bp.x,0,bp.z); if(d>1.0)moveToward(c,dt,0.8,0.9); else c.heading=angLerp(c.heading,Math.atan2(bp.x-c.g.position.x,bp.z-c.g.position.z),dt*5);
       if(d<1.1&&bp.y<1.5&&c.pounceT<=0&&c.hopT<=0){ hop(c,clamp(bp.y-0.35,0.3,0.95)*c.g.scale.x,0.6); c.reach=0.6; c.pounceT=rand(1.4,2.4); reward(c,3); b.dodge(); }
@@ -1123,6 +1132,7 @@ function animateCat(c,dt,t){
   else if(st==='eat'){ hx=0.6; rx=0.12; coreY=0.43; legA=[0,0,0,0]; }
   else if(st==='greet'&&c.greetFlop){ rz=1.55+Math.sin(t*2.4)*0.12; coreY=0.34; legA=[Math.sin(t*4)*0.5-0.3,Math.sin(t*4+1.6)*0.5-0.3,0.4,0.4]; tailUp=0.1; swish=0.35; swSpd=4; eye=0.45; hz=-0.5; hx=-0.2; }
   else if(st==='greet'||st==='bye'){ rx=-0.45; coreY=0.44; legA=[0.45,0.45,-1.0,-1.0]; tailUp=0.7; swish=0.1; }
+  else if(st==='itch'){ rx=-0.45; coreY=0.44; legA=[0.45,0.45,-2.1+Math.sin(t*34)*0.5,-1.0]; hx=0.1; hy=0.55; hz=0.5; eye=0.3; earOut=0.7; tailUp=-0.2; swish=0.3; swSpd=6; }
   else if(st==='groom'){ const lick=Math.sin(t*9)*0.12, gk=c.groomKind; eye=0.3; swish=0.05;
     if(gk==='paw'){ rx=-0.45; coreY=0.44; legA=[-1.35+Math.sin(t*3)*0.15,0.45,-1.0,-1.0]; hx=0.38+lick; hz=-0.25; hy=0.25; tailUp=-0.2; }
     else if(gk==='flank'){ rx=-0.4; coreY=0.43; legA=[0.4,0.4,-1.0,-1.0]; hx=0.45+lick; hy=1.35; hz=0.2; tailUp=-0.4; }
@@ -1416,7 +1426,7 @@ function updateSheen(c,dt){ const on=c.s.groom>=85&&c.g.visible&&!c.outside;
   if(!on){ if(c.sheen)c.sheen.visible=false; return; } const sh=sheenOf(c); sh.visible=true;
   c.sheenT-=dt; const dur=0.95; if(c.sheenT<=-dur)c.sheenT=rand(1.4,2.6); const q=c.sheenT<0?-c.sheenT/dur:-1;
   sh.material.uniforms.u.value=q<0?2:1.25-2.5*q; sh.material.uniforms.a.value=q<0?0:(0.8+0.5*(c.s.groom-85)/15)*Math.sin(q*Math.PI); sh.material.uniforms.g.value=0.1+0.08*(c.s.groom-85)/15; }
-function updateCoats(dt){ for(const c of W.cats){ if(c.away>0||!c.core)continue; ensureBurrs(c); updateSheen(c,dt); const n=burrCount(c);
+function updateCoats(dt){ for(const c of W.cats){ if(c.away>0||!c.core)continue; ensureBurrs(c); updateSheen(c,dt); updateFleas(c,dt); const n=burrCount(c);
   if(n!==c.burrN){ c.burrs.forEach((b,i)=>b.visible=i<n); c.burrN=n; }
   if(c.s.groom>=85&&c.g.visible&&!c.outside){ c.shineT=(c.shineT||rand(0,2))-dt; if(c.shineT<=0){ c.shineT=rand(1.6,3); spawnFx('spark',c.g.position.clone().setY(0.75*c.g.scale.y),1,0.3,0.12); } } } }
 // brushing: scrub back and forth anywhere on the coat; every bit of scrubbing pops off a burr. No rhythm to hit.
@@ -1428,7 +1438,7 @@ function brushScrub(c,len,zone){
   c.scrub=(c.scrub||0)+len; if(c.scrub<160)return; c.scrub=0; c.lastStroke=W.time;
   const s=c.s, top=c.g.position.clone().setY(0.8*c.g.scale.y), before=burrCount(c);
   if(s.groom>=97){ spawnFx('spark',top,1,0.3,0.12); return; }
-  const g0=s.groom; s.groom=Math.min(100,s.groom+7); s.aff=Math.min(100,s.aff+0.3); W.stat.brush++;
+  if(c.fleas){ c.fleas=Math.max(0,c.fleas-2); spawnFx('spark',top,3,0.25,0.12); } const g0=s.groom; s.groom=Math.min(100,s.groom+7); s.aff=Math.min(100,s.aff+0.3); W.stat.brush++;
   if(g0<85&&s.groom>=85){ spawnFx('spark',top,14,0.6,0.2); showIcon(c,'star',2.4); Snd.chime(); c.sheenT=0; } c.purr=Math.max(c.purr,0.2); c.lean=0.5;
   spawnFx('spark',top,1,0.3,0.14);
   if(burrCount(c)<before){ const b=c.burrs&&c.burrs[before-1]; if(b){ const wp=b.getWorldPosition(new V3()); spawnFx('spark',wp,4,0.12,0.12); b.visible=false; c.burrN=before-1; }
@@ -1536,7 +1546,7 @@ function handFx(cls){ handEl.classList.remove('jerk','bump'); void handEl.offset
 /* ================= SHOWS, FAMILY, NEW ARRIVALS ================= */
 const SHOWS=['Village Cat Fair','County Cat Fair','Regional Cat Fair','National Cat Fair','Grand Cat Festival'];
 function showName(){ return SHOWS[Math.min(W.showTier,SHOWS.length-1)]; }
-function showReady(c){ const s=c.s; return !(W.family&&W.family.cat===c)&&c.away<=0&&!c.carried&&!c.outside&&!c.leaving&&c.showCD<=0&&c.age>=1&&s.health>=60&&s.trust>=55&&s.aff>=50; }
+function showReady(c){ const s=c.s; return !(W.family&&W.family.cat===c)&&c.away<=0&&!c.carried&&!c.outside&&!c.leaving&&c.showCD<=0&&c.age>=1&&s.health>=60&&s.trust>=55&&s.groom>=GROOM_FAIR; }
 function enterShow(c){ if(!showReady(c))return; if(c.useItem||c.state!=='idle')setState(c,'idle',1); spawnFx('spark',c.g.position.clone().setY(.5),8,.5); floatWorld(c.g.position.clone().setY(1),'To the fair!'); c.away=25; c.g.visible=false; W.stat.shows++; Snd.chime(); tag.c=null; }
 function returnFromShow(c){
   const h=LV().half; c.g.position.set(rand(-1,1),0,-h+1.5); c.g.visible=true; setState(c,'idle',3);
@@ -1544,8 +1554,8 @@ function returnFromShow(c){
   const cats=[['Best Purr',s.aff],['Fluffiest Coat',s.groom],['Healthiest',s.health],['Most Improved',Math.min(100,(s.trust-c.trust0)*2.2)],['Bravest Rescue',c.origin==='stray'?Math.min(100,s.trust+25):0],['Best Friends',bv]];
   if(COATS[c.coat.base].rare)cats.push(['Rarest Coat',80]); if(c.collar)cats.push(['Best Dressed',74]);
   cats.sort((a,b)=>b[1]-a[1]); const cat=cats[0][0], val=cats[0][1], shiny=s.groom>=85, scruffy=burrCount(c)>0;
-  const score=val*0.8+rand(0,28)-W.showTier*4+(shiny?10:scruffy?-8:0); const place=score>=72?1:score>=55?2:3;
-  const base=Math.round(25*(1+W.showTier*0.6)); const prize=[0,base*3,base*2,Math.round(base*1.3)][place];
+  const score=val*0.8+rand(0,28)-W.showTier*4+(s.groom-60)*0.35+(shiny?4:scruffy?-4:0); const place=score>=72?1:score>=55?2:3;
+  const base=Math.round(25*(1+W.showTier*0.6)); const prize=Math.round([0,base*3,base*2,base*1.3][place]*(0.7+0.6*s.groom/100));
   if(place===1){ W.wins++; W.streak++; W.bestStreak=Math.max(W.bestStreak||0,W.streak); c.wins++; if(W.wins%2===0&&W.showTier<SHOWS.length-1)W.showTier++; } else W.streak=0;
   c.bestPlace=c.bestPlace?Math.min(c.bestPlace,place):place; W.ribbons++; W.money+=prize; W.earned+=prize; W.stat.showsBack++; s.groom=Math.max(20,s.groom-30); c.showCD=45; Snd.coin(); hud();
   const col=['','#ffcf3f','#c9d3de','#e1a06a'][place], lbl=place+['','st','nd','rd'][place];
@@ -1598,7 +1608,7 @@ function nextMeet(){
   $('#mOrg').innerHTML=(m.origin==='born'?`${heart}<span>${m.parents[0].name} + ${m.parents[1].name}</span>`:m.origin==='mama'?`${gate}<span>A mama cat at the gate</span>`:m.origin==='withmama'?`${heart}<span>${m.parents[0].name}'s kitten</span>`:`${gate}<span>Found at the gate</span>`)+`<span>\u00b7 ${coatName(m.c.coat)}${m.c.age<1?' kitten':''} \u00b7 ${m.c.trait}</span>`;
   $('#mRoster').innerHTML=W.cats.map(c=>`<div class="rc ${c===m.c?'new':''}"><b>${c.name}${c.age<1?' <small>kitten</small>':''}</b>
     <div class="t3">${ICO_A}<div class="tb"><i style="width:${c.s.aff}%;background:#ff7aa2"></i></div></div>
-    <div class="t3">${ICO_T}<div class="tb"><i style="width:${c.s.trust}%;background:#5b9be6"></i></div></div>
+    <div class="t3">${ICO_T}<div class="tb"><i style="width:${c.s.groom}%;background:#b98af0"></i></div></div>
     <div class="t3">${ICO_H}<div class="tb"><i style="width:${c.s.health}%;background:#5fb35a"></i></div></div></div>`).join('');
   $('#meet').hidden=false; handVis(); Snd.meow(m.c.age<1?1.45:1.15,0.6); spawnFx('h',m.c.g.position.clone().setY(1),4,.4);
 }
@@ -1614,6 +1624,13 @@ const ACH=[['rhythm','Gentle Hands','On-beat strokes',()=>W.stat.good,[10,60,250
   ['zoomies','Zoomies','Laser pounces',()=>W.stat.laserP,[25,150,500]],['deluxe','Deluxe Living','Upgrades bought',()=>W.stat.upgrades,[1,5,12]],['ouch','Band-Aid Club','Scratches (oops)',()=>W.stat.scratches,[1,5,15]],
   ['herd','Herding Cats','Cats led together with the wand or laser',()=>W.stat.herd||0,[3,6,10]]];
 const TIER_N=['','Bronze','Silver','Gold'];
+const GROOM_HOME=30, GROOM_FAIR=50, FLEA_AT=20, FLEA_M=new THREE.MeshBasicMaterial({color:0x161010}), FLEA_M2=new THREE.MeshBasicMaterial({color:0xc8a27a});
+// fleas: tiny black dots that crawl over the back and hop now and then
+function updateFleas(c,dt){ const n=c.fleas||0; if(!n&&!c.fleaG)return;
+  if(!c.fleaG){ c.fleaG=[]; for(let i=0;i<8;i++){ const m=new THREE.Mesh(G.sph,c.coat.base==='black'?FLEA_M2:FLEA_M); m.raycast=()=>{}; c.bodyM.add(m); const a=rand(-2.6,2.6), b=rand(0,0.9); m.userData.d=new V3(Math.sin(a)*Math.cos(b),Math.sin(b),Math.cos(a)*Math.cos(b)); c.fleaG.push(m); } }
+  const sc=c.bodyM.scale; c.fleaG.forEach((m,i)=>{ m.visible=i<n; if(!m.visible)return; const d=m.userData.d, hop=Math.random()<dt*1.5?0.35:0;
+    d.x+=rand(-1,1)*(dt*0.9+hop); d.z+=rand(-1,1)*(dt*0.9+hop); d.y+=rand(-1,1)*dt*0.9; d.normalize(); if(d.y<-0.1){ d.y=-0.1; d.normalize(); }
+    m.position.copy(d).multiplyScalar(1.02); m.scale.set(0.034/sc.x,0.034/sc.y,0.034/sc.z); }); }
 // herding: each following cat remembers where it joined; it counts once it has travelled 3 m with the lure and is still with it
 let herdT=0, herdShow=0;
 function herdTick(dt){ herdT-=dt; if(herdT>0)return; herdT=0.25;
@@ -1671,7 +1688,7 @@ function fairShot(c,place){ try{
 const STAY_SVG='<svg viewBox="0 0 24 24"><path d="M3 11L12 3l9 8v10H3z" fill="#f3c9a8"/><path d="M12 18.5s-4-2.5-4-5.2a2.2 2.2 0 0 1 4-1.3 2.2 2.2 0 0 1 4 1.3c0 2.7-4 5.2-4 5.2z" fill="#ff6f99"/></svg>';
 const tag={c:null,t:0,el:$('#tag'),prev:{}};
 tag.el.innerHTML=`<div class="tn" id="tName"></div><div id="tTrait"></div>
-  <div class="ic3"><div class="ic" id="rA">${ICO_A}<span class="lb">Love</span></div><div class="ic" id="rT">${ICO_T}<span class="lb">Trust</span></div><div class="ic" id="rH">${ICO_H}<span class="lb">Health</span></div></div>
+  <div class="ic3"><div class="ic" id="rA">${ICO_A}<span class="lb">Love</span></div><div class="ic" id="rT">${ICO_T}<span class="lb">Groom</span></div><div class="ic" id="rH">${ICO_H}<span class="lb">Health</span></div></div>
   <div class="tbtns"><button id="tShow" hidden aria-label="Cat fair"></button><button id="tStay" hidden title="Keep this cat (not for adoption)">${STAY_SVG}Keep</button></div>`;
 function tagFor(c,sec){ if(tag.c!==c)W.tagShows=(W.tagShows||0)+1; tag.c=c; tag.t=Math.max(tag.t,sec); }
 function updateTag(dt){
@@ -1680,11 +1697,11 @@ function updateTag(dt){
   const top=c.g.position.clone(); top.y+=1.25*c.g.scale.x+0.35; const s=toScreen(top); if(!s.ok){ tag.el.hidden=true; return; }
   tag.el.hidden=false; const w=tag.el.offsetWidth, hh=tag.el.offsetHeight; const x=clamp(s.x-w/2,8,innerWidth-w-8), y=clamp(s.y-hh,60,innerHeight-hh-90);
   tag.el.style.transform=`translate(${x}px,${y}px)`;
-  if(tag.lastC!==c){ tag.lastC=c; tag.prev={a:c.s.aff,t:c.s.trust,h:c.s.health}; $('#tName').innerHTML=`${c.name}${c.age<1?' <small>kitten</small>':''}`; }
+  if(tag.lastC!==c){ tag.lastC=c; tag.prev={a:c.s.aff,t:c.s.groom,h:c.s.health}; $('#tName').innerHTML=`${c.name}${c.age<1?' <small>kitten</small>':''}`; }
   const lab=(W.tagShows||0)<=6; for(const id of ['rA','rT','rH']){ const r=$('#'+id); r.querySelector('.lb').hidden=!lab; }
   $('#tTrait').textContent=c.trait+(c.forever?' · stays here':readyHome(c)?' · ready for a home':'');
-  for(const [id,v] of [['rA',c.s.aff],['rT',c.s.trust],['rH',c.s.health]]){ const g=$('#'+id+' svg'); g.style.transform=`scale(${(0.25+v/100).toFixed(3)})`; g.style.opacity=(0.55+0.45*v/100).toFixed(2); }
-  for(const [k,f,id] of [['a','aff','rA'],['t','trust','rT'],['h','health','rH']]){ const v=c.s[f]; if(v-tag.prev[k]>0.4){ const r=$('#'+id); r.classList.remove('pulse'); void r.offsetWidth; r.classList.add('pulse'); tag.prev[k]=v; } else if(v<tag.prev[k])tag.prev[k]=v; }
+  for(const [id,v] of [['rA',c.s.aff],['rT',c.s.groom],['rH',c.s.health]]){ const g=$('#'+id+' svg'); g.style.transform=`scale(${(0.25+v/100).toFixed(3)})`; g.style.opacity=(0.55+0.45*v/100).toFixed(2); }
+  for(const [k,f,id] of [['a','aff','rA'],['t','groom','rT'],['h','health','rH']]){ const v=c.s[f]; if(v-tag.prev[k]>0.4){ const r=$('#'+id); r.classList.remove('pulse'); void r.offsetWidth; r.classList.add('pulse'); tag.prev[k]=v; } else if(v<tag.prev[k])tag.prev[k]=v; }
   const ts=$('#tShow'); ts.hidden=!showReady(c); if(!ts.hidden&&ts.dataset.b!==String(c.bestPlace||0)){ ts.dataset.b=String(c.bestPlace||0); ts.innerHTML=fairBadge(c.bestPlace||0,46); } const st=$('#tStay'); st.hidden=!(c.age>=1); st.classList.toggle('on',!!c.forever);
 }
 for(const id of ['#tShow','#tStay'])$(id).addEventListener('pointerdown',e=>e.stopPropagation());
@@ -1768,15 +1785,15 @@ function openHelp(){
   openModal(`<h3>How to play</h3><div class="help">
   <div class="hrow"><span>Pointing hints</span><button id="hTog">${W.hints?'On':'Off'}</button></div>
   ${sec('The goal',`<p>You run a cat sanctuary. Shy rescue cats arrive; you earn their trust, keep them healthy and happy, and help them find loving homes. There is no losing: cats never get hurt, they just get grumpy when ignored.</p>`,true)}
-  ${sec(ICO_A+ICO_T+ICO_H+' The three stats',`<ul><li><b>Love</b> (heart): petting, playing, butt taps (for cats who like them), premium food.</li><li><b>Trust</b> (paw in hand): gentle on-beat petting, feeding, play, blinking back. Drops when you scratch the wrong spot, pet too fast, or hold a nervous cat too long. Kittens learn to trust faster.</li><li><b>Health</b> (leaf): full belly, fun, a groomed coat and a clean litter box. Naps on cushions and the water fountain help.</li></ul><p>Tap a cat to see its stats above its head.</p>`)}
+  ${sec(ICO_A+ICO_T+ICO_H+' The three stats',`<ul><li><b>Love</b> (heart): gentle on-beat petting, playing, feeding, blinking back, butt taps (for cats who like them), premium food. Drops when you scratch the wrong spot, pet too fast, or hold a nervous cat too long. Kittens warm up faster.</li><li><b>Groom</b> (brush): a clean, shiny coat. It fades slowly; brush to bring it back. Fair judges care a lot, families a little. A very scruffy cat catches <b>fleas</b> (tiny black dots, lots of scratching and grumbling): brush them off.</li><li><b>Health</b> (leaf): full belly, fun, a groomed coat and a clean litter box. Naps on cushions and the water fountain help.</li></ul><p>Tap a cat to see its stats above its head.</p>`)}
   ${sec('Petting rhythm',`<ul><li>Drag across the cat: one smooth stroke, then <b>wait</b>.</li><li>Keep stroking slowly: the ring by your hand fills while your hand moves over the cat, and every full ring is a happy purr. Holding still doesn't fill it, and after a few seconds of stillness the cat gets bored and wanders off.</li><li>An hourglass = slow down (a shaking one = way too fast; too much of that and the cat has had enough).</li><li>Too many fast strokes overstimulate a cat: watch for a twitching tail and sideways ears. Then it walks off, or, if it doesn't trust you yet, it scratches (band-aid!).</li></ul>`)}
-  ${sec('Where to pet',`<ul><li><b>Head, cheeks, chin</b>: favourites.</li><li><b>Back</b>: fine. <b>Tail</b>: no!</li><li><b>Belly</b>: only when a cat rolls over and has trust 75+. Otherwise it's a trap.</li><li><b>Butt taps</b>: tap the rump once. Some cats love it, some don't: find out!</li><li>Happy cats headbutt your hand, knead, lean in and slow-blink. When a cat looks up and slowly blinks at you, <b>tap it to blink back</b>.</li></ul>`)}
-  ${sec('Tools',`<ul><li><b>Pet</b>: stroke; press and hold a cat to carry it (relaxed cats flop, nervous ones wiggle free). Drop it next to another cat to introduce them.</li><li><b>Brush</b>: scrub back and forth to clean the coat. Scruffy cats have burrs stuck in their fur; brushing pops them off, and a clean coat shines. Love and trust come from petting; brushing is coat care (it helps health, and fair judges love a shiny coat). Cats also groom themselves a little when happy and fed.</li><li><b>Wand</b>: drag to move, flick to toss, tap to make it jump, hold still to raise it so cats leap.</li><li><b>Laser</b> (shop): cats sprint and pounce. Upgraded, it ends on a treat.</li><li>Bowls and litter boxes can be tapped with any tool.</li></ul>`)}
+  ${sec('Where to pet',`<ul><li><b>Head, cheeks, chin</b>: favourites.</li><li><b>Back</b>: fine. <b>Tail</b>: no!</li><li><b>Belly</b>: only when a cat rolls over and has Love 75+. Otherwise it's a trap.</li><li><b>Butt taps</b>: tap the rump once. Some cats love it, some don't: find out!</li><li>Happy cats headbutt your hand, knead, lean in and slow-blink. When a cat looks up and slowly blinks at you, <b>tap it to blink back</b>.</li></ul>`)}
+  ${sec('Tools',`<ul><li><b>Pet</b>: stroke; press and hold a cat to carry it (relaxed cats flop, nervous ones wiggle free). Drop it next to another cat to introduce them.</li><li><b>Brush</b>: scrub back and forth to clean the coat. Scruffy cats have burrs stuck in their fur; brushing pops them off, and a clean coat shines. Love comes from petting; brushing raises Groom (it helps health, wins fairs and gets rid of fleas). Cats also groom themselves a little when happy and fed.</li><li><b>Wand</b>: drag to move, flick to toss, tap to make it jump, hold still to raise it so cats leap.</li><li><b>Laser</b> (shop): cats sprint and pounce. Upgraded, it ends on a treat.</li><li>Bowls and litter boxes can be tapped with any tool.</li></ul>`)}
   ${sec('Daily care',`<ul><li>Tap a bowl to fill it (uses premium food first, then kibble).</li><li>Tap the litter box to scoop it; dirty boxes make the meadow smelly.</li><li>A rain roof keeps cats dry in showers.</li><li>Helpers fill bowls, scoop and pet cats, for $6 a minute. Unpaid helpers rest.</li><li>The donation jar by the gate collects money when your cats are happy.</li></ul>`)}
-  ${sec('Cat fair',`<p>A grown cat with <b>Trust 55+, Love 50+ and Health 60+</b> gets a <b>Fair!</b> button on its tag. Every cat wins a category (Best Purr, Fluffiest Coat, Most Improved, Bravest Rescue, Best Dressed...) and prize money. Winning moves you up to bigger fairs.</p>`)}
+  ${sec('Cat fair',`<p>A grown cat with <b>Love 55+, Groom 50+ and Health 60+</b> gets a <b>Fair!</b> button on its tag. The better groomed, the higher it places and the bigger the prize. Every cat wins a category (Best Purr, Fluffiest Coat, Most Improved, Bravest Rescue, Best Dressed...) and prize money. Winning moves you up to bigger fairs.</p>`)}
   ${sec('New cats & kittens',`<ul><li>Rescuers drive up and drop off strays, sometimes a mama with kittens.</li><li>Close friends touch noses and lick each other. A happy, bonded, unrelated pair may have <b>one</b> litter, then both get a vet visit.</li><li>Kittens stay near mum until they grow up (about 3 minutes).</li></ul>`)}
-  ${sec('Adoption',`<ul><li>A cat is <b>ready for a home</b> after settling in (about 2½ minutes) with Trust 50+ and Health 55+. Looks and ribbons don't matter.</li><li>Families drive up and say what they'd love (a calm cat, a playful cat...). Tap <b>Pick a cat</b>, then a cat with a little house. A good personality match goes home; best friends go together.</li><li>No money changes hands. Postcards arrive later and get pinned on the card board by the house: tap it to see them all. They're also in Badges → Happy Tails.</li><li>Tap <b>Keep</b> on a cat to keep it forever. Tap × to send a family off.</li></ul>`)}
-  ${sec('Runaways',`<p>A cat with very low trust may slip out the gate. Catch it before the "missing" notice for the <b>Quick Paws</b> badge, or press <b>Go look</b>, follow the paw prints and listen: meows get louder as you get closer. Tap it to bring it home (trust goes up).</p>`)}
+  ${sec('Adoption',`<ul><li>A cat is <b>ready for a home</b> after settling in (about 2½ minutes) with Love 50+ and Health 55+. Ribbons don't matter, but a family turns down a very scruffy cat (Groom under 30) unless it adores people (Love 90+).</li><li>Families drive up and say what they'd love (a calm cat, a playful cat...). Tap <b>Pick a cat</b>, then a cat with a little house. A good personality match goes home; best friends go together.</li><li>No money changes hands. Postcards arrive later and get pinned on the card board by the house: tap it to see them all. They're also in Badges → Happy Tails.</li><li>Tap <b>Keep</b> on a cat to keep it forever. Tap × to send a family off.</li></ul>`)}
+  ${sec('Runaways',`<p>A cat with very low love may slip out the gate. Catch it before the "missing" notice for the <b>Quick Paws</b> badge, or press <b>Go look</b>, follow the paw prints and listen: meows get louder as you get closer. Tap it to bring it home (love goes up).</p>`)}
   ${sec('Stars, shop & badges',`<ul><li>Sanctuary stars (1-5) come from homes found, rescues, ribbons and happiness. Stars unlock bigger meadows and item upgrades (cat castle, fountain, sunroom...).</li><li>At 5 stars the sanctuary keeps growing: new wings with ponds open as you find more cats homes (3, 6, 10, 16 homes).</li><li>Badges have bronze, silver and gold, and pay $10 / $25 / $60. Gold badges unlock special collars (rainbow, starry, blossom). Three small goals per visit pay $15 each (Badges → Goals).</li><li>Collars and premium food are in the shop.</li><li>Progress saves automatically on this device.</li></ul>`)}
   ${sec('Controls',`<ul><li>Drag the grass to move around; pinch or mouse wheel to zoom; right-drag to rotate (desktop).</li><li>Tap the cat counter (top left) to jump between cats.</li><li>Keys 1-4 pick tools on desktop.</li><li>The moon button turns the day &amp; night cycle on or off. At night cats get sleepy and fireflies come out.</li></ul>`)}
   </div>`);
@@ -1841,7 +1858,7 @@ function snapshot(){
   x.fillStyle='#4a3426'; x.font='700 46px Fredoka, sans-serif'; x.fillText('Whisker Meadow',48,610);
   x.fillStyle='#ff7aa2'; x.font='700 30px Fredoka, sans-serif'; x.fillText(`Score ${r.score}`,48,656);
   x.fillStyle='#8c7666'; x.font='700 22px Nunito, sans-serif'; x.fillText(`${r.minutes} min${prev?` · last time ${prev.score}`:''}`,48,694);
-  const cells=[['Cats',r.cats],['Homes',W.homes.length],['Health',r.health],['Trust',r.trust],['Ribbons',r.ribbons],['Badges',`${r.badges}/${ACH.length}`]];
+  const cells=[['Cats',r.cats],['Homes',W.homes.length],['Health',r.health],['Love',r.trust],['Ribbons',r.ribbons],['Badges',`${r.badges}/${ACH.length}`]];
   cells.forEach(([l,v],i)=>{ const cx=560+(i%3)*205, cy=596+Math.floor(i/3)*100; x.fillStyle='#f6ecdf'; x.beginPath(); x.roundRect?x.roundRect(cx,cy,190,84,18):x.rect(cx,cy,190,84); x.fill();
     x.fillStyle='#4a3426'; x.font='700 34px Fredoka, sans-serif'; x.fillText(String(v),cx+16,cy+44); x.fillStyle='#8c7666'; x.font='700 17px Nunito, sans-serif'; x.fillText(l,cx+16,cy+70); });
   const url=cv.toDataURL('image/png'); store.set('wm_last',r);
@@ -2093,7 +2110,7 @@ function pickForHome(c){ const f=W.family; if(!f){ W.pickHome=false; return; }
   if(!readyHome(c)){ floatWorld(c.g.position.clone().setY(1.3),c.forever?'Keeping this one':'Not ready yet'); tagFor(c,4); return; }
   W.pickHome=false; f.state='walking'; f.cat=c; renderFamily('Saying hello…'); tag.c=null; walkPath(c,[new V3(rand(-.2,.2),0,-LV().half+0.85)],'greet',0.9); }
 function famGreet(c){ const f=W.family; f.state='greet'; f.greetT=3.4; f.decided=false; c.greetFlop=0; setState(c,'greet'); f.members[0].kneel=true; c.heading=Math.PI; showIcon(c,'sniff',1.3);
-  f.match=c.trait===f.want||(c.s.trust>=75&&Math.random()<0.5)||Math.random()<0.15; }
+  f.match=c.trait===f.want||(c.s.trust>=75&&Math.random()<0.5)||Math.random()<0.15; f.scruffy=c.s.groom<GROOM_HOME&&c.s.trust<90; if(f.scruffy)f.match=false; }
 function backFromGate(c){ walkPath(c,[new V3(rand(-1,1),0,-LV().half+2.6)],'back',1); }
 function adoptOK(c){ const f=W.family; f.state='bye'; f.byeT=0; f.walking=false; f.members[0].kneel=false; const [fr,bv]=bestFriend(c); f.cats=[c];
   if(fr&&bv>=65&&readyHome(fr)){ f.cats.push(fr); W.stat.pairs++; walkPath(fr,[new V3(0.55,0,-LV().half+0.85)],'bye',1.2); }
@@ -2227,7 +2244,7 @@ function extraUpdate(dt){
       // after a short sniff the cat decides: roll over on its side for them, or turn its back and go home
       if(!f.decided&&f.greetT<=2.1){ f.decided=true;
         if(f.match){ c.greetFlop=1; c.heading=Math.PI+(Math.random()<0.5?1.25:-1.25); c.purr=1; showIcon(c,'h',1.8); spawnFx('h',c.g.position.clone().setY(0.7),4,0.4,0.3); Snd.chirp(); }
-        else { f.greetT=0; f.tries++; f.members[0].kneel=false; c.heading=0; showIcon(c,'huff',1.4); floatWorld(c.g.position.clone().setY(1.2),'Not quite'); backFromGate(c);
+        else { f.greetT=0; f.tries++; f.members[0].kneel=false; c.heading=0; showIcon(c,f.scruffy?'itch':'huff',1.4); floatWorld(c.g.position.clone().setY(1.2),f.scruffy?'Needs a brush':'Not quite'); backFromGate(c);
           if(f.tries>=2)familyLeave("We'll keep looking!"); else { f.state='wait'; f.cat=null; renderFamily(); } } }
       if(f.greetT<=0&&f.match&&f.state==='greet'){ c.greetFlop=0; adoptOK(c); } }
     else if(f.state==='bye'){ f.byeT+=dt; const h=LV().half;
@@ -2490,7 +2507,7 @@ function updatePairTut(dt){
 // ---- later, one-time wordless tips: belly rubs (only with high trust) and butt taps (some love them, some don't) ----
 const tips={cur:null,t:0};
 const CLAW='<g stroke="#e0505f" stroke-width="4" stroke-linecap="round"><path d="M92 68l10-13M100 72l10-13M108 76l10-13"/></g>';
-const trustIco=(x,y,w)=>ICO_T.replace('<svg ',`<svg x="${x}" y="${y}" width="${w}" height="${w}" `);
+const trustIco=(x,y,w)=>ICO_A.replace('<svg ',`<svg x="${x}" y="${y}" width="${w}" height="${w}" `);
 const ARROW=y=>`<path d="M50 ${y}h24m-8-7l8 7-8 7" fill="none" stroke="#b9a89a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
 const BELLY_TIP=`<svg viewBox="0 0 160 84">${trustIco(4,2,36)}${ARROW(20)}${HEART(104,18,1.6)}${trustIco(14,50,18)}${ARROW(60)}${CLAW}</svg>`;
 const BUTT_TIP=`<svg viewBox="0 0 160 46">${HEART(36,22,1.8)}<path d="M72 36l14-26" stroke="#b9a89a" stroke-width="4" stroke-linecap="round"/><g fill="none" stroke="#e0505f" stroke-width="4" stroke-linecap="round"><path d="M110 14q6 6 0 12"/><path d="M128 14q-6 6 0 12"/><path d="M113 32q6-6 12 0"/></g></svg>`;
@@ -2513,7 +2530,7 @@ const musT={b:$('#bMusic')}; musT.home=musT.b.parentElement; musT.next=musT.b.ne
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); }catch(e){} begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={Snd,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={Snd,updateFleas,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>
 

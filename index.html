@@ -11,6 +11,7 @@
 <link rel="icon" href="img/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="img/icon-192.png">
 <script>if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
+<div id="wmSplash" style="position:fixed;inset:0;z-index:9999;background:#bfe8f7;display:none;align-items:center;justify-content:center;transition:opacity .45s"><img src="img/icon-512.png" alt="" style="width:min(46vmin,280px);height:auto;border-radius:22%;box-shadow:0 10px 30px rgba(40,90,120,.25);animation:wmPop .6s ease-out"></div><style>@keyframes wmPop{from{transform:scale(.82);opacity:.6}to{transform:none;opacity:1}}</style><script>(function(){var s=document.getElementById('wmSplash'),st=matchMedia('(display-mode: standalone)').matches||navigator.standalone;if(!st){s.remove();return;}s.style.display='flex';var t0=performance.now(),done=false;function hide(){if(done)return;done=true;setTimeout(function(){s.style.opacity=0;setTimeout(function(){s.remove();},500);},Math.max(0,1800-(performance.now()-t0)));}addEventListener('load',hide);setTimeout(hide,5000);})();</script>
 <title>Whisker Meadow</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap">

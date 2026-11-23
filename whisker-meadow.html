@@ -641,8 +641,8 @@ function updateFx(dt){ for(let i=parts.length-1;i>=0;i--){ const p=parts[i]; p.l
 const pv=new V3();
 function catScreenH(c){ const p=c.g.position, a=toScreen(p.clone().setY(0)), b=toScreen(p.clone().setY(0.9*c.g.scale.y)); return a.ok&&b.ok?Math.abs(a.y-b.y):999; }
 function lessonOn(){ return !!(intro.c||bt.c||pl.a||br.c); }
-// quiet while a lesson runs, and until the three opening lessons are through
-function tutQuiet(){ return !!(W.started&&(lessonOn()||(!W.stat.pairDone&&W.time<360))); }
+// quiet while a lesson runs, and until the opening lessons (pet, blink, pair, brush) are through
+function tutQuiet(){ return !!(W.started&&(lessonOn()||(!W.stat.brushTut&&W.time<480))); }
 function lessonCat(c){ return !!c&&(c===intro.c||c===bt.c||c===pl.a||c===pl.b||c===br.c); }
 function blinkPending(){ return !W.stat.blinkBack&&!bt.skipped&&!bt.c&&!intro.c; }
 function focusClose(c){ if(!cam.close)cam.close={want:cam.want}; cam.close.c=c; cam.close.idle=0; cam.want=Math.min(cam.want,3.8); cam.focus=c; cam.focusT=0.3; tagFor(c,4); Snd.chirp(); }
@@ -1591,7 +1591,7 @@ function handFx(cls){ handEl.classList.remove('jerk','bump'); void handEl.offset
 /* ================= SHOWS, FAMILY, NEW ARRIVALS ================= */
 const SHOWS=['Village Cat Fair','County Cat Fair','Regional Cat Fair','National Cat Fair','Grand Cat Festival'];
 function showName(){ return SHOWS[Math.min(W.showTier,SHOWS.length-1)]; }
-function showReady(c){ const s=c.s; return !(W.family&&W.family.cat===c)&&c.away<=0&&!c.carried&&!c.outside&&!c.leaving&&c.showCD<=0&&c.age>=1&&s.health>=60&&s.trust>=55&&s.groom>=GROOM_FAIR; }
+function showReady(c){ const s=c.s; return !tutQuiet()&&!(W.family&&W.family.cat===c)&&c.away<=0&&!c.carried&&!c.outside&&!c.leaving&&c.showCD<=0&&c.age>=1&&s.health>=60&&s.trust>=55&&s.groom>=GROOM_FAIR; }
 function enterShow(c){ if(!showReady(c))return; if(c.useItem||c.state!=='idle')setState(c,'idle',1); spawnFx('spark',c.g.position.clone().setY(.5),8,.5); floatWorld(c.g.position.clone().setY(1),'To the fair!'); c.away=25; c.g.visible=false; W.stat.shows++; Snd.chime(); tag.c=null; }
 function returnFromShow(c){
   const h=LV().half; c.g.position.set(rand(-1,1),0,-h+1.5); c.g.visible=true; setState(c,'idle',3);
@@ -2323,7 +2323,7 @@ function extraUpdate(dt){
     else if((f.state==='arrive'||f.state==='wait')&&f.t>110&&!W.pickHome)familyLeave("We'll come back!"); }
   if(W.postQ.length&&W.postQ[0].t<=W.time&&$('#modal').hidden&&!W.paused){ const pq=W.postQ.shift(), hm=W.homes[pq.i]; if(hm){ if(hm.scene)W.stat.cards=[...new Set([...(W.stat.cards||[]),hm.scene])]; openModal(cardHTML(hm)+`<button class="big" id="pcOk">Aww</button>`,true); $('#pcOk').onclick=()=>{ closeModal(); boardPop(); }; Snd.chime(); } }
   if((boardT-=dt)<=0){ boardT=2; boardSync(); }
-  herdTick(dt); extraT-=dt; if(extraT<=0){ extraT=1; checkCollection(); updateStars(); updateAch(); updateGoals(); hud(); }
+  herdTick(dt); extraT-=dt; if(extraT<=0){ extraT=1; checkCollection(); if(!lessonOn()){ updateStars(); updateAch(); updateGoals(); } hud(); }
 }
 function buildWandToy(){ const f=wand.fm; while(f.children.length)f.remove(f.children[0]); const T=W.tier.wand||1;
   if(T===1){ f.add(mesh(G.cone,0xff8fb1,{p:[0,-0.1,0],s:[0.05,0.22,0.05],r:[Math.PI,0,0.3]})); f.add(mesh(G.cone,0x7fd1ff,{p:[0.04,-0.1,0],s:[0.045,0.2,0.045],r:[Math.PI,0,-0.3]})); f.add(mesh(G.sph,0xffd84d,{s:[0.045,0.045,0.045]})); }
@@ -2374,7 +2374,7 @@ if(/[?&]dev\b/.test(location.search)){ const d=document.createElement('div'); d.
 function addGlow(grp,x,y,z,s){ const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:iconTexture('glowY'),transparent:true,depthWrite:false,opacity:0,blending:THREE.AdditiveBlending})); sp.position.set(x,y,z); sp.scale.set(s,s,s); grp.add(sp); (W.glows=W.glows||[]).push(sp); }
 const stars=(()=>{ const n=350, pos=new Float32Array(n*3); for(let i=0;i<n;i++){ const a=rand(0,6.28), e=rand(0.15,1.4), R=170; pos[i*3]=Math.cos(a)*Math.cos(e)*R; pos[i*3+1]=Math.sin(e)*R; pos[i*3+2]=Math.sin(a)*Math.cos(e)*R; }
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3)); const p=new THREE.Points(g,new THREE.PointsMaterial({color:0xffffff,size:2,sizeAttenuation:false,transparent:true,opacity:0,fog:false,depthWrite:false})); p.frustumCulled=false; scene.add(p); return p; })();
-function applySky(dt){ if(W.dayOn)dayT=(dayT+dt)%DAYLEN; const ph=W.dayOn?dayT/DAYLEN:0.25, el=Math.sin(ph*Math.PI*2)+0.5;
+function applySky(dt){ if(W.dayOn&&!tutQuiet())dayT=(dayT+dt)%DAYLEN; const ph=W.dayOn?dayT/DAYLEN:0.25, el=Math.sin(ph*Math.PI*2)+0.5;
   const n=W.dayOn?clamp((0.15-el)/0.5,0,1):0, dusk=W.dayOn?clamp(1-Math.abs(el-0.2)/0.3,0,1)*(1-n):0; W.night=n;
   const sky=SKY.clone().lerp(DUSK,dusk*0.55).lerp(NIGHT,n), rainy=SKY_RAIN.clone().lerp(NIGHT,n*0.9);
   scene.background.copy(sky).lerp(rainy,weather.k); scene.fog.color.copy(scene.background);
@@ -2486,7 +2486,7 @@ function endBlinkTut(ok){ const c=bt.c; if(!c)return; bt.c=null; cam.want=Math.m
 const br={c:null,t:0,stage:'tool'};
 const BRUSH_ICON='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#4a3426" stroke-width="2.2" stroke-linecap="round"><path d="M4 20l7-7"/><rect x="11" y="4" width="9" height="9" rx="2.5" transform="rotate(45 15.5 8.5)" fill="#4a3426" stroke="none"/></svg>';
 const SHINE_ICON='<svg viewBox="0 0 24 24" width="34" height="34"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z" fill="#f2c94c"/></svg>';
-function brushReady(){ return !br.c&&!br.done&&W.stat.pairDone&&!W.stat.brushTut&&!intro.c&&!bt.c&&!pl.a&&!firstAdopt()&&W.started&&!W.paused&&$('#modal').hidden&&!W.runaway&&W.time>(W.stat.pairDoneT!=null?W.stat.pairDoneT+45:200); }
+function brushReady(){ return !br.c&&!br.done&&W.stat.pairDone&&!W.stat.brushTut&&!intro.c&&!bt.c&&!pl.a&&!firstAdopt()&&W.started&&!W.paused&&$('#modal').hidden&&!W.runaway&&W.time>(W.stat.pairDoneT!=null?W.stat.pairDoneT+25:200); }
 function startBrushTut(){ let c=scruffiest(); if(!c){ c=active().filter(k=>!k.carried&&!k.outside&&k.age>=0.5&&['idle','walk','sit','watch'].includes(k.state)).sort((a,b)=>a.s.groom-b.s.groom)[0]; if(!c)return; c.s.groom=Math.min(c.s.groom,22); }
   Object.assign(br,{c,t:0,stage:W.tool==='brush'?'scrub':'tool',want:cam.want}); cam.want=Math.min(cam.want,4); hideHint(); hintDone.add('brush'); hintDone.add('brush2'); tag.c=null;
   document.body.classList.add('intro','tools'); for(const id of ['#intro','#ghost','#pips','#introSkip'])$(id).hidden=false; $('#intro').classList.remove('off');
@@ -2601,6 +2601,6 @@ const musT={b:$('#bMusic')}; musT.home=musT.b.parentElement; musT.next=musT.b.ne
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); }catch(e){} begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={Snd,TREES,fadeTrees,tips,showTip,FLEA_TIP,owls,boopOwl,owlTrees,ensureBurrs,updateScruff,dustPuff,updateFleas,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={Snd,showReady,updateTag,lessonOn,TREES,fadeTrees,tips,showTip,FLEA_TIP,owls,boopOwl,owlTrees,ensureBurrs,updateScruff,dustPuff,updateFleas,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>

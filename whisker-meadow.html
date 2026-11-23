@@ -822,7 +822,7 @@ function buildCatMesh(cat){
   Object.assign(cat,{g,core,head,icon,glow});
 }
 function applyAge(c){ const a=c.age, B=BREEDS[c.coat.base]; c.g.scale.setScalar((0.52+0.48*a)*(B?B.size:1)); c.head.scale.setScalar((1+0.28*(1-a))*(B&&B.round||1)); }
-function showIcon(c,kind,dur=2.5){ if(tutQuiet()&&!lessonCat(c)&&!c.carried&&S.cat!==c&&P.cat!==c&&!(c.petT>0&&handOn(c)))return; c.icon.material.map=iconTexture(kind); c.icon.material.needsUpdate=true; c.icon.visible=true; c.iconT=dur; c.iconKind=kind; }
+function showIcon(c,kind,dur=2.5){ if(tutQuiet()&&!lessonCat(c)&&!c.carried&&S.cat!==c&&P.cat!==c&&!(c.petT>0&&handOn(c)))return; c.icon.material.map=iconTexture(kind); c.icon.material.needsUpdate=true; c.icon.visible=true; c.icon.material.opacity=1; c.iconT=dur; c.iconKind=kind; }
 function dist2(a,b){ return Math.hypot(a.x-b.x,a.z-b.z); }
 const bk=(a,b)=>a.id<b.id?a.id+'|'+b.id:b.id+'|'+a.id;
 const getBond=(a,b)=>bonds[bk(a,b)]||0;
@@ -975,7 +975,7 @@ function overReact(c){
 function handScratch(c){ Snd.hiss(); showIcon(c,'angry',2); cam.shake=0.25; W.aidT=45; handFx('jerk'); $('#hScr').style.opacity=1; setTimeout(()=>$('#hScr').style.opacity=0,1100);
   if(P.mode==='stroke'||P.mode==='catPending')P.mode='none'; floatAt(P.hx,P.hy-50,'Ouch!'); W.stat.scratches++; scratchFx(); }
 function scratchFx(){ const el=$('#scratch'); el.classList.remove('go'); void el.offsetWidth; el.classList.add('go'); cam.shake=Math.max(cam.shake||0,0.25); if(navigator.vibrate)try{ navigator.vibrate([40,30,60]); }catch(e){} }
-function blinkBack(c){ c.blinkBackT=0; c.gaze=0; c.slowBlink=1.8; const s=c.s; s.trust=Math.min(100,s.trust+3); s.aff=Math.min(100,s.aff+2); W.stat.blinkBack++;
+function blinkBack(c){ c.blinkBackT=0; c.gaze=0; if(c.iconKind==='blink'&&c.iconT>0.9)c.iconT=0.9; c.slowBlink=1.8; const s=c.s; s.trust=Math.min(100,s.trust+3); s.aff=Math.min(100,s.aff+2); W.stat.blinkBack++;
   spawnFx('h',c.g.position.clone().setY(1.1*c.g.scale.x),3,.3); Snd.chirp(); unlock('slow_blink'); }
 
 /* ---------- cat update ---------- */
@@ -1193,7 +1193,7 @@ function animateCat(c,dt,t){
     x+=Math.sin(side)*sp*0.6; y+=Math.sin(th)*sp; z-=Math.cos(th)*sp; m.position.set(x,y,z); });
   let gOp=0; if(c.petT>0&&handOn(c)&&!c.carried&&W.tool!=='brush'){ gOp=W.time-c.lastStroke<0.45?0.75:0.08+0.4*clamp(c.petProg||0,0,1); }
   c.glow.material.opacity=lerp(c.glow.material.opacity,gOp,Math.min(1,dt*8)); c.glow.position.y=c.state==='flop'?0.35:0.55;
-  if(c.iconT>0){ c.iconT-=dt; if(c.iconT<=0)c.icon.visible=false; }
+  if(c.iconT>0){ c.iconT-=dt; c.icon.material.opacity=Math.min(1,c.iconT/0.4); if(c.iconT<=0)c.icon.visible=false; }
   else if(W.pickHome&&readyHome(c))showIcon(c,'house',0.4);
   else if(purring&&Math.random()<dt*0.5)showIcon(c,'purr',1.2);
   else if(st==='sleep'&&Math.random()<dt*0.3)showIcon(c,'zzz',1.6);
@@ -1405,7 +1405,8 @@ function pickAt(e){ setRay(e); const objs=[]; for(const c of W.cats)if(c.away<=0
   for(const h of ray.intersectObjects(objs,true)){ const u=h.object.userData; if(u.pass||h.object.isSprite)continue; if(u.cat){ let z=u.zone; if(z==='back'){ const lp=u.cat.core.worldToLocal(h.point.clone()); if(lp.z<-0.26&&lp.y>-0.05)z='rump'; } return {cat:u.cat,zone:z}; } if(u.item)return {item:u.item}; } return null; }
 const P={mode:null,pointers:new Map(),start:{x:0,y:0},last:{x:0,y:0},t0:0,moved:false,cat:null,item:null,grab:new V3(),pinch:0,hx:-200,hy:-200,over:false,hoverCat:null,hoverT:0,type:'mouse',down:false};
 const S={cat:null,len:0,zones:{},dir:null,t0:0,last:0};
-const BURR_SVG='<svg viewBox="0 0 32 32" width="30" height="30"><path d="M20 9q6-6 10-3-2 6-9 6z" fill="#7fa54a"/><g stroke="#6b5326" stroke-width="2.4" stroke-linecap="round"><path d="M16 6v20M6 16h20M9 9l14 14M23 9L9 23"/></g><circle cx="16" cy="16" r="6.5" fill="#8f7436"/></svg>';
+const SCRUFF_SVG='<svg viewBox="0 0 32 32" width="30" height="30"><g fill="#d9c7a0"><circle cx="11" cy="19" r="7"/><circle cx="20" cy="16" r="8"/><circle cx="24" cy="23" r="5.5"/><circle cx="14" cy="25" r="5"/></g><path d="M5 9q7-5 12 1-7 4-12-1z" fill="#d9a23a"/><path d="M19 6l9 4M24 8l1-4" stroke="#7a5232" stroke-width="2" stroke-linecap="round"/></svg>',
+  BRUSH_HINT='<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#4a3426" stroke-width="2.2" stroke-linecap="round"><path d="M4 20l7-7"/><rect x="11" y="4" width="9" height="9" rx="2.5" transform="rotate(45 15.5 8.5)" fill="#4a3426" stroke="none"/><path d="M13 3.5l-1.5 1.5M16.5 2.5l-1 2M19.5 4l-2 1"/></svg>';
 // a scruffy coat: one tier below SCRUFF_AT. burrCount = how much brushing is still needed (the brush tutorial and fair use it)
 const SCRUFF_AT=35, DULL_ZONES=['back','belly','chest','head','cheek','chin','leg','tail'], PINKS=[0xf4a0a8,0xf6b7c0];
 function burrCount(c){ const g=c.s.groom; return g>=SCRUFF_AT?0:Math.min(5,Math.ceil((SCRUFF_AT-g)/7)); }
@@ -1847,8 +1848,8 @@ const HINTS=[
   {id:'shop',when:()=>W.time>80&&W.money>=12,el:'#bShop',g:'tap',label:()=>GUIDE_LABEL[guidePick('shop')]||'Shop',done:()=>W.stat.buys>0},
   {id:'wand',when:()=>W.time>100,el:'[data-tool=wand]',g:'tap',label:'Play',done:()=>W.tool==='wand'},
   {id:'wand2',when:()=>W.tool==='wand',at:()=>wand.tip.clone().setY(0.2),g:'stroke',label:'Drag · Flick · Hold',done:()=>W.stat.pounces>=3},
-  {id:'brush',when:()=>W.time>100&&W.tool!=='brush'&&!!scruffiest(),el:'[data-tool=brush]',g:'tap',label:()=>BURR_SVG,done:()=>W.tool==='brush'},
-  {id:'brush2',when:()=>W.tool==='brush'&&!!scruffiest(),at:()=>{ const c=scruffiest(); return c&&bodyOf(c); },g:'stroke',label:()=>BURR_SVG+'<span style="font-size:24px;vertical-align:8px"> ⇆</span>',done:()=>W.stat.brush>=4},
+  {id:'brush',when:()=>W.time>100&&W.tool!=='brush'&&!!scruffiest(),el:'[data-tool=brush]',g:'tap',label:()=>BRUSH_HINT,done:()=>W.tool==='brush'},
+  {id:'brush2',when:()=>W.tool==='brush'&&!!scruffiest(),at:()=>{ const c=scruffiest(); return c&&bodyOf(c); },g:'stroke',label:()=>BRUSH_HINT+'<span style="font-size:24px;vertical-align:8px"> ⇆</span>',done:()=>W.stat.brush>=4},
   {id:'show0',when:()=>W.tool!=='hand'&&!W.stat.shows&&W.cats.some(showReady),el:'[data-tool=hand]',g:'tap',label:'Pet',done:()=>W.tool==='hand',redo:true},
   {id:'show',when:()=>W.tool==='hand'&&W.cats.some(showReady),at:()=>headOf(W.cats.find(showReady)),g:'tap',label:'Cat fair!',done:()=>W.stat.shows>0},
   {id:'belly',when:()=>false&&W.cats.some(c=>c.state==='flop'&&c.offer&&c.s.trust<75),at:()=>{ const c=W.cats.find(c=>c.state==='flop'&&c.offer); return c&&bodyOf(c); },g:'none',label:'Belly? Careful!',auto:4},
@@ -2473,7 +2474,7 @@ function startBrushTut(){ let c=scruffiest(); if(!c){ c=active().filter(k=>!k.ca
   Object.assign(br,{c,t:0,stage:W.tool==='brush'?'scrub':'tool',want:cam.want}); cam.want=Math.min(cam.want,4); hideHint(); hintDone.add('brush'); hintDone.add('brush2'); tag.c=null;
   document.body.classList.add('intro','tools'); for(const id of ['#intro','#ghost','#pips','#introSkip'])$(id).hidden=false; $('#intro').classList.remove('off');
   const gh=$('#ghost'); gh.innerHTML=`<svg viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`; gh.classList.remove('tap');
-  $('#pips').innerHTML=`<div class="eq eq3">${BURR_SVG.replace('width="30" height="30"','width="34" height="34"')}<b style="font-size:24px;color:#4a3426">+</b>${BRUSH_ICON}<b style="font-size:24px;color:#4a3426">=</b>${SHINE_ICON}</div>`; }
+  $('#pips').innerHTML=`<div class="eq eq3">${SCRUFF_SVG.replace('width="30" height="30"','width="34" height="34"')}<b style="font-size:24px;color:#4a3426">+</b>${BRUSH_ICON}<b style="font-size:24px;color:#4a3426">=</b>${SHINE_ICON}</div>`; }
 function endBrushTut(ok){ const c=br.c; if(!c)return; br.c=null; br.done=true; W.stat.brushTut=1; cam.want=Math.max(br.want||0,LV().zoom*0.75); document.body.classList.remove('intro','tools');
   $('#intro').classList.add('off'); setTimeout(()=>{ if(!intro.c&&!bt.c&&!pl.a&&!br.c)$('#intro').hidden=true; },750); for(const id of ['#ghost','#pips','#introSkip'])$(id).hidden=true; $('#ghost').classList.remove('tap');
   if(ok){ spawnFx('spark',c.g.position.clone().setY(0.9*c.g.scale.y),14,0.5,0.18); Snd.chime(); tagFor(c,4); } hintGap=8; }

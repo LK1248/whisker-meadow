@@ -2050,7 +2050,7 @@ function updateHints(dt){ if(tutQuiet()||intro.c||bt.c||pl.a||br.c||(firstAdopt(
     hintEl.hidden=!$('#modal').hidden||W.paused||P.mode==='carry'; hintEl.style.transform=`translate(${x}px,${y}px)`;
     const lab=hintEl.querySelector('.lab'); const lw=lab.offsetWidth; lab.style.marginLeft=(Math.max(0,lw/2+8-x)-Math.max(0,x+lw/2+8-innerWidth))+'px'; lab.style.top=y<130?'48px':'-70px';
     return; }
-  hintGap-=dt; if(hintGap>0||!W.hints||!W.started||W.paused)return;
+  hintGap-=dt; if(hintGap>0||!W.hints||!W.started||W.paused||tips.cur)return;
   for(const h of HINTS){ if(hintDone.has(h.id)||(hintRetry[h.id]&&W.time<hintRetry[h.id]))continue; if(h.done&&h.done()&&h.when()){ hintDone.add(h.id); continue; } if(h.when()){ curHint=h; hintT=0; hintEl.className='g-'+h.g; { const L=typeof h.label==='function'?h.label():h.label, lb=hintEl.querySelector('.lab'); if(L.startsWith('<'))lb.innerHTML=L; else lb.textContent=L; } hintEl.hidden=false; break; } }
 }
 
@@ -2759,9 +2759,9 @@ const FLEA_TIP=`<svg viewBox="0 0 160 60"><circle cx="26" cy="26" r="18" fill="#
   `<g fill="#2a1e1a"><circle cx="16" cy="33" r="2.4"/><circle cx="34" cy="20" r="2.4"/><circle cx="30" cy="35" r="2.4"/><circle cx="22" cy="21" r="2"/></g><path d="M17 31q5-13 11-5" fill="none" stroke="#e0505f" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 3"/>`+
   `${ARROW(30)}<g transform="translate(92 6) scale(2)" color="#8a6a52"><g transform="rotate(-35 12 12)"><rect x="2.5" y="6.5" width="12.5" height="6.2" rx="2.6" fill="currentColor"/><path d="M4.6 13.6v3.4M7.3 13.6v3.4M10 13.6v3.4M12.7 13.6v3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M15 9.6h6.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></g></g></svg>`;
 function showTip(kind,c,svg,dur,tap){ tips.cur={kind,c,dur,tap}; tips.t=0; $('#tip').innerHTML=svg; $('#tip').hidden=false; $('#tip').style.opacity=1; if(tap){ const gh=$('#ghost'); gh.innerHTML=`<svg viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`; gh.classList.add('tap'); gh.hidden=false; } W.stat[kind+'Tip']=1; }
-function endTip(){ if(!tips.cur)return; if(tips.cur.tap){ $('#ghost').hidden=true; $('#ghost').classList.remove('tap'); } tips.cur=null; $('#tip').hidden=true; }
+function endTip(){ if(!tips.cur)return; if(tips.cur.tap){ $('#ghost').hidden=true; $('#ghost').classList.remove('tap'); } tips.cur=null; $('#tip').hidden=true; hintGap=Math.max(hintGap,3); }
 function updateTips(dt){ const busy=tutQuiet()||br.c||firstAdopt()||intro.c||bt.c||pl.a||!W.started||W.paused||!$('#modal').hidden;
-  if(!tips.cur){ if(busy||!W.stat.pairDone)return; tips.wait=(tips.wait||0)-dt; if(tips.wait>0)return; tips.wait=2;
+  if(!tips.cur){ if(busy||!W.stat.pairDone||curHint)return; tips.wait=(tips.wait||0)-dt; if(tips.wait>0)return; tips.wait=2;
     const flea=!W.stat.fleaTip&&active().find(c=>c.fleas&&!c.carried&&!c.outside&&c.away<=0&&toScreen(c.g.position).ok); if(flea){ showTip('flea',flea,FLEA_TIP,8,false); return; }
     const flop=!W.stat.bellyTip&&active().find(c=>c.state==='flop'&&c.offer&&!c.carried); if(flop){ showTip('belly',flop,BELLY_TIP,7,false); return; }
     if(!W.stat.buttTip&&W.time>240&&!W.stat.butt){ const c=active().filter(c=>!c.carried&&!c.outside&&c.away<=0&&c.s.trust>=45&&['idle','sit'].includes(c.state)).sort((x,y)=>dist2(x.g.position,cam.target)-dist2(y.g.position,cam.target))[0]; if(c)showTip('butt',c,BUTT_TIP,9,true); }

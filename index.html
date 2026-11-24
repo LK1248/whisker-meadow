@@ -1950,7 +1950,7 @@ const SHOP=[
   {id:'helper',name:()=>'Helper',desc:'Feeds, scoops, pets \u00b7 $6/min wage',cost:()=>150,max:()=>W.level,buy(){makeHelper();}},
 ];
 function guidePick(why){ const can=id=>{ const it=SHOP.find(x=>x.id===id); if(!it)return false; const av=it.avail?it.avail():true, mx=it.max?it.max():Infinity; return av&&countItems(id)<mx&&W.money>=it.cost(); };
-  if(why==='roof')return 'shelter'; if(why==='space')return 'expand'; if(why==='food')return 'food'; if(why==='laser')return 'laser';
+  if(why==='helper')return 'helper'; if(why==='roof')return 'shelter'; if(why==='space')return 'expand'; if(why==='food')return 'food'; if(why==='laser')return 'laser';
   const meals=(W.food||0)+(W.premium||0), n=active().length;
   if(weather.raining&&can('shelter'))return 'shelter';
   if(meals<Math.max(6,n*2)&&can('food'))return 'food';
@@ -2050,11 +2050,13 @@ const HINTS=[
   {id:'show',when:()=>W.tool==='hand'&&W.cats.some(showReady),at:()=>headOf(W.cats.find(showReady)),g:'tap',label:()=>fairBadge(0,30),done:()=>W.stat.shows>0},
   {id:'belly',when:()=>false&&W.cats.some(c=>c.state==='flop'&&c.offer&&c.s.trust<75),at:()=>{ const c=W.cats.find(c=>c.state==='flop'&&c.offer); return c&&bodyOf(c); },g:'none',label:'Belly? Careful!',auto:4},
   {id:'roof',when:()=>weather.raining&&!countItems('shelter'),el:'#bShop',g:'tap',label:()=>hIco(IC.shelter),done:()=>countItems('shelter')>0||!weather.raining},
+  {id:'helper',when:()=>!helpers.length&&(W.cats.length>8||(W.needT||0)>60)&&shopCan(SHOP.find(x=>x.id==='helper')),el:'#bShop',g:'tap',label:()=>hIco(IC.helper),done:()=>helpers.length>0},
   {id:'space',when:()=>W.cats.length>=LV().cap&&W.level<4,el:'#bShop',g:'tap',label:()=>hIco(IC.expand),done:()=>W.cats.length<LV().cap},
 ];
 const hintDone=new Set(), hintRetry={}; let curHint=null, hintT=0, hintGap=0;
 function hideHint(){ curHint=null; hintEl.hidden=true; hintGap=4; }
-function updateHints(dt){ if(tutQuiet()||intro.c||bt.c||pl.a||br.c||(firstAdopt()&&W.family.cat)){ hintEl.hidden=true; return; }
+function needTick(dt){ const cs=active(), hungry=cs.filter(c=>c.s.full<30).length, fleas=cs.filter(c=>c.fleas).length; W.needT=hungry>2||fleas>1?(W.needT||0)+dt:Math.max(0,(W.needT||0)-dt*0.5); }
+function updateHints(dt){ needTick(dt); if(tutQuiet()||intro.c||bt.c||pl.a||br.c||(firstAdopt()&&W.family.cat)){ hintEl.hidden=true; return; }
   if(curHint){ hintT+=dt; const h=curHint;
     if(h.done&&h.done()){ if(!h.redo)hintDone.add(h.id); hideHint(); return; }
     if(h.auto&&hintT>h.auto){ if(!h.again)hintDone.add(h.id); else hintRetry[h.id]=W.time+20; hideHint(); return; }

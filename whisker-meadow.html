@@ -1008,7 +1008,7 @@ function decide(c){
   if(r<0.3&&s.fun<92){ const bd=birds.find(b=>b.state==='ground'&&dist2(b.g.position,p)<5); if(bd){ c.prey=bd; setState(c,'stalkBird',10); return; }
     const bf=butterflies.find(b=>dist2(b.g.position,p)<4); if(bf){ c.watch=bf; setState(c,'watch',rand(5,8)); return; } }
   if(r<0.37){ const t=pick(items.filter(i=>i.kind==='tree'&&freeSpot(i)>=0)); if(t){ const [x,z]=approach(c,t,0.5); goTo(c,x,z,'perch',t); return; } }
-  if(r<0.43&&s.aff>35&&s.fun>30&&c.age>0.3){ setState(c,'flop',rand(6,11)); return; }
+  if(r<0.43&&s.aff>35&&s.fun>30&&c.age>0.3&&!(lessonOn()&&(c===intro.c||c===bt.c||c===pl.a||c===br.c))){ setState(c,'flop',rand(6,11)); return; }
   if(r<0.47&&c.age>0.25){ setState(c,'groom',rand(4,7)); c.groomKind=pick(['paw','paw','flank','tail','behind']); return; }
   if(r<0.52&&W.time>45){ const b=pick(items.filter(i=>i.kind==='bed'&&!i.occupant)); if(b&&Math.random()<0.8){ goTo(c,b.pos.x,b.pos.z,'bed',b); return; } setState(c,'sleep',rand(8,14)); return; }
   if(r<0.8){ const [fr,v]=bestFriend(c); if(fr&&v>25&&fr.away<=0&&Math.random()<0.45){ const fp=fr.g.position; goTo(c,fp.x+rand(-1,1),fp.z+rand(-1,1),null); return; }
@@ -1055,7 +1055,7 @@ function onStroke(c,zone,frantic,good){
     // the cat warms up: after 2 on-beat strokes it leans in and rubs, after 3 it shows off every stroke
     if(!brush&&c.streak>=2){ c.joy=Math.min(1,(c.streak-1)/3); c.lean=1.4; spawnFx('h',c.g.position.clone().setY(1.1*c.g.scale.x),1); }
     if(!brush&&c.streak>=3){ const r=Math.random();
-      if(r<0.28&&s.aff>=35&&c.state==='pet'){ setState(c,'flop',7); c.offer=true; c.petT=3; }
+      if(r<0.28&&s.aff>=35&&c.state==='pet'&&!lessonOn()){ setState(c,'flop',7); c.offer=true; c.petT=3; }
       else if(r<0.55&&c.hbCD<=0){ c.hb=0.55; c.hbCD=rand(1.5,3); handFx('bump'); Snd.chirp(); }
       else if(r<0.7){ c.elev=1.2; }
       else if(r<0.85&&c.slowBlink<=0){ c.slowBlink=1.9; }

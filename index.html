@@ -1759,7 +1759,7 @@ window.addEventListener('keydown',e=>{ const k={'1':'hand','2':'brush','3':'wand
 /* ---------- hand cursor ---------- */
 const handEl=$('#hand');
 function handPos(e){ P.hx=e.clientX; P.hy=e.clientY; handEl.style.transform=`translate(${e.clientX}px,${e.clientY}px)`; handEl.classList.toggle('touch',e.pointerType!=='mouse'); }
-function handVis(){ const toolOk=W.tool==='hand'||W.tool==='brush'; const show=W.started&&!W.paused&&toolOk&&P.mode!=='carry'&&P.mode!=='pinch'&&(P.type==='mouse'?P.over:P.down);
+function handVis(){ const toolOk=W.tool==='hand'||W.tool==='brush'; const show=W.started&&!W.paused&&toolOk&&P.mode!=='carry'&&P.mode!=='pinch'&&(P.type==='mouse'?P.over:P.down&&P.mode!=='pan'&&P.mode!=='rotate');
   handEl.hidden=!show; handEl.classList.toggle('brush',W.tool==='brush'); canvas.classList.toggle('nocur',W.started&&toolOk&&P.type==='mouse');
   if(P.mode!=='carry')carryHands.forEach(m=>m.visible=false); }
 function handFx(cls){ handEl.classList.remove('jerk','bump'); void handEl.offsetWidth; handEl.classList.add(cls); setTimeout(()=>handEl.classList.remove(cls),500); }

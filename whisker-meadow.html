@@ -1226,7 +1226,7 @@ function catCircles(c){ const p=c.g.position, s=c.g.scale.x, sh=Math.sin(c.headi
 function solid(c){ return c.away<=0&&!c.carried&&!c.outside&&!c.leaving&&!['litter','perch'].includes(c.state)&&!(c.state==='sleep'&&c.useItem)&&(c.jump<0.15||c.leap); }
 function collide(){
   const cs=active().filter(solid);
-  const pinned=c=>!c.carried&&((P.mode==='stroke'||P.mode==='catPending')&&(S.cat===c||P.cat===c)||tips.cur&&tips.cur.kind==='flea'&&tips.cur.c===c);
+  const pinned=c=>!c.carried&&((P.mode==='stroke'||P.mode==='catPending')&&(S.cat===c||P.cat===c)||tips.cur&&['flea','butt'].includes(tips.cur.kind)&&tips.cur.c===c);
   for(const c of cs){ if(pinned(c)){ if(!c.pinP)c.pinP=c.g.position.clone(); c.speed=0; } else c.pinP=null; }
   for(let iter=0;iter<2;iter++){
     const air=c=>c.leap&&c.hopT>0;
@@ -1296,7 +1296,7 @@ function animateCat(c,dt,t){
   // gaze up at the player + slow blink
   if(c.gaze>0&&!c.carried){ c.gaze-=dt; const p=c.g.position; const yaw=angDiff(c.heading,Math.atan2(camera.position.x-p.x,camera.position.z-p.z));
     // turn the body part way round, so the blink reads face-on (the head does the rest)
-    if(['idle','watch','shelter'].includes(c.state)&&!(c.hopT>0)){ const ex=yaw-clamp(yaw,-0.35,0.35); c.heading+=ex*Math.min(1,dt*2.2); }
+    if(['idle','watch','shelter'].includes(c.state)&&!(c.hopT>0)&&!(tips.cur&&tips.cur.kind==='butt'&&tips.cur.c===c)){ const ex=yaw-clamp(yaw,-0.35,0.35); c.heading+=ex*Math.min(1,dt*2.2); }
     hy=clamp(angDiff(c.heading,Math.atan2(camera.position.x-p.x,camera.position.z-p.z)),-1.1,1.1); hx=Math.min(hx,-0.45);
     if(!c.gazeBl&&c.gaze<(c.leaving?2.1:9)){ c.gazeBl=true; c.slowBlink=1.9; showIcon(c,'blink',c.leaving?2.2:8.5); }
     if(!c.leaving&&c.gazeBl&&!c.gazeBl2&&c.gaze<4.5){ c.gazeBl2=true; c.slowBlink=1.9; } }
@@ -2828,6 +2828,8 @@ function updateTips(dt){ const busy=tutQuiet()||br.c||firstAdopt()||intro.c||bt.
     return; }
   const T=tips.cur, c=T.c; tips.t+=dt; if(busy||c.away>0||c.carried||c.outside||(tips.t>T.dur&&T.kind!=='butt'&&T.kind!=='flea')||(T.kind==='belly'&&c.state!=='flop')||(T.kind==='flea'&&!c.fleas)||(T.kind==='butt'&&c.buttKnown&&tips.t>1.5)){ endTip(); return; }
   if(T.kind==='butt'&&c.state==='idle')c.stT=Math.max(c.stT||0,2);
+  if(T.kind==='butt'&&!c.buttKnown&&['idle','sit'].includes(c.state)){ const w=a=>Math.atan2(Math.sin(a),Math.cos(a)); // side-on: facing at right angles to the view
+    const v=Math.atan2(camera.position.x-c.g.position.x,camera.position.z-c.g.position.z), d1=w(v+Math.PI/2-c.heading), d2=w(v-Math.PI/2-c.heading), d=Math.abs(d1)<Math.abs(d2)?d1:d2; c.heading+=d*Math.min(1,dt*4); }
   if(T.kind==='flea'){ if(['walk','run','trot','zoom'].includes(c.state))setState(c,'idle'); if(c.state==='idle')c.stT=Math.max(c.stT||0,2); }
   const top=toScreen(c.g.position.clone().setY(1.35*c.g.scale.x+0.45)); if(!top.ok)return; const el=$('#tip'), w=el.offsetWidth, hh=el.offsetHeight;
   el.style.transform=`translate(${clamp(top.x-w/2,8,innerWidth-w-8)}px,${clamp(top.y-hh,60,innerHeight-hh-90)}px)`; el.style.opacity=tips.t>T.dur-0.6?0:1;

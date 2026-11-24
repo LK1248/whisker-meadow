@@ -997,7 +997,7 @@ function moveToward(c,dt,speed,stop=0.15){
   c.speed=lerp(c.speed,Math.min(speed,d*3),Math.min(1,dt*(speed>3?10:5)));
   p.x+=Math.sin(c.heading)*c.speed*dt; p.z+=Math.cos(c.heading)*c.speed*dt; return false;
 }
-function walkAway(c,run=true){ const p=c.g.position; const away=Math.atan2(p.x-camera.position.x,p.z-camera.position.z)+rand(-1.2,1.2); goTo(c,p.x+Math.sin(away)*2.6,p.z+Math.cos(away)*2.6,null); c.run=run; c.flick=0.8; c.over=0; c.purr=0; c.leaveT=2.2; c.petT=0; }
+function walkAway(c,run=true,dist=2.6){ const p=c.g.position; const away=Math.atan2(p.x-camera.position.x,p.z-camera.position.z)+rand(-1.2,1.2); goTo(c,p.x+Math.sin(away)*dist,p.z+Math.cos(away)*dist,null); c.run=run; c.flick=0.8; c.over=0; c.purr=0; c.leaveT=2.2; c.petT=0; }
 // cats spread out between roofs: distance counts, but so does how many cats are already under (or heading to) each one
 function shelterLoad(sh,me){ return W.cats.filter(o=>o!==me&&!o.outside&&o.away<=0&&(shelterOf(o.g.position)===sh||(o.state==='walk'&&o.afterData===sh)||(o.state==='shelter'&&o.shelterAt===sh))).length; }
 function shelterPick(c){ const sh=items.filter(i=>i.kind==='shelter'); if(!sh.length)return null; const p=c.g.position;
@@ -1206,7 +1206,7 @@ function dropCat(c){ if(!c.carried)return; c.carried=false; setState(c,'idle',ra
   for(const o of active()){ if(o!==c&&dist2(o.g.position,c.g.position)<1.9){ addBond(c,o,6); showIcon(c,'sniff',2); showIcon(o,'sniff',2); if(canBoop(o)){ c.boopCD=0; boop(c,o); }
       c.heading=Math.atan2(o.g.position.x-c.g.position.x,o.g.position.z-c.g.position.z); if(['idle','walk','pet'].includes(o.state)){ setState(o,'idle',3); o.heading=c.heading+Math.PI; } break; } }
   if(P.cat===c)P.mode=null; handVis(); }
-function hopFree(c){ c.carried=false; if(P.cat===c&&P.mode==='carry')P.mode='none'; c.s.trust=Math.max(0,c.s.trust-3); hop(c,0.3,0.45); showIcon(c,'huff',1.5); walkAway(c); W.stat.drops++; handVis(); }
+function hopFree(c){ c.carried=false; if(P.cat===c&&P.mode==='carry')P.mode='none'; c.s.trust=Math.max(0,c.s.trust-3); hop(c,0.3,0.45); showIcon(c,'huff',1.5); walkAway(c,true,rand(5,7)); W.stat.drops++; handVis(); }
 
 /* ---------- collisions ---------- */
 // body = two circles along the spine, plus one for the head (kittens have bigger heads)

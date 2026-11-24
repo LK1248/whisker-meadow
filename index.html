@@ -263,6 +263,7 @@ h3 .cnt{color:#e0507a;font-size:20px;margin-left:6px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 #modal button.pop{animation:btnPop .35s ease-out}@keyframes btnPop{40%{transform:scale(1.15)}}
 body.tutLock .hbtn,body.tutLock #bCats,body.tutLock .tool:not(.tutOk):not(.on){pointer-events:none;opacity:.45;filter:saturate(.4)}body.faLock #fX,body.faLock #fNo,body.faLock #fCancel{display:none}
+#touchDot{position:fixed;left:0;top:0;width:44px;height:44px;margin:-22px 0 0 -22px;pointer-events:none;z-index:8;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.75) 0 22%,rgba(255,240,246,.35) 40%,rgba(255,255,255,0) 70%);transition:opacity .2s}#touchDot::after{content:'';position:absolute;inset:6px;border-radius:50%;border:2.5px solid rgba(255,255,255,.85);animation:tdRip 1.1s ease-out infinite}@keyframes tdRip{0%{transform:scale(.45);opacity:.9}100%{transform:scale(1.35);opacity:0}}
 </style>
 
 <div id="stage"></div>
@@ -294,7 +295,7 @@ body.tutLock .hbtn,body.tutLock #bCats,body.tutLock .tool:not(.tutOk):not(.on){p
 
 <div id="hint" hidden><div class="rip"></div><div class="hh"></div><div class="lab"></div></div>
 <div id="ring" hidden></div>
-<div id="tempo" hidden><svg viewBox="0 0 100 60"><path class="bg" d=""/><path class="band" d=""/><line class="ndl" x1="50" y1="53" x2="50" y2="18"/><circle class="hub" cx="50" cy="53" r="5.5"/></svg></div><div id="hand" hidden>
+<div id="tempo" hidden><svg viewBox="0 0 100 60"><path class="bg" d=""/><path class="band" d=""/><line class="ndl" x1="50" y1="53" x2="50" y2="18"/><circle class="hub" cx="50" cy="53" r="5.5"/></svg></div><div id="touchDot" hidden></div><div id="hand" hidden>
   <svg viewBox="0 0 64 64">
     <g class="hp">
       <g fill="#ffd8bd" stroke="#b97f5e" stroke-width="2.5" stroke-linejoin="round">
@@ -2549,7 +2550,9 @@ function rimPts(f0,f1,amp,t){ const N=12, n=Math.max(2,Math.ceil((f1-f0)*120)), 
   return 'M'+out.join('L'); }
 function rimDraw(amp,p){ const t=performance.now()/1000, bg=$('#beatBg'), fg=$('#beatFg'); bg.setAttribute('d',rimPts(0,1,amp,t)+'Z'); fg.setAttribute('d',p>0.005?rimPts(0,Math.min(1,p),amp,t):''); }
 const gArc=(a0,a1,r=8.6)=>{ const P2=a=>{ const t=a*Math.PI/180; return (22+r*Math.sin(t)).toFixed(2)+' '+(25-r*Math.cos(t)).toFixed(2); }; return `M${P2(a0)} A${r} ${r} 0 0 1 ${P2(a1)}`; };
-function updateBeat(){ const el=$('#beat'); let c=null;
+function touchDotTick(){ const d=$('#touchDot'), on=W.started&&!W.paused&&P.down&&P.type&&P.type!=='mouse'&&P.mode!=='pinch'&&P.mode!=='pan'&&P.mode!=='none';
+  if(d.hidden!==!on)d.hidden=!on; if(on)d.style.transform=`translate(${P.hx}px,${P.hy}px)`; }
+function updateBeat(){ touchDotTick(); const el=$('#beat'); let c=null;
   if(P.mode==='stroke'&&S.cat)c=S.cat; else if(P.mode==='catPending')c=P.cat; else if(P.type==='mouse'&&!P.mode&&P.hoverCat&&P.hoverCat.petT>0)c=P.hoverCat;
   if(!c||W.tool!=='hand'||c.carried||c.leaving||c.outside||!$('#modal').hidden){ el.hidden=true; return; }
   const fresh=W.time-c.lastStroke<0.45, p=fresh?1:clamp(c.petProg||0,0,1);

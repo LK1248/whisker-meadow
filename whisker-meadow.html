@@ -1703,7 +1703,7 @@ function petMove(c,len,zone){
   if(zone==='tail'){ c.over+=len/260; c.flick=0.6; if(c.over>=1.5)showIcon(c,'angry',1.2); return; }
   const D=2.5*Math.max(60,Math.min(400,catScreenH(c))), vP=D*tempoOf(c), v=S.v==null?vP:S.v, now=W.time, tol=tempoTol(c), x=Math.log(Math.max(1,v)/vP);
   let gain=0; const gap=Math.min(0.12,Math.max(0,performance.now()/1000-(c.pmT||0))); c.pmT=performance.now()/1000;
-  const tf=tolFast(c);
+  const tf=tolFast(c)+(['head','cheek','chin'].includes(zone)?Math.log(1.35):0); // face scritches may be 35% quicker
   if(x>tf){ // too fast: 1) purr stops  2) ring floods + hourglass  3) irritated
     c.fastM=Math.min(3.4,(c.fastM||0)+gap*(0.6+Math.min(1.5,x-tf))); c.fastT=performance.now()/1000; gain=gap*PET_RATE*0.45*Math.max(0,1-(x-tf)/0.5);
     c.purr=Math.max(0,c.purr-gap*1.2); if(c.fastM>0.45){ c.purr=0; c.purrBlock=now+1.5; }

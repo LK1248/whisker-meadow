@@ -1165,8 +1165,9 @@ function updateCat(c,dt){
       s.fun=Math.min(100,s.fun+dt*1.5); const op=o.g.position, p=c.g.position, d=dist2(p,op);
       if(c.rompPhase==='chase'){
         if(c.rompRole==='runner'){ if(!c.rompTgt||dist2(p,c.rompTgt)<0.6)c.rompTgt=new V3(clampX(p.x+rand(-3.5,3.5),1),0,clampZ(p.z+rand(-3.5,3.5),1)); c.target.copy(c.rompTgt); moveToward(c,dt,2.6,0.3); }
-        else { c.target.set(op.x,0,op.z); moveToward(c,dt,2.95,0.5); if(d<0.95){ c.rompPhase=o.rompPhase='wrestle'; c.rompT=o.rompT=rand(2.5,4); hop(c,0.25*c.g.scale.x,0.4); Snd.chirp(); } } }
+        else { c.target.set(op.x,0,op.z); moveToward(c,dt,2.95,1.05); if(d<1.15){ c.rompPhase=o.rompPhase='wrestle'; c.rompT=o.rompT=rand(2.5,4); hop(c,0.25*c.g.scale.x,0.4); Snd.chirp(); } } }
       else { c.speed=lerp(c.speed,0,Math.min(1,dt*6)); c.heading=angLerp(c.heading,Math.atan2(op.x-p.x,op.z-p.z),dt*6); c.rompT-=dt;
+        { const gap=1.05*(c.g.scale.x+o.g.scale.x)/2; if(d<gap&&d>0.01){ const k=Math.min(1,dt*3)*(gap-d)/2; p.x+=(p.x-op.x)/d*k; p.z+=(p.z-op.z)/d*k; } } /* tussle at arm's length */
         if(Math.random()<dt*1.4&&c.hopT<=0)hop(c,0.16*c.g.scale.x,0.35);
         if(c.rompT<=0&&c.rompRole==='chaser'){ if(Math.random()<0.55){ c.rompPhase=o.rompPhase='chase'; c.rompRole='runner'; o.rompRole='chaser'; c.rompTgt=null; o.rompTgt=null; } else { addBond(c,o,4); heartBetween(c,o); setState(c,'idle',2); setState(o,'idle',2); } } }
       break; }
@@ -1235,13 +1236,13 @@ function hopFree(c){ c.carried=false; if(P.cat===c&&P.mode==='carry')P.mode='non
 // body = two circles along the spine, plus one for the head (kittens have bigger heads)
 function catCircles(c){ const p=c.g.position, s=c.g.scale.x, sh=Math.sin(c.heading), ch=Math.cos(c.heading), fx=sh*0.27*s, fz=ch*0.27*s, hr=0.24*s*(1+0.28*(1-c.age));
   return [[p.x+fx,p.z+fz,0.3*s],[p.x-fx,p.z-fz,0.3*s],[p.x+sh*0.58*s,p.z+ch*0.58*s,hr]]; }
-function solid(c){ return c.away<=0&&!c.carried&&!c.outside&&!c.leaving&&!['litter','perch'].includes(c.state)&&!(c.state==='sleep'&&c.useItem)&&(c.jump<0.15||c.leap); }
+function solid(c){ return c.away<=0&&!c.carried&&!c.outside&&!c.leaving&&!['litter','perch'].includes(c.state)&&!(c.state==='sleep'&&c.useItem)&&(c.jump<0.15||c.leap||c.state==='romp'); }
 function collide(){
   const cs=active().filter(solid);
   const pinned=c=>!c.carried&&((P.mode==='stroke'||P.mode==='catPending')&&(S.cat===c||P.cat===c)||tips.cur&&['flea','butt'].includes(tips.cur.kind)&&tips.cur.c===c);
   for(const c of cs){ if(pinned(c)){ if(!c.pinP)c.pinP=c.g.position.clone(); c.speed=0; } else c.pinP=null; }
   for(let iter=0;iter<2;iter++){
-    const air=c=>c.leap&&c.hopT>0;
+    const air=c=>c.leap&&c.hopT>0&&c.state!=='romp';
     for(let i=0;i<cs.length;i++)for(let j=i+1;j<cs.length;j++){ const a=cs[i],b=cs[j]; if(air(a)||air(b)||dist2(a.g.position,b.g.position)>1.6||(a.state==='boop'&&a.boopP===b))continue;
       for(const ca of catCircles(a))for(const cb of catCircles(b)){ const dx=cb[0]-ca[0],dz=cb[1]-ca[1],d=Math.hypot(dx,dz)||0.001,m=ca[2]+cb[2];
         if(d<m){ const wa=a.pinP?0:1, wb=b.pinP?0:1; if(!wa&&!wb)continue; const pa=(m-d)*wa/(wa+wb), pb=(m-d)*wb/(wa+wb), nx=dx/d, nz=dz/d; a.g.position.x-=nx*pa; a.g.position.z-=nz*pa; b.g.position.x+=nx*pb; b.g.position.z+=nz*pb; } } }

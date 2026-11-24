@@ -1708,6 +1708,7 @@ function strokeMove(e,dx,dy){
     let path=0,x0=1e9,x1=-1e9,y0=1e9,y1=-1e9; for(let i=0;i<sm.length;i++){ const q=sm[i]; if(i)path+=Math.hypot(q[1]-sm[i-1][1],q[2]-sm[i-1][2]); if(now-q[0]<=200){ x0=Math.min(x0,q[1]); x1=Math.max(x1,q[1]); y0=Math.min(y0,q[2]); y1=Math.max(y1,q[2]); } }
     S.v=path/Math.max(0.25,(now-sm[0][0])/1000); S.moving=Math.hypot(x1-x0,y1-y0)>=5; }
   else { const inst=len0/dtm; S.v=S.v==null?inst:lerp(S.v,inst,0.35); }
+  if(S.lock&&(!h||h.cat!==S.lock))return; // locked to the first cat until release: off it, the stroke just pauses
   if(!h||!h.cat){ if(W.tool==='hand'&&S.cat)return; if(S.cat)finishStroke(); S.cat=null; return; }
   if(h.cat!==S.cat){ if(S.cat)finishStroke(); if(W.tool==='hand'&&!petReact(h.cat)){ S.cat=null; return; } beginStroke(h.cat,now); }
   const len=len0; if(len<0.5)return; const ux=dx/len, uy=dy/len;
@@ -1746,7 +1747,7 @@ canvas.addEventListener('pointermove',e=>{
   const dx=e.clientX-P.last.x, dy=e.clientY-P.last.y; P.last={x:e.clientX,y:e.clientY};
   if(Math.hypot(e.clientX-P.start.x,e.clientY-P.start.y)>(e.pointerType==='mouse'?8:14))P.moved=true;
   if(P.mode==='catPending'&&P.moved&&(tutLock()||{}).tapOnly){ P.mode='none'; P.cat=null; }
-  if(P.mode==='catPending'&&P.moved){ P.mode='stroke'; $('#ring').hidden=true; if(W.tool==='hand'&&!petReact(P.cat)){ P.mode='none'; P.cat=null; } else beginStroke(P.cat,performance.now()); }
+  if(P.mode==='catPending'&&P.moved){ P.mode='stroke'; $('#ring').hidden=true; if(W.tool==='hand'&&!petReact(P.cat)){ P.mode='none'; P.cat=null; } else { S.lock=P.cat; beginStroke(P.cat,performance.now()); } }
   if(P.mode==='stroke')strokeMove(e,dx,dy);
   else if(P.mode==='carry'){ const p=groundAt(e,tmp); if(p){ P.cat.g.position.x=clampX(p.x,0.35); P.cat.g.position.z=clampZ(p.z,0.35); } }
   else if(P.mode==='pan'){ const p=groundAt(e,tmp); if(p&&P.moved){ cam.target.x+=P.grab.x-p.x; cam.target.z+=P.grab.z-p.z; clampTarget(); updateCamera(0); } }
@@ -1754,7 +1755,7 @@ canvas.addEventListener('pointermove',e=>{
   else if(P.mode==='wand')wandMove(e);
   else if(P.mode==='laser')laserMove(e);
 });
-function endPointer(e){
+function endPointer(e){ S.lock=null;
   P.pointers.delete(e.pointerId); P.down=P.pointers.size>0; $('#ring').hidden=true;
   if(P.mode==='pinch'){ if(P.pointers.size===0)P.mode=null; handVis(); return; }
   if(P.mode==='stroke')finishStroke();

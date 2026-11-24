@@ -249,7 +249,7 @@ h3 .cnt{color:#e0507a;font-size:20px;margin-left:6px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 #modal button.pop{animation:btnPop .35s ease-out}@keyframes btnPop{40%{transform:scale(1.15)}}
-body.tutLock .hbtn,body.tutLock #bCats,body.tutLock .tool:not(.tutOk):not(.on){pointer-events:none;opacity:.45;filter:saturate(.4)}body.faLock #fX,body.faLock #fNo,body.faLock #fCancel{display:none}
+body.tutLock .hbtn,body.tutLock #bCats,body.tutLock .tool:not(.tutOk):not(.on){pointer-events:none;opacity:.45;filter:saturate(.4)}body.shopLock #bShop{pointer-events:auto;opacity:1;filter:none}body.shopLock #mbox .x{display:none}body.faLock #fX,body.faLock #fNo,body.faLock #fCancel{display:none}
 #touchDot{position:fixed;left:0;top:0;width:44px;height:44px;margin:-22px 0 0 -22px;pointer-events:none;z-index:8;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.75) 0 22%,rgba(255,240,246,.35) 40%,rgba(255,255,255,0) 70%);transition:opacity .2s}#touchDot::after{content:'';position:absolute;inset:6px;border-radius:50%;border:2.5px solid rgba(255,255,255,.85);animation:tdRip 1.1s ease-out infinite}@keyframes tdRip{0%{transform:scale(.45);opacity:.9}100%{transform:scale(1.35);opacity:0}}
 #ghost .gRing{position:absolute;left:30px;top:40px;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;--p:0;background:conic-gradient(var(--pink) calc(var(--p)*1turn),rgba(255,255,255,.6) 0);-webkit-mask:radial-gradient(circle,transparent 21px,#000 22px);mask:radial-gradient(circle,transparent 21px,#000 22px);transition:opacity .2s}
 </style>
@@ -748,14 +748,19 @@ function updateFx(dt){ for(let i=parts.length-1;i>=0;i--){ const p=parts[i]; p.l
 const pv=new V3();
 function catScreenH(c){ const p=c.g.position, a=toScreen(p.clone().setY(0)), b=toScreen(p.clone().setY(0.9*c.g.scale.y)); return a.ok&&b.ok?Math.abs(a.y-b.y):999; }
 // what the running lesson allows: null = no lesson. cats: tappable/pettable cats; tools: dock tools that may be chosen
+const SHOP_FORCE=new Set(['shop','helper','roof','space']);
+function shopForce(){ if(!curHint||!SHOP_FORCE.has(curHint.id)||!W.started)return null; const g=guidePick(curHint.id), it=SHOP.find(x=>x.id===g); return it&&shopCan(it)?g:null; }
+function shopOk(id){ const g=shopForce(); return !g||id===g; }
+function userClose(){ if(shopForce()&&document.querySelector('#mbox [data-buy]'))return; closeModal(); }
 function tutLock(){
   if(intro.c)return {cats:[intro.c],tools:[]};
   if(bt.c)return {cats:[bt.c],tools:[]};
   if(pl.a)return {cats:pl.stage==='carry'?[pl.a]:[],tools:[]};
   if(br.c)return {cats:W.tool==='brush'?[br.c]:[],tools:['brush']};
   if(firstAdopt())return {cats:W.pickHome?W.cats.filter(readyHome):[],tools:[],fam:true};
+  { const g=shopForce(); if(g)return {cats:[],tools:[],shop:g}; }
   return null; }
-function tutLockTick(){ const L=tutLock(), b=document.body; b.classList.toggle('tutLock',!!L); b.classList.toggle('faLock',!!(L&&L.fam));
+function tutLockTick(){ const L=tutLock(), b=document.body; b.classList.toggle('tutLock',!!L); b.classList.toggle('faLock',!!(L&&L.fam)); b.classList.toggle('shopLock',!!(L&&L.shop));
   document.querySelectorAll('.tool').forEach(t=>t.classList.toggle('tutOk',!!(L&&L.tools.includes(t.dataset.tool)))); }
 function lessonOn(){ return !!(intro.c||bt.c||pl.a||br.c); }
 // quiet while a lesson runs, and until the opening lessons (pet, blink, pair, brush) are through
@@ -1747,7 +1752,7 @@ function endPointer(e){
 }
 canvas.addEventListener('pointerup',endPointer); canvas.addEventListener('pointercancel',endPointer);
 canvas.addEventListener('wheel',e=>{ e.preventDefault(); if(!W.paused)zoomBy(e.deltaY>0?1.1:0.9); },{passive:false});
-window.addEventListener('keydown',e=>{ const k={'1':'hand','2':'brush','3':'wand','4':'laser'}[e.key]; if(k)setTool(k); if(e.key==='Escape')closeModal(); });
+window.addEventListener('keydown',e=>{ const k={'1':'hand','2':'brush','3':'wand','4':'laser'}[e.key]; if(k){ const L=tutLock(); if(!L||k===W.tool||L.tools.includes(k))setTool(k); } if(e.key==='Escape')userClose(); });
 
 /* ---------- hand cursor ---------- */
 const handEl=$('#hand');
@@ -1934,9 +1939,9 @@ function updateTag(dt){
 for(const id of ['#tShow','#tStay'])$(id).addEventListener('pointerdown',e=>e.stopPropagation());
 $('#tShow').onclick=()=>{ if(tag.c&&!(W.family&&W.family.cat===tag.c))enterShow(tag.c); };
 $('#tStay').onclick=()=>{ const c=tag.c; if(!c)return; c.forever=!c.forever; floatWorld(c.g.position.clone().setY(1.4),c.forever?'Forever home here':'Can find a home'); tag.t=Math.max(tag.t,3); };
-function openModal(html,noX){ $('#mbox').innerHTML=(noX?'':'<button class="x" aria-label="Close">&times;</button>')+html; $('#modal').hidden=false; const x=$('#mbox .x'); if(x)x.onclick=closeModal; }
+function openModal(html,noX){ $('#mbox').innerHTML=(noX?'':'<button class="x" aria-label="Close">&times;</button>')+html; $('#modal').hidden=false; const x=$('#mbox .x'); if(x)x.onclick=userClose; }
 function closeModal(){ $('#modal').hidden=true; }
-$('#modal').addEventListener('pointerdown',e=>{ if(e.target.id==='modal')closeModal(); });
+$('#modal').addEventListener('pointerdown',e=>{ if(e.target.id==='modal')userClose(); });
 const IC={collar:'<circle cx="12" cy="11" r="7.5" fill="none" stroke="#e2574c" stroke-width="3"/><circle cx="12" cy="19" r="2.6" fill="#f6c443" stroke="#d99a1e"/>',premium:'<path d="M2.5 12c3-5.2 9.3-6.3 13.4-3.1L21 5.8v12.4l-5.1-3.1C11.8 18.3 5.5 17.2 2.5 12z" fill="#e9b949"/><circle cx="8" cy="11" r="1.4" fill="#5a3d00"/><path d="M19 2l.9 2.1L22 5l-2.1.9L19 8l-.9-2.1L16 5l2.1-.9z" fill="#ff7aa2"/>',food:'<path d="M2.5 12c3-5.2 9.3-6.3 13.4-3.1L21 5.8v12.4l-5.1-3.1C11.8 18.3 5.5 17.2 2.5 12z" fill="#7fc4e8"/><circle cx="8" cy="11" r="1.4" fill="#24415a"/>',
   ball:'<circle cx="12" cy="12" r="8" fill="#ff6f91"/><path d="M4.5 10.5c5 2 10 2 15 0" stroke="#fff" stroke-width="2" fill="none"/>',
   bed:'<ellipse cx="12" cy="15" rx="10" ry="5" fill="#f4a6b8"/><ellipse cx="12" cy="14" rx="7" ry="3" fill="#fcd3dc"/>',
@@ -1993,16 +1998,16 @@ function shopCan(it){ const avail=it.avail?it.avail():true, max=it.max?it.max():
 function upCan(k){ const n=W.tier[k]+1; return n<=TIERS[k].length&&W.stars>=starsFor(n)&&W.money>=upCost(k,n); }
 // live refresh while the shop is open: money (or stars) changed -> toggle buttons in place
 function shopRefresh(){ if($('#modal').hidden)return; const bs=document.querySelectorAll('#modal [data-buy],#modal [data-up]'); if(!bs.length)return;
-  for(const b of bs){ let can; if(b.dataset.buy){ const it=SHOP.find(x=>x.id===b.dataset.buy); if(!it)continue; can=shopCan(it); } else can=upCan(b.dataset.up);
+  for(const b of bs){ let can; if(b.dataset.buy){ const it=SHOP.find(x=>x.id===b.dataset.buy); if(!it)continue; can=shopCan(it)&&shopOk(it.id); } else can=upCan(b.dataset.up)&&!shopForce();
     if(b.disabled===can){ b.disabled=!can; if(can){ b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); } } } }
 function openShop(guide){ guide=guide||rainGuide();
   const cards=SHOP.filter(it=>it.id!=='fire'||helpers.length).map(it=>{ const avail=it.avail?it.avail():true, max=it.max?it.max():Infinity, have=it.id==='helper'?helpers.length:it.max?countItems(it.id):0, cost=it.cost(), need=it.need?it.need():0, starOk=W.stars>=need;
-    const hn=it.homes?it.homes():0, hOk=W.homes.length>=hn; const can=shopCan(it); const lbl=!avail?(it.id==='laser'?'Owned':'Maxed'):have>=max?'Full':!starOk?`★${need} needed`:!hOk?`${hn} homes needed`:it.id==='fire'?'Let one go':`$${cost}`;
+    const hn=it.homes?it.homes():0, hOk=W.homes.length>=hn; const can=shopCan(it)&&shopOk(it.id); const lbl=!avail?(it.id==='laser'?'Owned':'Maxed'):have>=max?'Full':!starOk?`★${need} needed`:!hOk?`${hn} homes needed`:it.id==='fire'?'Let one go':`$${cost}`;
     const desc=it.id==='expand'?(LEVELS[W.level+1]?`Room for ${LEVELS[W.level+1].cap} cats${LEVELS[W.level+1].ponds?' \u00b7 new pond':''}`:'Biggest already'):it.desc;
     const gd=it.id===guide;
     return `<div class="item${gd?' guide':''}"${gd?' data-guide':''}><div class="ico"><svg viewBox="0 0 24 24">${IC[it.id]}</svg></div><b>${it.name()}</b><span>${desc}${it.max&&max<99?` · ${have}/${max}`:''}</span><button data-buy="${it.id}" ${can?'':'disabled'}>${lbl}</button>${gd?`<svg class="gHand" viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`:''}</div>`; }).join('');
   const kinds=Object.keys(TIERS).filter(k=>k==='wand'||(k==='laser'?W.laser:countItems(k)>0)).filter(k=>W.tier[k]<TIERS[k].length);
-  const ups=kinds.map(k=>{ const n=W.tier[k]+1, cost=upCost(k,n), sOk=W.stars>=starsFor(n), can=sOk&&W.money>=cost;
+  const ups=kinds.map(k=>{ const n=W.tier[k]+1, cost=upCost(k,n), sOk=W.stars>=starsFor(n), can=sOk&&W.money>=cost&&!shopForce();
     return `<div class="item"><div class="ico"><svg viewBox="0 0 24 24">${IC[k]}</svg></div><b>${TIERS[k][n-1]}</b><span>${TIER_DESC[k][n-1]}</span><button data-up="${k}" ${can?'':'disabled'}>${sOk?`$${cost}`:`★${starsFor(n)} needed`}</button></div>`; }).join('');
   openModal(`<h3>Shop</h3><div class="grid">${cards}</div>${ups?`<h3 style="margin-top:18px">Upgrades</h3><div class="grid">${ups}</div>`:''}`);
   const gEl=document.querySelector('[data-guide]'); if(gEl)setTimeout(()=>gEl.scrollIntoView({block:'center',behavior:'smooth'}),60);
@@ -2079,7 +2084,7 @@ function updateHints(dt){ tutLockTick(); needTick(dt); calmTick(); if(meetQ.leng
   if(curHint){ hintT+=dt; const h=curHint;
     if(h.done&&h.done()){ if(!h.redo)hintDone.add(h.id); hideHint(); return; }
     if(h.auto&&hintT>h.auto){ if(!h.again)hintDone.add(h.id); else hintRetry[h.id]=W.time+20; hideHint(); return; }
-    if(hintT>22){ hintRetry[h.id]=W.time+50; hideHint(); return; }
+    if(hintT>22&&!shopForce()){ hintRetry[h.id]=W.time+50; hideHint(); return; }
     let x,y; if(h.el){ ({x,y}=elC(h.el)); } else { const v=h.at(); if(!v){ hideHint(); return; } const s=toScreen(v); if(!s.ok){ hintEl.hidden=true; return; } x=s.x; y=s.y; }
     hintEl.hidden=!$('#modal').hidden||W.paused||P.mode==='carry'; hintEl.style.transform=`translate(${x}px,${y}px)`;
     const lab=hintEl.querySelector('.lab'); const lw=lab.offsetWidth; lab.style.marginLeft=(Math.max(0,lw/2+8-x)-Math.max(0,x+lw/2+8-innerWidth))+'px'; lab.style.top=y<130?'48px':'-70px';
@@ -2823,6 +2828,6 @@ const musT={b:$('#bMusic')}; musT.home=musT.b.parentElement; musT.next=musT.b.ne
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); localStorage.removeItem(SNAP_KEY); }catch(e){} SNAPS=[]; boardSync(true); begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={Snd,startCarry,tutLock,mixHex,catScreenH,playerBusy,calmHold,eventOn,coatNow,tolFast,rPhase,metroLearn,updateBeat,shopRefresh,openShop,tempoOf,tempoTol,strokeT,updateTempo,S,endPairTut,strayHold,endBrushTut,openShop,weather,tickAll:(dt)=>{ const t=performance.now()/1000; update(dt); for(const c of W.cats)animateCat(c,dt,t); updateWand(dt,t); updateLaser(t); updateFamilyMeshes(dt,t); updateFx(dt); },snapNow,snapTake,snapFrame,snapBlocked,snapRay,snapMoments,snapTick,openSnap,getSnaps:()=>SNAPS,strayGap,getStrayT:()=>strayT,setShot:(y,c,a)=>{ SHOT_YAW=y; SHOT_CAM=c; SHOT_AT=a; },firstBye,cars,pickForHome,HINTS,showReady,updateTag,lessonOn,TREES,fadeTrees,tips,showTip,FLEA_TIP,owls,boopOwl,owlTrees,ensureBurrs,updateScruff,dustPuff,updateFleas,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={Snd,shopForce,getHint:()=>curHint,startCarry,tutLock,mixHex,catScreenH,playerBusy,calmHold,eventOn,coatNow,tolFast,rPhase,metroLearn,updateBeat,shopRefresh,openShop,tempoOf,tempoTol,strokeT,updateTempo,S,endPairTut,strayHold,endBrushTut,openShop,weather,tickAll:(dt)=>{ const t=performance.now()/1000; update(dt); for(const c of W.cats)animateCat(c,dt,t); updateWand(dt,t); updateLaser(t); updateFamilyMeshes(dt,t); updateFx(dt); },snapNow,snapTake,snapFrame,snapBlocked,snapRay,snapMoments,snapTick,openSnap,getSnaps:()=>SNAPS,strayGap,getStrayT:()=>strayT,setShot:(y,c,a)=>{ SHOT_YAW=y; SHOT_CAM=c; SHOT_AT=a; },firstBye,cars,pickForHome,HINTS,showReady,updateTag,lessonOn,TREES,fadeTrees,tips,showTip,FLEA_TIP,owls,boopOwl,owlTrees,ensureBurrs,updateScruff,dustPuff,updateFleas,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>

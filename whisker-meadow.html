@@ -997,7 +997,8 @@ function moveToward(c,dt,speed,stop=0.15){
   c.speed=lerp(c.speed,Math.min(speed,d*3),Math.min(1,dt*(speed>3?10:5)));
   p.x+=Math.sin(c.heading)*c.speed*dt; p.z+=Math.cos(c.heading)*c.speed*dt; return false;
 }
-function walkAway(c,run=true,dist=2.6){ const p=c.g.position; const away=Math.atan2(p.x-camera.position.x,p.z-camera.position.z)+rand(-1.2,1.2); goTo(c,p.x+Math.sin(away)*dist,p.z+Math.cos(away)*dist,null); c.run=run; c.flick=0.8; c.over=0; c.purr=0; c.leaveT=2.2; c.petT=0; }
+function walkAway(c,run=true,dist=2.6){ const p=c.g.position; let away=Math.atan2(p.x-camera.position.x,p.z-camera.position.z)+rand(-1.2,1.2);
+  if(dist>3){ let best=-1; for(let i=0;i<10;i++){ const a=away+(i-5)*0.55, tx=clampX(p.x+Math.sin(a)*dist,0.4), tz=clampZ(p.z+Math.cos(a)*dist,0.4), d=Math.hypot(tx-p.x,tz-p.z)-Math.abs(i-5)*0.15; if(d>best){ best=d; away=a; } } } goTo(c,p.x+Math.sin(away)*dist,p.z+Math.cos(away)*dist,null); c.run=run; c.flick=0.8; c.over=0; c.purr=0; c.leaveT=2.2; c.petT=0; }
 // cats spread out between roofs: distance counts, but so does how many cats are already under (or heading to) each one
 function shelterLoad(sh,me){ return W.cats.filter(o=>o!==me&&!o.outside&&o.away<=0&&(shelterOf(o.g.position)===sh||(o.state==='walk'&&o.afterData===sh)||(o.state==='shelter'&&o.shelterAt===sh))).length; }
 function shelterPick(c){ const sh=items.filter(i=>i.kind==='shelter'); if(!sh.length)return null; const p=c.g.position;

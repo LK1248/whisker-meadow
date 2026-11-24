@@ -2569,10 +2569,8 @@ function extraUpdate(dt){
       if(!inB(c.g.position.x,c.g.position.z,0))R.outT+=dt;
       if(R.outT>=R.delay&&(c.pathEnd==='hide'||c.state==='hiding')){ R.notified=true; W.stat.runNotes=(W.stat.runNotes||0)+1; renderMissing(); toast(c.name+' slipped out!'); Snd.meow(0.95,0.6); } }
     if(R.t>240&&c.state==='hiding')comeHome(c); }
-  donT-=dt; if(donT<=0){ donT=1; let got=0; for(const c of active()){ if(c.outside||c.carried||c.leaving)continue; c.tipT=(c.tipT??rand(8,25))-1; if(c.tipT>0)continue; c.tipT=rand(22,28);
-    const s=c.s, care=clamp(((s.aff+s.health+s.groom+s.full)/4-(c.fleas?15:0)-45)/40,0,1), amt=Math.round(2.2*care*(1+W.stars*0.2)); if(amt<=0)continue;
-    W.money+=amt; W.earned+=amt; W.stat.tips=(W.stat.tips||0)+amt; got+=amt; floatWorld(c.g.position.clone().setY(1.25*c.g.scale.x+0.2),'+$'+amt); }
-  if(got){ hud(); if(!W.stat.tipNote&&W.started&&!tutLock()){ W.stat.tipNote=1; toast('Happy, groomed, well-fed cats leave tips','badge',4200); } } }
+  donT-=dt; if(donT<=0){ donT=25; /* visitors' donations grow with how well the cats are looked after */ let amt=0; for(const c of active()){ if(c.outside||c.leaving)continue; const s=c.s; amt+=2.2*clamp(((s.aff+s.health+s.groom+s.full)/4-(c.fleas?15:0)-45)/40,0,1); }
+  amt=Math.round(amt*(1+W.stars*0.2)); if(amt>0){ W.money+=amt; W.earned+=amt; if(W.jarPos)floatWorld(W.jarPos.clone().setY(1.2),'+$'+amt); hud(); } }
   const f=W.family;
   if(!f){ if(W.cats.some(readyHome)&&!W.runaway&&(W.night||0)<0.55&&!tutQuiet()&&!strayHold()){ visitT-=dt*(W.homes.length?1:3); if(visitT<=0)spawnFamily(); } }
   else { f.t+=dt;

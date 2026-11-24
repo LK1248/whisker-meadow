@@ -379,11 +379,12 @@ const Snd={ac:null,musicOn:true,
   toggleMusic(){ this.musicOn=!this.musicOn; if(this.music)this.music.gain.setTargetAtTime(this.musicOn?0.07:0,this.ac.currentTime,0.1); },
   purr(v){ if(this.ac)this.purrVol.gain.setTargetAtTime(v*1.8,this.ac.currentTime,0.08); },
   meow(p=1,loud=1){ if(!this.ac)return; const ac=this.ac,t=ac.currentTime,d=0.5+Math.random()*0.15;
+    const hot=Math.max(0,loud-0.4); if(hot>0)loud=0.4+hot/(1+hot*0.9); // soft knee: loud stays loud, never piercing (1.2 -> ~0.95)
     const o=ac.createOscillator(); o.type='sawtooth'; const f=ac.createBiquadFilter(); f.type='bandpass'; f.Q.value=2.5; const g=ac.createGain();
     o.frequency.setValueAtTime(470*p,t); o.frequency.linearRampToValueAtTime(800*p,t+d*0.35); o.frequency.linearRampToValueAtTime(540*p,t+d);
     f.frequency.setValueAtTime(900,t); f.frequency.linearRampToValueAtTime(1900,t+d*0.4); f.frequency.linearRampToValueAtTime(1000,t+d);
     g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.16*loud,t+0.06); g.gain.setValueAtTime(0.16*loud,t+d*0.7); g.gain.linearRampToValueAtTime(0,t+d);
-    o.connect(f); f.connect(g); g.connect(this.sfx); o.start(t); o.stop(t+d+0.05); },
+    if(hot>0){ const lp=ac.createBiquadFilter(); lp.type='lowpass'; lp.Q.value=0.5; lp.frequency.value=Math.max(1500,3400-hot*2200); o.connect(f); f.connect(lp); lp.connect(g); } else { o.connect(f); f.connect(g); } g.connect(this.sfx); o.start(t); o.stop(t+d+0.05); },
   chirp(){ if(!this.ac)return; const ac=this.ac,t=ac.currentTime; const o=ac.createOscillator(); o.type='triangle'; const g=ac.createGain();
     o.frequency.setValueAtTime(520,t); o.frequency.exponentialRampToValueAtTime(900,t+0.12); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.12,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.18);
     o.connect(g); g.connect(this.sfx); o.start(t); o.stop(t+0.2); },

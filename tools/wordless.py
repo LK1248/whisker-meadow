@@ -1,6 +1,6 @@
 """Wordless variant: no language anywhere on screen. Icons, pictures, symbols and numbers only.
 Run on a fresh copy of main's whisker-meadow.html (branch `wordless`):  python tools/wordless.py
-Last rebuilt on main v118.
+Last rebuilt on main v119.
 Kept on purpose: aria-labels/alt text (invisible, for screen readers), the page <title>, the dev panel (?dev only)."""
 import re, sys
 P = 'whisker-meadow.html'

@@ -2277,9 +2277,9 @@ function updateBoops(dt){ for(let i=W.boops.length-1;i>=0;i--){ const B=W.boops[
 function buttEnd(c){ return c.buttStart==null?-99:Math.max((c.buttAnimT??-99)+1,c.buttStart+2.2); }
 function buttTap(c){ if(c.away>0||c.carried||c.outside||c.leaving||['path','greet','bye'].includes(c.state))return; const s=c.s; tagFor(c,3); if(!(W.time<buttEnd(c)))c.buttStart=W.time; c.buttAnimT=W.time; c.petProg=0;
   if(!['flop','sleep','boop'].includes(c.state))setState(c,'pet'); c.petT=2.5;
-  if(c.buttLike){ c.elev=1.2; const fresh=W.time-(c.buttT??-99)>8; c.buttT=W.time; c.purr=Math.max(c.purr,0.6); Snd.chirp(); if(!c.buttKnown)floatWorld(c.g.position.clone().setY(1.3),'Loves butt taps!');
+  if(c.buttLike){ c.elev=1.2; const fresh=W.time-(c.buttT??-99)>8; c.buttT=W.time; c.purr=Math.max(c.purr,0.6); if(W.time-(c.buttSndT??-99)>1.5){ c.buttSndT=W.time; Snd.chirp(); } if(!c.buttKnown)floatWorld(c.g.position.clone().setY(1.3),'Loves butt taps!');
     if(fresh){ s.aff=Math.min(100,s.aff+1); spawnFx('h',c.g.position.clone().setY(.9),1); W.stat.butt++; } }
-  else { c.flick=1; c.snap=0.3; s.aff=Math.max(0,s.aff-1.5); c.over+=0.8; showIcon(c,'angry',1.5); Snd.meow(0.85,0.7); if(!c.buttKnown)floatWorld(c.g.position.clone().setY(1.3),'Not a fan'); }
+  else { c.flick=1; c.snap=0.3; s.aff=Math.max(0,s.aff-1.5); c.over+=0.8; showIcon(c,'angry',1.5); if(W.time-(c.buttSndT??-99)>2.5){ c.buttSndT=W.time; Snd.meow(0.85,0.7); } if(!c.buttKnown)floatWorld(c.g.position.clone().setY(1.3),'Not a fan'); }
   c.buttKnown=true; }
 function tapWildlife(e){
   for(const b of butterflies){ const sc=toScreen(b.g.position); if(sc.ok&&Math.hypot(sc.x-e.clientX,sc.y-e.clientY)<46){ b.dodge(); spawnFx('spark',b.g.position,3,.15); Snd.ding();

@@ -1,5 +1,6 @@
 """Wordless variant: no language anywhere on screen. Icons, pictures, symbols and numbers only.
 Run on a fresh copy of main's whisker-meadow.html (branch `wordless`):  python tools/wordless.py
+Last rebuilt on main v118.
 Kept on purpose: aria-labels/alt text (invisible, for screen readers), the page <title>, the dev panel (?dev only)."""
 import re, sys
 P = 'whisker-meadow.html'
@@ -50,19 +51,23 @@ rep("toast(c.name+' slipped out!');", "toast('🐾 !');")
 
 # ---------------- badges & goals: an emoji per badge ----------------
 rep("const TIER_N=['','Bronze','Silver','Gold'];", """const TIER_N=['','🥉','🥈','🥇'];
-const ACH_E={rhythm:'🎵',blink:'😌',homes:'🏡',pairs:'💞',patient:'🐢',rescues:'🚪',found:'🔦',quick:'⚡',ribbons:'🎀',kittens:'🍼',belly:'🤗',butt:'🍑',family:'🏘️',coats:'🌈',cards:'💌',rare:'💎',breeds:'🌍',spotless:'🧹',zoomies:'🔴',deluxe:'🛋️',ouch:'🩹',herd:'🐾'};
+const ACH_E={rhythm:'🎵',blink:'😌',homes:'🏡',pairs:'💞',patient:'🐢',rescues:'🚪',found:'🔦',quick:'⚡',ribbons:'🎀',kittens:'🍼',belly:'🤗',butt:'🍑',family:'🏘️',coats:'🌈',cards:'💌',rare:'💎',breeds:'🌍',spotless:'🧹',zoomies:'🔴',deluxe:'🛋️',ouch:'🩹',herd:'🐾',album:'📷'};
 const GOAL_E=['🎵','🧹','🥣','✨','😌','🪶','🤝','🎀','🏡','🍑'];""")
 rep("toast(`★ ${n} · ${TIER_N[t]} +$${rw}`,'badge',3400);", "toast(`${ACH_E[id]||'★'} ${TIER_N[t]} +$${rw}`,'badge',3400);")
 rep("toast(`✓ ${n} +$15`,'badge',3000);", "toast(`✓ ${GOAL_E[g.i]} +$15`,'badge',3000);")
 cut("function openBadges(tab='badges'){", "$('#bShop').onclick=", """function openBadges(tab='badges'){
   const tabs=`<div class="tabs"><button data-tab="badges" class="${tab==='badges'?'on':''}" aria-label="Badges">🏅</button><button data-tab="tails" class="${tab==='tails'?'on':''}" aria-label="Postcards">💌 ${W.homes.length}</button><button data-tab="goals" class="${tab==='goals'?'on':''}" aria-label="Goals">🎯</button></div>`;
   let body='';
-  if(tab==='badges') body=`<div class="grid">${ACH.map(([id,n,d,f,th])=>{ const t=W.achT[id]||0, v=f(), nx=th[t]; return `<div class="badge-i ${t?'t'+t:''}"><div class="medal" style="font-size:24px">${ACH_E[id]}</div><div><b style="font-size:22px">${TIER_N[t]||'·'}</b><div class="pips">${nx!==undefined?`${Math.min(v,nx)} / ${nx}`:'🥇'}</div></div></div>`; }).join('')}</div>`;
+  if(tab==='badges') body=`<div class="grid">${ACH.map(([id,n,d,f,th])=>{ const t=W.achT[id]||0, v=f(), nx=th[t]; return `<div class="badge-i ${t?'t'+t:''}"><div class="medal" style="font-size:24px">${ACH_E[id]||'★'}</div><div><b style="font-size:22px">${TIER_N[t]||'·'}</b><div class="pips">${nx!==undefined?`${Math.min(v,nx)} / ${nx}`:'🥇'}</div></div></div>`; }).join('')}</div>`;
   else if(tab==='tails') body=W.homes.length?`<div class="cards">${W.homes.map((hm,i)=>({hm,i})).reverse().map(({hm,i})=>{ const on=cardOn(hm,i), t=on?'button':'div'; return `<${t} class="pc"${on?` data-hi="${i}"`:''}>${hm.img?`<img src="${hm.img}" alt="">`:'<img alt="">'}<span>${FAM_SVG.replace('<svg ','<svg width="34" height="26" ')}</span></${t}>`; }).join('')}</div>`:'<p class="center" style="font-size:40px;margin:16px 0">💌</p>';
-  else body=W.goals.map(g=>{ const [n,f,tg]=GOALS[g.i]; const v=Math.max(0,Math.min(tg,f()-g.base)); return `<div class="goal ${g.done?'done':''}"><span style="font-size:22px">${g.done?'✓ ':''}${GOAL_E[g.i]}</span><span>${g.done?'+$15':`${v} / ${tg}`}</span></div>`; }).join('');
+  else body=W.goals.map(g=>{ const [n,f]=GOALS[g.i], tg=goalT(g); const v=Math.max(0,Math.min(tg,f()-g.base)); return `<div class="goal ${g.done?'done':''}"><span style="font-size:22px">${g.done?'✓ ':''}${GOAL_E[g.i]}</span><span>${g.done?'+$15':`${v} / ${tg}`}</span></div>`; }).join('');
   openModal(`<h3>${'★'.repeat(W.stars)}</h3>${tabs}${tab==='badges'?`<p style="margin:-4px 0 10px;color:var(--muted);font:700 15px var(--body)">🥉 +$10 \\u00b7 🥈 +$25 \\u00b7 🥇 +$60</p>`:''}${body}`);
   document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>openBadges(b.dataset.tab)); if(tab==='tails')bindCards(()=>openBadges('tails')); }
 """)
+
+# goals strip (v115+): an emoji per goal, a star for the star bar
+rep("<span>${g.done?'✓ ':''}${n}</span><em>", "<span style=\"font-size:17px\">${g.done?'✓ ':''}${GOAL_E[g.i]}</span><em>")
+rep("<div class=\"gr st\"><span>Next ★</span>", "<div class=\"gr st\"><span style=\"font-size:16px\">★</span>")
 
 # ---------------- shop ----------------
 rep("""const lbl=!avail?(it.id==='laser'?'Owned':'Maxed'):have>=max?'Full':!starOk?`★${need} needed`:!hOk?`${hn} homes needed`:it.id==='fire'?'Let one go':`$${cost}`;""",
@@ -94,8 +99,8 @@ rep("$('#tTrait').textContent=c.trait+(c.forever?' · stays here':readyHome(c)?'
 rep("<button id=\"tStay\" hidden>${STAY_SVG}Keep</button>", "<button id=\"tStay\" hidden aria-label=\"Keep\">${STAY_SVG}</button>")
 
 # ---------------- fair result ----------------
-rep("const cats=[['Best Purr',s.aff],['Fluffiest Coat',s.groom],['Healthiest',s.health],['Most Improved',Math.min(100,(s.trust-c.trust0)*2.2)],['Bravest Rescue',c.origin==='stray'?Math.min(100,s.trust+25):0],['Best Friends',bv]];",
-    "const cats=[['♥',s.aff],['✨',s.groom],['🌿',s.health],['📈',Math.min(100,(s.trust-c.trust0)*2.2)],['🦁',c.origin==='stray'?Math.min(100,s.trust+25):0],['💞',bv]];")
+rep("const cats=[['Best Purr',s.aff],['Fluffiest Coat',s.groom],['Healthiest',s.health],['Most Improved',Math.min(100,(s.aff-c.love0)*2.2)],['Bravest Rescue',c.origin==='stray'?Math.min(100,s.aff+25):0],['Best Friends',bv]];",
+    "const cats=[['♥',s.aff],['✨',s.groom],['🌿',s.health],['📈',Math.min(100,(s.aff-c.love0)*2.2)],['🦁',c.origin==='stray'?Math.min(100,s.aff+25):0],['💞',bv]];")
 rep("if(COATS[c.coat.base].rare)cats.push(['Rarest Coat',80]); if(c.collar)cats.push(['Best Dressed',74]);", "if(COATS[c.coat.base].rare)cats.push(['💎',80]); if(c.collar)cats.push(['🎀',74]);")
 rep("lbl=place+['','st','nd','rd'][place];", "lbl=String(place);")
 rep("<h3 class=\"center\" style=\"margin:0\">${c.name}</h3><div class=\"center\" style=\"font:600 19px var(--display);color:var(--pinkd)\">${cat}</div><div class=\"prize\">+$${prize}</div><button class=\"big\" id=\"collect\">Collect</button>",
@@ -135,8 +140,8 @@ rep("case 'zzz': x.fillStyle='#5b8def'; x.font='800 40px Nunito, sans-serif'; x.
 rep("x.fillText('Whisker Meadow',48,610);", "x.font='700 52px sans-serif'; x.fillText('🐈 ♥',48,612);")
 rep("x.fillText(`Score ${r.score}`,48,656);", "x.fillText(`🏆 ${r.score}`,48,660);")
 rep("x.fillText(`${r.minutes} min${prev?` · last time ${prev.score}`:''}`,48,694);", "x.fillText(`⏱ ${r.minutes}${prev?` · ↩ ${prev.score}`:''}`,48,700);")
-rep("const cells=[['Cats',r.cats],['Homes',W.homes.length],['Health',r.health],['Love',r.trust],['Ribbons',r.ribbons],['Badges',`${r.badges}/${ACH.length}`]];",
-    "const cells=[['🐈',r.cats],['🏡',W.homes.length],['🌿',r.health],['♥',r.trust],['🎀',r.ribbons],['🏅',`${r.badges}/${ACH.length}`]];")
+rep("const cells=[['Cats',r.cats],['Homes',W.homes.length],['Health',r.health],['Love',r.love],['Ribbons',r.ribbons],['Badges',`${r.badges}/${ACH.length}`]];",
+    "const cells=[['🐈',r.cats],['🏡',W.homes.length],['🌿',r.health],['♥',r.love],['🎀',r.ribbons],['🏅',`${r.badges}/${ACH.length}`]];")
 rep("const summary=`My Whisker Meadow: ${r.cats} cats, ${r.ribbons} ribbons, score ${r.score}.`;", "const summary=`🐈 ${r.cats} · 🎀 ${r.ribbons} · 🏆 ${r.score}`;")
 rep("<h3>My meadow</h3><img id=\"snapimg\"", "<img id=\"snapimg\"")
 rep("<button id=\"copySum\">Copy</button><button id=\"keepPlay\" style=\"background:var(--pink);color:#fff\">Keep playing</button>",

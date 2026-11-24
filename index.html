@@ -1622,14 +1622,21 @@ function petReact(c){ if(!c||c.carried||c.outside||c.leaving||c.away>0)return tr
   if((c.dodgeCD||0)<=W.time){ c.dodgeCD=W.time+2.5; hop(c,0.35,0.45); c.flick=0.8; showIcon(c,'huff',1.2); walkAway(c); Snd.meow(0.85,0.35); }
   return false; }
 // ---- petting tempo: every cat has a favourite stroking speed; love widens how forgiving it is ----
-function tempoOf(c){ if(c.tempo==null){ let m=0.22+clamp((3.3-(c.pace||2.8))/0.9,0,1)*0.38; if(c.trait==='shy')m*=0.8; else if(c.trait==='playful')m*=1.25; if(c.age<1)m*=1.15; c.tempo=m; } return c.tempo*TEMPO_K; }
+function tempoOf(c){ if(c.tempo==null){ let m=0.22+clamp((3.3-(c.pace||2.8))/0.9,0,1)*0.38; if(c.trait==='shy')m*=0.8; else if(c.trait==='playful')m*=1.25; if(c.age<1)m*=1.15; c.tempo=m; }
+  if(c.tempoExt==null){ const r=Math.random(); c.tempoExt=r<0.22?0.55:r<0.42?1.7:1; c.strictK=Math.random()<0.33?0.5:1; }
+  const v=rPhase(900,1200), spread=0.45+0.55*v, ext=1+(c.tempoExt-1)*v;
+  return 0.36*Math.pow(c.tempo/0.36,spread)*ext*TEMPO_K; }
+// play-time phases: 0..1 ramp between two times (in-game seconds)
+function rPhase(a,b){ return clamp((W.time-a)/(b-a),0,1); }
+function slowOk(){ return W.time<600; } // first 10 minutes: slow strokes are never off-beat
+function tolFast(c){ const early=W.time<180?1.6:0.9*(1-rPhase(600,900)); return tempoTol(c)+early; }
 const TEMPO_K=0.7; // overall pace: lower = slower, calmer strokes
 // metronome as training wheels: hide it once the rhythm is learned, bring it back if slips pile up
 function metroLearn(err){ const r=W.stat.metroRec||(W.stat.metroRec=[]); r.push(err?1:0); if(r.length>10)r.shift(); const bad=a=>a.reduce((x,y)=>x+y,0);
   if(!W.stat.metroOff&&r.length>=10&&bad(r)<=1)W.stat.metroOff=1;
   else if(W.stat.metroOff&&bad(r.slice(-6))>=3){ W.stat.metroOff=0; r.length=0; const b=$('#beat'); b.classList.remove('mback'); void b.offsetWidth; b.classList.add('mback'); } }
 function strokeT(c){ return 0.38/tempoOf(c); } // seconds for one gentle stroke at this cat's tempo
-function tempoTol(c){ return (0.3+0.7*c.s.aff/100)*(c.trait==='shy'?0.85:1)+(intro.c===c?0.35:0); } // in log-speed units
+function tempoTol(c){ tempoOf(c); const k=1+((c.strictK||1)-1)*rPhase(600,900); return (0.3+0.7*c.s.aff/100)*(c.trait==='shy'?0.85:1)*k+(intro.c===c?0.35:0); } // in log-speed units
 const TG={x:0,shown:0}, TG_A=72, tgPt=(a,r)=>{ const t=a*Math.PI/180; return (50+r*Math.sin(t)).toFixed(1)+' '+(53-r*Math.cos(t)).toFixed(1); };
 const tgArc=(a0,a1,r=38)=>`M${tgPt(a0,r)} A${r} ${r} 0 0 1 ${tgPt(a1,r)}`;
 document.querySelector('#tempo .bg').setAttribute('d',tgArc(-TG_A,TG_A));
@@ -1637,7 +1644,7 @@ function updateTempo(dt){ const el=$('#tempo'), c=S.cat, on=W.started&&!W.paused
   if(on){ TG.shown=0.8; TG.c=c; } else TG.shown-=dt; if(TG.shown<=0||!TG.c){ el.hidden=true; return; }
   const k=TG.c, vP=2.5*Math.max(60,Math.min(400,catScreenH(k)))*tempoOf(k), x=Math.log(Math.max(1,S.v==null?vP:S.v)/vP), tol=tempoTol(k);
   TG.x=lerp(TG.x,on?x:-2.4,Math.min(1,dt*7)); const a=clamp(TG.x/2.4,-1,1)*TG_A, b=clamp(tol/2.4,0.08,1)*TG_A;
-  TG.st=TG.x>tol?'fast':TG.x<-tol?'slow':'on'; el.hidden=true; return; el.hidden=false; el.style.opacity=on?1:Math.max(0,TG.shown/0.8); el.style.transform=`translate(${P.hx}px,${P.hy-(P.type==='mouse'?96:146)}px)`;
+  TG.st=TG.x>tolFast(k)?'fast':TG.x<-tol&&!slowOk()?'slow':'on'; el.hidden=true; return; el.hidden=false; el.style.opacity=on?1:Math.max(0,TG.shown/0.8); el.style.transform=`translate(${P.hx}px,${P.hy-(P.type==='mouse'?96:146)}px)`;
   const band=el.querySelector('.band'), d=tgArc(-b,b); if(band.getAttribute('d')!==d)band.setAttribute('d',d);
   el.querySelector('.ndl').setAttribute('transform',`rotate(${a.toFixed(1)} 50 53)`); el.classList.toggle('on',Math.abs(TG.x)<=tol); el.classList.toggle('fast',TG.x>tol); }
 const METRO=c=>`<svg class="metro" viewBox="0 0 14 16" aria-hidden="true"><path d="M3 15L5.5 2h3L11 15z" fill="#c99a6b"/><g class="arm" style="animation-duration:${strokeT(c).toFixed(2)}s"><path d="M7 14V3" stroke="#4a3426" stroke-width="1.6" stroke-linecap="round"/><circle cx="7" cy="6" r="1.8" fill="#ff6f99"/></g></svg>`;
@@ -1650,9 +1657,9 @@ function petMove(c,len,zone){
   if(zone==='tail'){ c.over+=len/260; c.flick=0.6; if(c.over>=1.5)showIcon(c,'angry',1.2); return; }
   const D=2.5*Math.max(60,Math.min(400,catScreenH(c))), vP=D*tempoOf(c), v=S.v==null?vP:S.v, now=W.time, tol=tempoTol(c), x=Math.log(Math.max(1,v)/vP);
   let gain=0;
-  if(x>tol+1.3){ c.over+=len/D*0.9; if(now>(c.hgT||0)){ c.hgT=now+0.9; floatHourglass(P.hx,P.hy-(P.type==='mouse'?62:112),true); slowNag.n++; c.strokeErr=1; metroLearn(1); } }
-  else if(x>tol){ c.over+=len/D*0.15*(x-tol+0.3); gain=len/D*0.35/TEMPO_K; if(now>(c.hgT||0)){ c.hgT=now+1.3; floatHourglass(P.hx,P.hy-(P.type==='mouse'?62:112),false); slowNag.n++; c.strokeErr=1; metroLearn(1); } }
-  else if(x<-tol)gain=len/D*0.5/TEMPO_K;
+  const tf=tolFast(c), fr=W.time<180?1.0:0; if(x>tf+1.3+fr){ c.over+=len/D*0.9; if(now>(c.hgT||0)){ c.hgT=now+0.9; floatHourglass(P.hx,P.hy-(P.type==='mouse'?62:112),true); slowNag.n++; c.strokeErr=1; metroLearn(1); } }
+  else if(x>tf){ c.over+=len/D*0.15*(x-tf+0.3); gain=len/D*0.35/TEMPO_K; if(now>(c.hgT||0)){ c.hgT=now+1.3; floatHourglass(P.hx,P.hy-(P.type==='mouse'?62:112),false); slowNag.n++; c.strokeErr=1; metroLearn(1); } }
+  else if(x<-tol&&!slowOk())gain=len/D*0.5/TEMPO_K;
   else gain=len/D*1.1/TEMPO_K;
   if(slowNag.n>=4&&now>slowNag.next){ slowNag.n=0; slowNag.next=now+40; showSlow(); }
   if(gain>0){ c.petProg=(c.petProg||0)+gain; c.petIdle=0; c.purr=Math.max(c.purr,0.15);
@@ -2783,7 +2790,7 @@ const musT={b:$('#bMusic')}; musT.home=musT.b.parentElement; musT.next=musT.b.ne
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); localStorage.removeItem(SNAP_KEY); }catch(e){} SNAPS=[]; boardSync(true); begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={Snd,metroLearn,updateBeat,shopRefresh,openShop,tempoOf,tempoTol,strokeT,updateTempo,S,endPairTut,strayHold,endBrushTut,openShop,weather,tickAll:(dt)=>{ const t=performance.now()/1000; update(dt); for(const c of W.cats)animateCat(c,dt,t); updateWand(dt,t); updateLaser(t); updateFamilyMeshes(dt,t); updateFx(dt); },snapNow,snapTake,snapFrame,snapBlocked,snapRay,snapMoments,snapTick,openSnap,getSnaps:()=>SNAPS,strayGap,getStrayT:()=>strayT,setShot:(y,c,a)=>{ SHOT_YAW=y; SHOT_CAM=c; SHOT_AT=a; },firstBye,cars,pickForHome,HINTS,showReady,updateTag,lessonOn,TREES,fadeTrees,tips,showTip,FLEA_TIP,owls,boopOwl,owlTrees,ensureBurrs,updateScruff,dustPuff,updateFleas,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={Snd,tolFast,rPhase,metroLearn,updateBeat,shopRefresh,openShop,tempoOf,tempoTol,strokeT,updateTempo,S,endPairTut,strayHold,endBrushTut,openShop,weather,tickAll:(dt)=>{ const t=performance.now()/1000; update(dt); for(const c of W.cats)animateCat(c,dt,t); updateWand(dt,t); updateLaser(t); updateFamilyMeshes(dt,t); updateFx(dt); },snapNow,snapTake,snapFrame,snapBlocked,snapRay,snapMoments,snapTick,openSnap,getSnaps:()=>SNAPS,strayGap,getStrayT:()=>strayT,setShot:(y,c,a)=>{ SHOT_YAW=y; SHOT_CAM=c; SHOT_AT=a; },firstBye,cars,pickForHome,HINTS,showReady,updateTag,lessonOn,TREES,fadeTrees,tips,showTip,FLEA_TIP,owls,boopOwl,owlTrees,ensureBurrs,updateScruff,dustPuff,updateFleas,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>
 

@@ -1616,7 +1616,8 @@ function tempoOf(c){ if(c.tempo==null){ let m=0.22+clamp((3.3-(c.pace||2.8))/0.9
 // play-time phases: 0..1 ramp between two times (in-game seconds)
 function rPhase(a,b){ return clamp((W.time-a)/(b-a),0,1); }
 function slowOk(){ return W.time<600; } // first 10 minutes: slow strokes are never off-beat
-function tolFast(c){ const early=W.time<180?1.6:0.9*(1-rPhase(600,900)); return tempoTol(c)+early; }
+function tolFast(c){ const early=W.time<180?1.6:0.9*(1-rPhase(600,900)); return Math.min(FAST_CAP,tempoTol(c)+early); }
+const FAST_CAP=0.85; // loose top speed: about 2.3x the cat's favourite stroke speed
 const TEMPO_K=0.7; // overall pace: lower = slower, calmer strokes
 // metronome as training wheels: hide it once the rhythm is learned, bring it back if slips pile up
 function metroLearn(err){ const r=W.stat.metroRec||(W.stat.metroRec=[]); r.push(err?1:0); if(r.length>10)r.shift(); const bad=a=>a.reduce((x,y)=>x+y,0);

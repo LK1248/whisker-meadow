@@ -752,7 +752,7 @@ function catScreenH(c){ const p=c.g.position, a=toScreen(p.clone().setY(0)), b=t
 // what the running lesson allows: null = no lesson. cats: tappable/pettable cats; tools: dock tools that may be chosen
 const SHOP_FORCE=new Set(['shop','helper','roof','space']);
 function fairForce(){ if(!curHint||!W.started||W.stat.shows)return null; if(curHint.id==='show0')return 'hand'; if(curHint.id!=='show')return null; return W.cats.some(showReady)?'show':null; }
-function wandForce(){ if(!curHint||!W.started)return null; if(curHint.id==='wand')return 'pick'; if(curHint.id==='wand2'&&W.tool==='wand'&&hintT<60)return 'sway'; return null; }
+function wandForce(){ if(!curHint||!W.started)return null; if(curHint.id==='wand')return 'pick'; if(curHint.id==='wand2'&&W.tool==='wand'&&hintT<30)return 'sway'; return null; }
 function shopForce(){ if(!curHint||!SHOP_FORCE.has(curHint.id)||!W.started)return null; const g=guidePick(curHint.id), it=SHOP.find(x=>x.id===g); return it&&shopCan(it)?g:null; }
 function shopOk(id){ const g=shopForce(); return !g||id===g; }
 function userClose(){ if(shopForce()&&document.querySelector('#mbox [data-buy]'))return; closeModal(); }

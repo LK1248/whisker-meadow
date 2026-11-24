@@ -1966,7 +1966,7 @@ function updateTag(dt){
   $('#tTrait').textContent=c.trait+(c.forever?' · stays here':readyHome(c)?' · ready for a home':'');
   for(const [id,v] of [['rA',c.s.aff],['rT',c.s.groom],['rH',c.s.health]]){ const g=$('#'+id+' svg'); g.style.transform=`scale(${(0.25+v/100).toFixed(3)})`; g.style.opacity=(0.55+0.45*v/100).toFixed(2); }
   for(const [k,f,id] of [['a','aff','rA'],['t','groom','rT'],['h','health','rH']]){ const v=c.s[f]; if(v-tag.prev[k]>0.4){ const r=$('#'+id); r.classList.remove('pulse'); void r.offsetWidth; r.classList.add('pulse'); tag.prev[k]=v; } else if(v<tag.prev[k])tag.prev[k]=v; }
-  const ts=$('#tShow'); ts.hidden=!showReady(c); if(!ts.hidden&&ts.dataset.b!==String(c.bestPlace||0)){ ts.dataset.b=String(c.bestPlace||0); ts.innerHTML=fairBadge(c.bestPlace||0,46); } const st=$('#tStay'); st.hidden=!(c.age>=1); st.classList.toggle('on',!!c.forever);
+  const ts=$('#tShow'); ts.hidden=!showReady(c); if(!ts.hidden&&ts.dataset.b!==String(c.bestPlace||0)){ ts.dataset.b=String(c.bestPlace||0); ts.innerHTML=fairBadge(c.bestPlace||0,46); } const st=$('#tStay'); st.hidden=!(c.age>=1&&(W.homes.length>0||!!W.family||c.forever)); st.classList.toggle('on',!!c.forever);
 }
 for(const id of ['#tShow','#tStay'])$(id).addEventListener('pointerdown',e=>e.stopPropagation());
 $('#tShow').onclick=()=>{ if(tag.c&&!(W.family&&W.family.cat===tag.c))enterShow(tag.c); };

@@ -1707,7 +1707,7 @@ canvas.addEventListener('pointerdown',e=>{
 });
 canvas.addEventListener('pointermove',e=>{
   if(!W.started)return; handPos(e);
-  if(P.pointers.has(e.pointerId))P.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(P.pointers.has(e.pointerId)){ P.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY}); if(!W.paused)W.lastInput=W.time; }
   if(!P.mode||P.mode==='none'){ if(e.pointerType==='mouse'){ if(W.tool==='laser')laserMove(e); const now=performance.now(); if(now-P.hoverT>60){ P.hoverT=now; const h=pickAt(e); P.hoverCat=h&&h.cat?h.cat:null; } } return; }
   if(P.mode==='pinch'){ if(P.pointers.size<2)return; const [a,b]=[...P.pointers.values()]; const d=Math.hypot(a.x-b.x,a.y-b.y); if(P.pinch>0)zoomBy(P.pinch/d); P.pinch=d; return; }
   const dx=e.clientX-P.last.x, dy=e.clientY-P.last.y; P.last={x:e.clientX,y:e.clientY};
@@ -1785,7 +1785,12 @@ function birth(a,b){
 let strayT=rand(60,80);
 // time to the next stray: short while there's lots of room, longer as the sanctuary fills
 const HINT_HOLD=new Set(['feed','litter','carry','shop','wand','wand2','brush','brush2','roof']);
-function strayHold(){ return (!W.stat.brushTut&&W.time<900)||W.time<(W.stat.brushTutT||0)+40||!!(curHint&&HINT_HOLD.has(curHint.id)); }
+// calm pacing: a player who is busy with a cat or a toy is never interrupted, and events get breathing room
+function playerBusy(){ if(W.time-(W.lastInput||-99)>=6)return false; return W.tool!=='hand'||!!(S.cat&&S.cat.petT>0)||P.mode==='carry'||P.mode==='stroke'; }
+function eventOn(){ return !!(W.dropoff&&!W.dropoff.gift)||!!W.family||!!W.runaway||!!cam.meet||meetQ.length>0; }
+function calmTick(){ if(eventOn())W.lastEv=W.time; }
+function calmHold(){ return playerBusy()||W.time-(W.lastEv??-999)<(W.time<900?90:50); }
+function strayHold(){ return calmHold()||(!W.stat.brushTut&&W.time<900)||W.time<(W.stat.brushTutT||0)+40||!!(curHint&&HINT_HOLD.has(curHint.id)); }
 function strayGap(){ const f=W.cats.length/LV().cap; return f<0.5?rand(45,70):f<0.8?rand(75,110):rand(110,150); }
 function arriveStray(){
   const h=LV().half, room=LV().cap-W.cats.length; if(room<=0)return;
@@ -1802,7 +1807,7 @@ function checkCollection(){ W.stat.coatsMax=Math.max(W.stat.coatsMax||0,new Set(
 // meet sheet (pauses play, focuses the new cat, shows everyone at a glance)
 const meetQ=[]; let meetSaved=null;
 function coatNow(c){ if(!c||!c.core)return; ensureBurrs(c); updateScruff(c); updateSheen(c,0); updateFleas(c,0.05); }
-function meet(c,origin,parents){ if(origin==='stray'&&W.stat.pairDone&&c.s.groom<FLEA_AT&&!c.fleas&&Math.random()<0.4)c.fleas=5+Math.floor(rand(0,4)); coatNow(c); meetQ.push({c,origin,parents}); if(!cam.meet)nextMeet(); }
+function meet(c,origin,parents){ W.lastEv=W.time; if(origin==='stray'&&W.stat.pairDone&&c.s.groom<FLEA_AT&&!c.fleas&&Math.random()<0.4)c.fleas=5+Math.floor(rand(0,4)); coatNow(c); meetQ.push({c,origin,parents}); if(!cam.meet&&!playerBusy())nextMeet(); }
 function nextMeet(){
   const m=meetQ.shift();
   if(!m){ W.paused=false; cam.meet=null; $('#meet').hidden=true; if(meetSaved){ cam.want=meetSaved; meetSaved=null; } handVis(); return; }
@@ -2056,7 +2061,7 @@ const HINTS=[
 const hintDone=new Set(), hintRetry={}; let curHint=null, hintT=0, hintGap=0;
 function hideHint(){ curHint=null; hintEl.hidden=true; hintGap=4; }
 function needTick(dt){ const cs=active(), hungry=cs.filter(c=>c.s.full<30).length, fleas=cs.filter(c=>c.fleas).length; W.needT=hungry>2||fleas>1?(W.needT||0)+dt:Math.max(0,(W.needT||0)-dt*0.5); }
-function updateHints(dt){ needTick(dt); if(tutQuiet()||intro.c||bt.c||pl.a||br.c||(firstAdopt()&&W.family.cat)){ hintEl.hidden=true; return; }
+function updateHints(dt){ needTick(dt); calmTick(); if(meetQ.length&&!cam.meet&&!playerBusy())nextMeet(); if(tutQuiet()||intro.c||bt.c||pl.a||br.c||(firstAdopt()&&W.family.cat)){ hintEl.hidden=true; return; }
   if(curHint){ hintT+=dt; const h=curHint;
     if(h.done&&h.done()){ if(!h.redo)hintDone.add(h.id); hideHint(); return; }
     if(h.auto&&hintT>h.auto){ if(!h.again)hintDone.add(h.id); else hintRetry[h.id]=W.time+20; hideHint(); return; }
@@ -2793,7 +2798,7 @@ const musT={b:$('#bMusic')}; musT.home=musT.b.parentElement; musT.next=musT.b.ne
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); localStorage.removeItem(SNAP_KEY); }catch(e){} SNAPS=[]; boardSync(true); begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={Snd,coatNow,tolFast,rPhase,metroLearn,updateBeat,shopRefresh,openShop,tempoOf,tempoTol,strokeT,updateTempo,S,endPairTut,strayHold,endBrushTut,openShop,weather,tickAll:(dt)=>{ const t=performance.now()/1000; update(dt); for(const c of W.cats)animateCat(c,dt,t); updateWand(dt,t); updateLaser(t); updateFamilyMeshes(dt,t); updateFx(dt); },snapNow,snapTake,snapFrame,snapBlocked,snapRay,snapMoments,snapTick,openSnap,getSnaps:()=>SNAPS,strayGap,getStrayT:()=>strayT,setShot:(y,c,a)=>{ SHOT_YAW=y; SHOT_CAM=c; SHOT_AT=a; },firstBye,cars,pickForHome,HINTS,showReady,updateTag,lessonOn,TREES,fadeTrees,tips,showTip,FLEA_TIP,owls,boopOwl,owlTrees,ensureBurrs,updateScruff,dustPuff,updateFleas,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={Snd,playerBusy,calmHold,eventOn,coatNow,tolFast,rPhase,metroLearn,updateBeat,shopRefresh,openShop,tempoOf,tempoTol,strokeT,updateTempo,S,endPairTut,strayHold,endBrushTut,openShop,weather,tickAll:(dt)=>{ const t=performance.now()/1000; update(dt); for(const c of W.cats)animateCat(c,dt,t); updateWand(dt,t); updateLaser(t); updateFamilyMeshes(dt,t); updateFx(dt); },snapNow,snapTake,snapFrame,snapBlocked,snapRay,snapMoments,snapTick,openSnap,getSnaps:()=>SNAPS,strayGap,getStrayT:()=>strayT,setShot:(y,c,a)=>{ SHOT_YAW=y; SHOT_CAM=c; SHOT_AT=a; },firstBye,cars,pickForHome,HINTS,showReady,updateTag,lessonOn,TREES,fadeTrees,tips,showTip,FLEA_TIP,owls,boopOwl,owlTrees,ensureBurrs,updateScruff,dustPuff,updateFleas,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>
 

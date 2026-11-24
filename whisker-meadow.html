@@ -114,6 +114,16 @@ body.intro .dock,body.intro #hud,body.intro .top{opacity:.25;pointer-events:none
 #toasts{position:fixed;top:calc(62px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;z-index:7;pointer-events:none}
 .toast{background:rgba(74,52,38,.86);color:#fff;padding:7px 16px;border-radius:999px;font:600 16px var(--display);white-space:nowrap;animation:pop .3s ease-out}
 .toast.badge{background:linear-gradient(#ffe48a,#f6c443);color:#5a3d00}
+.toast.snap{background:#fff;padding:6px 6px 14px;border-radius:4px;transform:rotate(-3deg);box-shadow:0 6px 18px rgba(0,0,0,.3);animation:snapIn .5s ease-out}
+.toast.snap img{display:block;width:132px;height:99px;object-fit:cover;border-radius:2px}
+@keyframes snapIn{0%{transform:translateY(-30px) rotate(8deg) scale(.6);opacity:0}100%{transform:rotate(-3deg);opacity:1}}
+#snapFlash{position:fixed;inset:0;background:#fff;pointer-events:none;z-index:6;opacity:0;transition:opacity .45s}
+.albumH{display:flex;align-items:center;gap:8px;margin:16px 0 8px;font:700 19px var(--display)}
+.pc.snap img{aspect-ratio:4/3;object-fit:cover;width:100%;border-radius:4px;display:block}
+.pc.snap .k{position:absolute;right:8px;bottom:8px;font-size:20px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+.pc.empty{background:rgba(255,255,255,.18);border:2px dashed rgba(255,255,255,.6);box-shadow:none;display:flex;align-items:center;justify-content:center;aspect-ratio:4/3.4;font-size:30px;opacity:.75;cursor:default}
+.snapBig{background:#fff;padding:10px 10px 18px;border-radius:6px;box-shadow:0 6px 20px rgba(74,52,38,.25);transform:rotate(-1deg);text-align:center}
+.snapBig img{width:100%;display:block;border-radius:3px}.snapBig .k{font-size:26px;margin-top:8px;display:block}
 .float.hg svg{width:50px;height:60px;display:block;filter:drop-shadow(0 2px 3px rgba(74,52,38,.35))}
 .float.hg.fast svg{animation:hgShake .35s ease-in-out 2}
 @keyframes hgShake{0%,100%{transform:rotate(0)}25%{transform:rotate(-18deg)}75%{transform:rotate(18deg)}}
@@ -274,7 +284,7 @@ h3 .cnt{color:#e0507a;font-size:20px;margin-left:6px}
     <g class="hb"><rect x="22" y="22" width="26" height="18" rx="6" fill="#9a86cf" stroke="#6e5ea8" stroke-width="2"/><path d="M25 40v7M30 40v8M35 40v8M40 40v8M45 40v7" stroke="#4a3426" stroke-width="2.2" stroke-linecap="round"/><rect x="31" y="4" width="8" height="20" rx="3.5" fill="#d9a46a" stroke="#a87440" stroke-width="2"/><g fill="#ffd8bd" stroke="#b97f5e" stroke-width="2.2"><rect x="25" y="6" width="20" height="12" rx="6"/></g></g>
   </svg>
 </div>
-<div id="toasts"></div>
+<div id="toasts"></div><div id="snapFlash"></div>
 <div id="modal" hidden><div class="box" id="mbox"></div></div>
 <div id="family" hidden></div>
 <div id="meet" hidden><div class="sheet"><div class="nm" id="mName"></div><div class="org" id="mOrg"></div><div class="roster" id="mRoster"></div><button class="big" id="mOk">Hello!</button></div></div>
@@ -415,7 +425,7 @@ function MG(c){ if(glossCache[c])return glossCache[c]; const m=new THREE.MeshToo
   m.onBeforeCompile=sh=>{ sh.fragmentShader=sh.fragmentShader.replace('#include <lights_toon_pars_fragment>',THREE.ShaderChunk.lights_toon_pars_fragment.replace(GLOSS_SPEC,GLOSS_SPEC+
     ' vec3 hv=normalize(directLight.direction+geometry.viewDir); float nh=max(dot(geometry.normal,hv),0.0); float nl=max(dot(geometry.normal,directLight.direction),0.0);'+
     ' float rim=pow(1.0-max(dot(geometry.normal,geometry.viewDir),0.0),3.0); vec3 tint=mix(vec3(0.5),material.diffuseColor,0.55);'+
-    ' reflectedLight.directDiffuse += directLight.color*tint*(pow(nh,8.0)*0.1+rim*nl*0.16);')); };
+    ' reflectedLight.directDiffuse += directLight.color*tint*(pow(nh,8.0)*0.17+rim*nl*0.26);')); };
   m.customProgramCacheKey=()=>'gloss'; return glossCache[c]=m; }
 const G={sph:new THREE.SphereGeometry(1,24,18),sphLo:new THREE.SphereGeometry(1,10,8),cyl:new THREE.CylinderGeometry(1,1,1,16),cone:new THREE.ConeGeometry(1,1,14),box:new THREE.BoxGeometry(1,1,1)};
 function mesh(geo,color,o={}){ const m=new THREE.Mesh(geo,typeof color==='number'?M(color):color); if(o.p)m.position.set(...o.p); if(o.s)m.scale.set(...o.s); if(o.r)m.rotation.set(...o.r);
@@ -514,24 +524,103 @@ function bigDecor(grp){ const A=area(), k=(A-200)/100; W.decoObst=[]; if(k<=0)re
 function treeMesh(s){ const g=new THREE.Group(); g.scale.setScalar(s); const fc=pick([0x6fbf5a,0x5eae4f,0x83c766,0x76b85c]);
   g.add(mesh(G.cyl,0x9b6b43,{p:[0,0.8,0],s:[0.18,1.6,0.18]})); g.add(mesh(G.sph,fc,{p:[0,2.1,0],s:[1,0.9,1]}));
   g.add(mesh(G.sph,fc,{p:[0.6,1.8,0.2],s:[0.7,0.6,0.7]})); g.add(mesh(G.sph,fc,{p:[-0.55,1.85,-0.2],s:[0.65,0.6,0.65]})); g.userData.parts=g.children.slice(); g.userData.fade=1; TREES.push(g); return g; }
+// ---- everyday snapshots: candid photos of the live sanctuary, pinned with the postcards ----
+const SNAP_KEY='wm_snaps';
+const SNAP_KINDS={zoomies:'💨',pounce:'⚡',herd:'🐾',nap:'💤',boop:'😽',flop:'🙃',perch:'🌳',kittens:'🍼',rain:'☔',feast:'🍽️',pond:'🐟',night:'🌙',crowd:'📸'};
+// camera elevation range per moment (radians) and whether it's an action shot (low, a little handheld tilt, three-quarter view)
+const SNAP_EL={pounce:[0.1,0.22,1],zoomies:[0.14,0.28,1],herd:[0.5,0.65,0],nap:[0.6,0.85,0],night:[0.45,0.6,0],boop:[0.12,0.24,0],flop:[0.75,0.95,0],perch:[0.12,0.25,0],kittens:[0.25,0.4,0],rain:[0.3,0.42,0],feast:[0.4,0.55,0],pond:[0.22,0.35,0],crowd:[0.5,0.62,0]};
+let SNAPS=store.get(SNAP_KEY)||[], snapCD=60, snapScanT=1, snapPend=null, snapWant=null;
+const snapCam=new THREE.PerspectiveCamera(40,4/3,0.1,300), snapRay=new THREE.Raycaster();
+function snapSave(){ let L=SNAPS.slice(); for(let i=0;i<4;i++){ try{ localStorage.setItem(SNAP_KEY,JSON.stringify(L)); return; }catch(e){ L=L.slice(0,-1); } } }
+function snapHave(k){ return SNAPS.find(s=>s.k===k); }
+function snapOk(){ return W.started&&!W.paused&&$('#modal').hidden&&!tutQuiet()&&!firstBye()&&!intro.c; }
+const snapFree=c=>c.g.visible&&!c.outside&&!c.leaving&&!c.carried&&!(c.away>0);
+function snapNear(c,list,r){ return list.filter(o=>o!==c&&dist2(o.g.position,c.g.position)<r); }
+// what's worth a photo right now: [{k, cats, score, wait}]
+function snapMoments(){ const A=W.cats.filter(snapFree), out=[], by=st=>A.filter(c=>c.state===st);
+  for(const c of A)if(c.hopT>0&&(c.lunge>0||['pounce','chase','laser'].includes(c.state))){ const w=snapNear(c,A,2.2).filter(o=>['chase','laser','watch','idle','stalk'].includes(o.state)).slice(0,2); out.push({k:'pounce',cats:[c,...w],score:3,wait:()=>!(c.hopT>0)||c.hopT<=c.hopDur*0.55}); break; }
+  const romp=by('romp'); if(romp.length>=2){ const a=romp[0], b=a.rompP&&romp.includes(a.rompP)?a.rompP:romp[1]; out.push({k:'zoomies',cats:[a,b],score:3,wait:()=>a.hopT>0||b.hopT>0}); }
+  const sleepy=A.filter(c=>c.state==='sleep'||(c.state==='idle'&&c.sit&&W.night>0.5)); for(const c of sleepy){ const g=[c,...snapNear(c,sleepy,1.6)]; if(g.length>=2){ out.push({k:W.night>0.5?'night':'nap',cats:g.slice(0,4),score:2+g.length*0.3}); break; } }
+  const fl=by('flop'); if(fl.length){ const c=fl[0]; out.push({k:'flop',cats:[c,...snapNear(c,A,1.6).slice(0,1)],score:1.5}); }
+  const pe=by('perch'); if(pe.length)out.push({k:'perch',cats:[pe[0]],score:1.6,perch:true});
+  for(const c of A)if(c.age<1){ const big=snapNear(c,A,1.4).filter(o=>o.age>=1); if(big.length){ const m=big.find(o=>o===c.mother)||big[0]; out.push({k:'kittens',cats:[c,m],score:2}); break; } }
+  if(weather.raining){ const sh=by('shelter'); if(sh.length)out.push({k:'rain',cats:sh.slice(0,4),score:2+sh.length*0.2}); }
+  const eat=by('eat'); if(eat.length>=2)out.push({k:'feast',cats:eat.slice(0,4),score:1.5+eat.length*0.3});
+  const pw=by('pondwatch'); if(pw.length)out.push({k:'pond',cats:pw.slice(0,2),score:1.5});
+  if(A.length>=6){ let best=null; for(const c of A){ const g=[c,...snapNear(c,A,2.4)]; if(!best||g.length>best.length)best=g; } if(best&&best.length>=4)out.push({k:'crowd',cats:best.slice(0,6),score:1+best.length*0.15}); }
+  return out; }
+// a moment handed in by the game itself (a boop, a herd): taken shortly after if nothing is in the way
+function snapHint(k,cats,delay=0.3){ if(snapPend||!snapOk())return; const fresh=!snapHave(k); if(snapCD>0&&!(fresh&&snapCD<40)&&!(snapWant&&snapWant.k===k))return; snapPend={k,cats:cats.filter(snapFree),t:W.time+delay,ach:snapWant&&snapWant.k===k?snapWant.ach:null}; }
+const SNAP_ACH={herd:'herd',zoomies:'pounce',belly:'flop',kittens:'kittens',family:'crowd',rescues:'crowd'};
+function snapAch(id){ if(SNAP_ACH[id])snapWant={k:SNAP_ACH[id],ach:id,until:W.time+25}; }
+function snapTick(dt){ snapCD-=dt; if(snapWant&&W.time>snapWant.until)snapWant=null;
+  if(snapPend){ const p=snapPend; if(!snapOk()||p.cats.length===0||!p.cats.every(snapFree)){ snapPend=null; return; }
+    if(W.time>=p.t&&(!p.wait||p.wait()||W.time>p.t+0.9)){ snapPend=null; snapTake(p.k,p.cats,p.ach); } return; }
+  snapScanT-=dt; if(snapScanT>0||!snapOk())return; snapScanT=0.5;
+  const want=snapWant&&snapWant.k; if(snapCD>0&&!want)return;
+  let best=null; for(const m of snapMoments()){ const had=snapHave(m.k); let sc=m.score+(had?0:4)+(m.k===want?20:0);
+    if(had&&m.k!==want){ if(W.time-had.at<480||m.cats.length<=(had.n||1)&&Math.random()<0.7)continue; }
+    if(snapCD>0&&m.k!==want)continue; sc+=Math.random(); if(!best||sc>best.sc)best={...m,sc}; }
+  if(!best)return; snapPend={k:best.k,cats:best.cats,t:W.time,wait:best.wait,ach:best.k===want?snapWant.ach:null,perch:best.perch}; if(best.k===want)snapWant=null; }
+function snapNow(){ const m=snapMoments(); const p=m.length?m[0]:{k:'crowd',cats:W.cats.filter(snapFree).slice(0,6)}; if(p.cats.length)snapTake(p.k,p.cats,null); }
+// is anything (not one of the subjects) between the camera and this point?
+function snapBlocked(from,to,skip){ const d=to.clone().sub(from), len=d.length(); snapRay.set(from,d.normalize()); snapRay.far=len-0.25; snapRay.camera=camera;
+  for(const h of snapRay.intersectObjects(scene.children,true)){ let o=h.object, vis=true, sub=false; if(o.isSprite||o.isPoints||o.isLine)continue;
+    const m=o.material; if(m&&(m.opacity<0.3||m.visible===false))continue;
+    for(let q=o;q;q=q.parent){ if(!q.visible){ vis=false; break; } if(skip.has(q)){ sub=true; break; } }
+    if(vis&&!sub)return true; }
+  return false; }
+// pick the camera: fit the cats in a 4:3 frame, try 16 angles, score faces / blockers / light / lead room
+function snapFrame(cats,k,perch){ const pts=cats.map(c=>c.g.position.clone().setY((c.hopT>0||perch?c.g.position.y:0)+0.32*c.g.scale.y)), sc0=Math.max(...cats.map(c=>c.g.scale.x));
+  const ctr=pts.reduce((a,p)=>a.add(p),new V3()).multiplyScalar(1/pts.length); let R=0.85*sc0; for(const p of pts)R=Math.max(R,p.distanceTo(ctr)+0.7*sc0);
+  if(perch){ R=Math.max(R,ctr.y*0.55+0.3); ctr.y=ctr.y*0.62; }
+  const e=SNAP_EL[k]||[0.25,0.45,0], el=rand(e[0],e[1]), act=!!e[2], hf=(cats.length>2?46:38)*Math.PI/180;
+  const dist=Math.max(1.9, R/(Math.tan(hf/2)*0.75)*1.15), skip=new Set(cats.map(c=>c.g)), sunAz=Math.atan2(sun.position.x,sun.position.z);
+  const heads=cats.slice(0,4).flatMap(c=>{ c.g.updateMatrixWorld(true); return [c.head.getWorldPosition(new V3()),c.g.position.clone().setY(c.g.position.y+0.22*c.g.scale.y),c.g.position.clone().setY(c.g.position.y+0.06)]; }); let best=null;
+  for(let i=0;i<16;i++){ const az=i/16*Math.PI*2+rand(-0.08,0.08); const dir=new V3(Math.sin(az)*Math.cos(el),Math.sin(el),Math.cos(az)*Math.cos(el)); const pos=ctr.clone().addScaledVector(dir,dist); if(pos.y<0.25)pos.y=0.25;
+    let s=0, wsum=0; cats.slice(0,6).forEach((c,j)=>{ const f=Math.sin(c.heading)*Math.sin(az)+Math.cos(c.heading)*Math.cos(az), wt=j===0?2:1; wsum+=wt; s+=wt*(act?1-Math.abs(f-0.45)*1.2:(f>0?f*1.3:f*0.5)); });
+    s/=wsum; s+=0.35*Math.cos(az-sunAz); heads.forEach((h,j)=>{ if(snapBlocked(pos,h,skip))s-=j<3?[3,2,0.5][j]:[1.2,0.8,0.3][j%3]; });
+    if(!inB(pos.x,pos.z,0.2))s-=1.2; s+=rand(0,0.25); if(!best||s>best.s)best={s,az,pos}; }
+  // lead room: put space in front of the main cat
+  const az=best.az, right=new V3(Math.cos(az),0,-Math.sin(az)), lead=cats[0], hv=new V3(Math.sin(lead.heading),0,Math.cos(lead.heading)), side=hv.dot(right);
+  const at=ctr.clone().addScaledVector(right,side*0.2*dist*Math.tan(hf/2)); if(el>0.4)at.y-=0.05;
+  return {pos:best.pos,at,hf,roll:act?rand(-0.06,0.06):rand(-0.015,0.015)}; }
+function snapTake(k,cats,ach){ try{
+  const f=snapFrame(cats,k,k==='perch'), cv0=renderer.domElement, W0=cv0.width, H0=cv0.height, cw=Math.min(W0,H0*4/3), ch=cw*0.75;
+  const hfFull=2*Math.atan(Math.tan(f.hf/2)*W0/cw); snapCam.aspect=W0/H0; snapCam.fov=2*Math.atan(Math.tan(hfFull/2)/snapCam.aspect)*180/Math.PI; snapCam.updateProjectionMatrix();
+  snapCam.position.copy(f.pos); snapCam.up.set(0,1,0); snapCam.lookAt(f.at); snapCam.rotateZ(f.roll);
+  const ics=[...W.cats.map(c=>c.icon),...items.map(it=>it.icon)].filter(Boolean), iv=ics.map(o=>o.visible); ics.forEach(o=>o.visible=false);
+  renderer.render(scene,snapCam); ics.forEach((o,i)=>o.visible=iv[i]);
+  const out=document.createElement('canvas'); out.width=400; out.height=300; const x=out.getContext('2d'); x.filter=`saturate(1.08) contrast(1.04) brightness(${(1+0.45*W.night).toFixed(2)})`;
+  x.drawImage(cv0,(W0-cw)/2,(H0-ch)/2,cw,ch,0,0,400,300); x.filter='none';
+  const g=x.createRadialGradient(200,150,110,200,150,260); g.addColorStop(0,'rgba(40,20,10,0)'); g.addColorStop(1,'rgba(40,20,10,.32)'); x.fillStyle=g; x.fillRect(0,0,400,300);
+  x.globalCompositeOperation='soft-light'; x.fillStyle='rgba(255,190,120,.16)'; x.fillRect(0,0,400,300); x.globalCompositeOperation='source-over';
+  const img=out.toDataURL('image/jpeg',0.82), rec={k,img,at:W.time,n:cats.length,ach:ach||null,id:Date.now()};
+  const i=SNAPS.findIndex(s=>s.k===k), fresh=i<0; if(i>=0)SNAPS.splice(i,1); SNAPS.unshift(rec); snapSave();
+  snapCD=rand(130,170); Snd.shutter(); const fl=$('#snapFlash'); fl.style.transition='none'; fl.style.opacity=0.55; void fl.offsetWidth; fl.style.transition=''; fl.style.opacity=0;
+  toast(`<img src="${img}" alt="">`,'snap',3200); boardPop(); W.stat.snaps=Math.max(W.stat.snaps||0,SNAPS.length);
+  return rec; }catch(e){ console.error(e); return null; } }
 // ---- adoption card wall: thank-you postcards pinned on a corkboard by the house ----
 let cardBoard=null, boardSig='', boardT=0; const boardImgs={};
 function boardRand(a){ return ()=>{ a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 function cardOn(hm,i){ return !hm.noCard&&!!hm.img&&!W.postQ.some(q=>q.i===i); }
 function wallCards(){ return W.homes.map((hm,i)=>({hm,i})).filter(o=>cardOn(o.hm,o.i)).reverse(); }
+// what's pinned on the board: postcards and snapshots, alternating, newest first
+function boardItems(){ const a=wallCards().map(o=>({i:o.i,img:o.hm.img,r:o.i*31+5})), b=SNAPS.map(s=>({i:'s'+s.id,img:s.img,r:(s.id%9973)+7})), L=[];
+  for(let k=0;k<Math.max(a.length,b.length);k++){ if(a[k])L.push(a[k]); if(b[k])L.push(b[k]); } return L; }
 function drawBoard(){ if(!cardBoard)return; const cv=cardBoard.userData.cv, x=cv.getContext('2d'), w=cv.width, h=cv.height;
   x.fillStyle='#c99560'; x.fillRect(0,0,w,h); const rr=boardRand(7); x.fillStyle='rgba(120,75,35,.25)'; for(let i=0;i<500;i++){ x.beginPath(); x.arc(rr()*w,rr()*h,1+rr()*1.6,0,7); x.fill(); }
   x.strokeStyle='#8a5a3b'; x.lineWidth=22; x.strokeRect(11,11,w-22,h-22);
-  const L=wallCards().slice(0,12), n=L.length, cols=n<=4?2:n<=9?3:4, rows=n<=4?2:3, cw=(w-60)/cols, ch=(h-60)/rows, pins=['#e0507a','#f6c443','#5b9be6'];
+  const L=boardItems().slice(0,12), n=L.length, cols=n<=4?2:n<=9?3:4, rows=n<=4?2:3, cw=(w-60)/cols, ch=(h-60)/rows, pins=['#e0507a','#f6c443','#5b9be6'];
   if(!L.length){ x.font='700 120px sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.globalAlpha=.35; x.fillStyle='#fff'; x.fillText('♥',w/2,h/2+6); x.globalAlpha=1; }
-  L.forEach((o,k)=>{ const r2=boardRand(o.i*31+5), cx=30+cw*(k%cols)+cw/2+(r2()-.5)*10, cy=30+ch*Math.floor(k/cols)+ch/2+(r2()-.5)*8, a=(r2()-.5)*0.22, pw=cw*0.86, ph=ch*0.86;
+  L.forEach((o,k)=>{ const r2=boardRand(o.r), cx=30+cw*(k%cols)+cw/2+(r2()-.5)*10, cy=30+ch*Math.floor(k/cols)+ch/2+(r2()-.5)*8, a=(r2()-.5)*0.22, pw=cw*0.86, ph=ch*0.86;
     x.save(); x.translate(cx,cy); x.rotate(a); x.shadowColor='rgba(0,0,0,.35)'; x.shadowBlur=8; x.shadowOffsetY=3; x.fillStyle='#fff'; x.fillRect(-pw/2,-ph/2,pw,ph); x.shadowColor='transparent';
     const im=boardImgs[o.i]; if(im&&im.complete&&im.naturalWidth){ const iw=pw-12, ih=ph-12; const sr=Math.max(iw/im.naturalWidth,ih/im.naturalHeight), sw=iw/sr, sh=ih/sr;
       x.drawImage(im,(im.naturalWidth-sw)/2,(im.naturalHeight-sh)/2,sw,sh,-iw/2,-ih/2,iw,ih); } else { x.fillStyle='#f3e7d6'; x.fillRect(-pw/2+6,-ph/2+6,pw-12,ph-12); }
     x.fillStyle=pins[k%3]; x.beginPath(); x.arc(0,-ph/2+4,7,0,7); x.fill(); x.restore(); });
   cardBoard.material.map.needsUpdate=true; }
-function boardSync(force){ const L=wallCards(); let wait=false;
-  for(const o of L.slice(0,12))if(!boardImgs[o.i]||boardImgs[o.i].src!==o.hm.img){ const im=new Image(); im.onload=()=>{ boardSig=''; }; im.src=o.hm.img; boardImgs[o.i]=im; wait=true; }
+function boardSync(force){ const L=boardItems(); let wait=false;
+  for(const o of L.slice(0,12))if(!boardImgs[o.i]||boardImgs[o.i].src!==o.img){ const im=new Image(); im.onload=()=>{ boardSig=''; }; im.src=o.img; boardImgs[o.i]=im; wait=true; }
   const sig=L.slice(0,12).map(o=>o.i+(boardImgs[o.i]&&boardImgs[o.i].complete?'y':'n')).join(',');
   if(force||sig!==boardSig){ boardSig=sig; drawBoard(); } }
 function cardBoardMesh(){ const g=new THREE.Group(); g.position.set(2.65,0,0.5); g.rotation.y=-0.22;
@@ -546,8 +635,12 @@ function cardHTML(hm){ return `<div class="postcard">${hm.thanks?`<b class="ty">
 function openCard(i,back){ const hm=W.homes[i]; if(!hm)return; openModal(cardHTML(hm)+`<button class="big" id="pcBack" aria-label="Back to the card wall">↩</button>`,true); $('#pcBack').onclick=back||closeModal; }
 function bindCards(back){ document.querySelectorAll('#mbox [data-hi]').forEach(b=>b.onclick=()=>{ Snd.ding(); openCard(+b.dataset.hi,back); }); }
 function openWall(){ const L=wallCards();
-  openModal(`<h3>Happy Tails<span class="cnt">♥ ${L.length}</span></h3><div class="wall">${L.length?`<div class="cards">${L.map(o=>`<button class="pc" data-hi="${o.i}"><img src="${o.hm.img}" alt="${o.hm.name} at home"><b>${o.hm.name}</b><span>with the ${o.hm.fam} family</span></button>`).join('')}</div>`:'<div class="wempty">\u{1F48C}</div>'}</div>`);
-  bindCards(openWall); }
+  const kinds=Object.keys(SNAP_KINDS), got=kinds.filter(k=>snapHave(k)), miss=kinds.filter(k=>!snapHave(k));
+  const album=`<div class="albumH">📷<span class="cnt">${got.length}/${kinds.length}</span></div><div class="wall"><div class="cards">${got.map(k=>{ const s=snapHave(k); return `<button class="pc snap" data-sk="${k}"><img src="${s.img}" alt=""><span class="k">${SNAP_KINDS[k]}</span></button>`; }).join('')}${miss.map(k=>`<div class="pc empty" aria-hidden="true">${SNAP_KINDS[k]}</div>`).join('')}</div></div>`;
+  openModal(`<h3>Happy Tails<span class="cnt">♥ ${L.length}</span></h3><div class="wall">${L.length?`<div class="cards">${L.map(o=>`<button class="pc" data-hi="${o.i}"><img src="${o.hm.img}" alt="${o.hm.name} at home"><b>${o.hm.name}</b><span>with the ${o.hm.fam} family</span></button>`).join('')}</div>`:'<div class="wempty">\u{1F48C}</div>'}</div>`+album);
+  bindCards(openWall); document.querySelectorAll('#mbox [data-sk]').forEach(b=>b.onclick=()=>{ Snd.ding(); openSnap(b.dataset.sk); }); }
+function openSnap(k){ const s=snapHave(k); if(!s)return; const a=s.ach&&ACH.find(x=>x[0]===s.ach);
+  openModal(`<div class="snapBig"><img src="${s.img}" alt=""><span class="k">${SNAP_KINDS[k]}${a?' · ★':''}</span></div><button class="big" id="pcBack" aria-label="Back to the card wall">↩</button>`,true); $('#pcBack').onclick=openWall; }
 function boardPop(){ boardSync(true); if(!cardBoard)return; const p=cardBoard.getWorldPosition(new V3()); p.y+=0.2; spawnFx('spark',p,8,.6); spawnFx('h',p,3,.4); }
 function sanctuaryHouse(){
   const g=new THREE.Group();
@@ -1675,7 +1768,7 @@ const ACH=[['rhythm','Gentle Hands','On-beat strokes',()=>W.stat.good,[10,60,250
   ['belly','Belly Rub Legend','Trusted belly rubs',()=>W.stat.belly,[3,20,60]],['butt','Butt Tap Expert','Happy butt taps',()=>W.stat.butt,[3,20,60]],['family','Big Happy Family','Most cats living here together',()=>W.maxCats||0,[6,12,20]],
   ['coats','Rainbow Meadow','Different coats at once',()=>W.stat.coatsMax||0,[4,6,9]],['cards','Postcard Collector','Different postcards from new homes',()=>(W.stat.cards||[]).length,[3,6,10]],['rare','Rare Coat','Rare coats and breeds',()=>W.stat.rare||0,[1,3,6]],['breeds','Exotic Friends','Different breeds rescued',()=>(W.stat.breedSeen||[]).length,[1,3,6]],['spotless','Spotless','Litter scoops',()=>W.stat.cleaned,[10,50,150]],
   ['zoomies','Zoomies','Laser pounces',()=>W.stat.laserP,[25,150,500]],['deluxe','Deluxe Living','Upgrades bought',()=>W.stat.upgrades,[1,5,12]],['ouch','Band-Aid Club','Scratches (oops)',()=>W.stat.scratches,[1,5,15]],
-  ['herd','Herding Cats','Cats led together with the wand or laser',()=>W.stat.herd||0,[3,6,10]]];
+  ['herd','Herding Cats','Cats led together with the wand or laser',()=>W.stat.herd||0,[3,6,10]],['album','Photo Album','Everyday moments caught on camera',()=>SNAPS.length,[3,7,11]]];
 const TIER_N=['','Bronze','Silver','Gold'];
 const GROOM_HOME=30, GROOM_FAIR=50, FLEA_AT=20, FLEA_M=new THREE.MeshBasicMaterial({color:0x161010}), FLEA_M2=new THREE.MeshBasicMaterial({color:0xc8a27a});
 // fleas: tiny black dots that crawl over the back and hop now and then
@@ -1692,9 +1785,10 @@ function herdTick(dt){ herdT-=dt; if(herdT>0)return; herdT=0.25;
     if(!on){ c.herdOff=(c.herdOff||0)+0.25; if(c.herdOff>2||!lure)c.herdFrom=null; continue; } c.herdOff=0;
     if(!c.herdFrom)c.herdFrom=c.g.position.clone(); if(dist2(c.g.position,c.herdFrom)>=3&&dist2(c.g.position,lure)<3)n++; }
   if(n>(W.stat.herd||0))W.stat.herd=n;
+  if(n>=3&&n>herdShow)snapHint('herd',W.cats.filter(c=>c.herdFrom&&lure&&dist2(c.g.position,lure)<3).slice(0,8),0.2);
   if(n>=3&&n>herdShow){ herdShow=n; floatWorld(lure.clone().setY(1.2),'🐾×'+n); } if(n<3)herdShow=0; }
 function unlock(){}
-function updateAch(){ for(const [id,n,,f,th] of ACH){ const v=f(); let t=0; th.forEach((x,i)=>{ if(v>=x)t=i+1; }); if(t>(W.achT[id]||0)){ const rw=[0,10,25,60][t]-[0,10,25,60][W.achT[id]||0]; W.achT[id]=t; W.money+=rw; W.earned+=rw; hud(); Snd.chime(); toast(`★ ${n} · ${TIER_N[t]} +$${rw}`,'badge',3400); } } }
+function updateAch(){ for(const [id,n,,f,th] of ACH){ const v=f(); let t=0; th.forEach((x,i)=>{ if(v>=x)t=i+1; }); if(t>(W.achT[id]||0)){ const rw=[0,10,25,60][t]-[0,10,25,60][W.achT[id]||0]; W.achT[id]=t; snapAch(id); W.money+=rw; W.earned+=rw; hud(); Snd.chime(); toast(`★ ${n} · ${TIER_N[t]} +$${rw}`,'badge',3400); } } }
 const GOALS=[['Pet on the beat',()=>W.stat.good,15],['Scoop the litter',()=>W.stat.cleaned,3],['Fill the bowls',()=>W.stat.fills,3],['Brush a coat',()=>W.stat.brush,8],['Blink back',()=>W.stat.blinkBack,2],
   ['Wand pounces',()=>W.stat.pounces,10],['Carry & introduce',()=>W.stat.drops,3],['Win a fair ribbon',()=>W.ribbons,1],['Find a home',()=>W.homes.length,1],['Happy butt taps',()=>W.stat.butt,2]];
 function pickGoals(){ const idx=[...GOALS.keys()].sort(()=>Math.random()-0.5).slice(0,3); W.goals=idx.map(i=>({i,base:GOALS[i][1](),done:false})); }
@@ -2009,7 +2103,7 @@ function updateDropoff(dt){ const D=W.dropoff; if(!D)return; const h=LV().half;
   else if(D.stage==='walkout'&&arrived(D.p)){ scene.remove(D.p.g); carLeave(D.car); W.dropoff=null; } }
 function readyHome(c){ return c.age>=1&&!c.forever&&c.away<=0&&!c.outside&&!c.carried&&!c.leaving&&c.s.trust>=50&&c.s.health>=55&&W.time-c.arrivedAt>=150; }
 function canBoop(c){ return !c.carried&&!c.outside&&!c.leaving&&c.away<=0&&(c.boopCD||0)<=0&&c.petT<=0&&['idle','walk','watch'].includes(c.state); }
-function boop(a,b){ const lick=getBond(a,b)>=40&&Math.random()<0.6;
+function boop(a,b){ const lick=getBond(a,b)>=40&&Math.random()<0.6; snapHint('boop',[a,b],0.5);
   for(const c of [a,b]){ setState(c,'boop',lick?4.4:3.4); c.boopP=c===a?b:a; c.boopCD=rand(40,70); c.boopKind=lick?'lick':'boop'; c.licker=lick&&c===a; }
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:iconTexture('h'),transparent:true,depthWrite:false})); sp.scale.set(0.12,0.12,0.12); scene.add(sp); W.boops.push({a,b,sp,t:0,dur:lick?4.2:3.2}); Snd.chirp(); }
 function updateBoops(dt){ for(let i=W.boops.length-1;i>=0;i--){ const B=W.boops[i]; B.t+=dt; const a=B.a.g.position,b=B.b.g.position; B.sp.position.set((a.x+b.x)/2,1.05+Math.min(1,B.t/B.dur)*0.35,(a.z+b.z)/2);
@@ -2385,7 +2479,7 @@ if(/[?&]dev\b/.test(location.search)){ const d=document.createElement('div'); d.
   const B=[['+$500',()=>{ W.money+=500; }],['+50 food',()=>{ W.food+=50; }],['+1 ★',()=>{ W.stars=(W.stars||0)+1; }],
     ['Max stats',()=>{ for(const c of W.cats)Object.assign(c.s,{trust:95,aff:95,health:95,full:95,fun:95,groom:95,clean:95}); }],
     ['Skip 2 min',()=>{ W.time+=120; for(const c of W.cats)c.arrivedAt=(c.arrivedAt||0)-120; }],
-    ['Family',()=>{ if(!W.family)spawnFamily(); }],['Stray',()=>{ startDropoff(); }],['Night/Day',()=>{ dayT=(dayT+DAYLEN/2)%DAYLEN; }],
+    ['Family',()=>{ if(!W.family)spawnFamily(); }],['Stray',()=>{ startDropoff(); }],['Snap',()=>{ snapNow(); }],['Night/Day',()=>{ dayT=(dayT+DAYLEN/2)%DAYLEN; }],
     ['Expand',()=>{ if(W.level<LEVELS.length-1){ W.stars=Math.max(W.stars||0,5); expand(); } }]];
   for(const [t,f] of B){ const b=document.createElement('button'); b.textContent=t; b.style.cssText='padding:4px 8px;border-radius:8px;border:0;background:rgba(40,30,50,.75);color:#fff;text-align:left'; b.onclick=e=>{ e.stopPropagation(); f(); hud(); }; d.appendChild(b); }
   const x=document.createElement('button'); x.textContent='DEV ▾'; x.style.cssText='padding:4px 8px;border-radius:8px;border:0;background:#e0507a;color:#fff'; x.onclick=()=>{ for(const b of [...d.children].slice(1))b.hidden=!b.hidden; }; d.prepend(x);
@@ -2436,7 +2530,7 @@ function update(dt){
   birdT-=dt; if(birdT<=0){ birdT=rand(6,14); if(birds.length<3+W.level&&!weather.raining)makeBird(); }
   slowT-=dt; if(slowT<=0){ slowT=0.3; hud(); const a=active(); if(a.length>=4&&a.every(c=>c.s.health>=80))unlock('bliss'); }
   if(W.aidT>0)W.aidT-=dt; $('#hAid').style.opacity=W.aidT>0?1:0;
-  updateFirstAdopt(dt); updateCoats(dt); updateMice(dt); updateOwls(dt); updateFish(dt); updateSafetyNet(dt); updateIntro(dt); updateBlinkTut(dt); updatePairTut(dt); updateBrushTut(dt); updateTips(dt); updateHints(dt); updateWeather(dt); extraUpdate(dt);
+  updateFirstAdopt(dt); snapTick(dt); updateCoats(dt); updateMice(dt); updateOwls(dt); updateFish(dt); updateSafetyNet(dt); updateIntro(dt); updateBlinkTut(dt); updatePairTut(dt); updateBrushTut(dt); updateTips(dt); updateHints(dt); updateWeather(dt); extraUpdate(dt);
   let purr=0; for(const c of W.cats)if(c.away<=0)purr=Math.max(purr,c.purr*(handOn(c)?1:0.3)); Snd.purr(purr*0.9);
 }
 let last=performance.now();
@@ -2619,8 +2713,8 @@ function begin(){ Snd.init(); if(musT.b.classList.contains('ontitle')){ musT.b.c
 Snd.init(); if(Snd.ac&&Snd.ac.state!=='running'){ const EV=['pointerdown','keydown','touchend'], wake=()=>{ Snd.ac.resume(); for(const ev of EV)removeEventListener(ev,wake,true); }; for(const ev of EV)addEventListener(ev,wake,true); }
 const musT={b:$('#bMusic')}; musT.home=musT.b.parentElement; musT.next=musT.b.nextSibling; musT.b.classList.add('ontitle'); $('#start').appendChild(musT.b);
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
-$('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); }catch(e){} begin(); };
+$('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); localStorage.removeItem(SNAP_KEY); }catch(e){} SNAPS=[]; boardSync(true); begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={Snd,strayGap,getStrayT:()=>strayT,setShot:(y,c,a)=>{ SHOT_YAW=y; SHOT_CAM=c; SHOT_AT=a; },firstBye,cars,pickForHome,HINTS,showReady,updateTag,lessonOn,TREES,fadeTrees,tips,showTip,FLEA_TIP,owls,boopOwl,owlTrees,ensureBurrs,updateScruff,dustPuff,updateFleas,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={Snd,tickAll:(dt)=>{ const t=performance.now()/1000; update(dt); for(const c of W.cats)animateCat(c,dt,t); updateWand(dt,t); updateLaser(t); updateFamilyMeshes(dt,t); updateFx(dt); },snapNow,snapTake,snapFrame,snapBlocked,snapRay,snapMoments,snapTick,openSnap,getSnaps:()=>SNAPS,strayGap,getStrayT:()=>strayT,setShot:(y,c,a)=>{ SHOT_YAW=y; SHOT_CAM=c; SHOT_AT=a; },firstBye,cars,pickForHome,HINTS,showReady,updateTag,lessonOn,TREES,fadeTrees,tips,showTip,FLEA_TIP,owls,boopOwl,owlTrees,ensureBurrs,updateScruff,dustPuff,updateFleas,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>

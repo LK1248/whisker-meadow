@@ -2191,7 +2191,7 @@ function startDropoff(gift){ if(firstAdopt()||tutQuiet())return; if(W.dropoff||(
 function giftFood(at){ W.food+=12; W.stat.gifts=(W.stat.gifts||0)+1; spawnFx('h',at.clone().setY(1.2),6,0.4,0.4); spawnFx('spark',at.clone().setY(0.4),8,0.4); floatWorld(at.clone().setY(1.6),'+12'); Snd.chime(); hud(); }
 function updateSafetyNet(dt){ W.netT=(W.netT||0)-dt; if(W.netT>0)return; W.netT=5;
   if(W.started&&!W.dropoff&&(W.food||0)+(W.premium||0)<=0&&W.money<8&&W.time>(W.netNext||0)&&!items.some(i=>i.kind==='bowl'&&i.portions>0)&&active().some(c=>c.s.full<50)){ W.netNext=W.time+240; startDropoff(true); } }
-let RUN_MEOW0=0.3, RUN_PEAK=2.3, RUN_SWELL=60; // runaway meows: start at an everyday meow's volume, reach PEAK x after SWELL s in hiding
+let RUN_MEOW0=0.3, RUN_PEAK=2.3, RUN_SWELL=60, RUN_NEAR=0.75, RUN_NEAR_D=8; // NEAR: extra loudness up close, fading out by NEAR_D m // runaway meows: start at an everyday meow's volume, reach PEAK x after SWELL s in hiding
 const mice=[]; let MOUSE_SCARE=1.8; // how close a cat can come before a mouse darts away
 function mouseMesh(){ const g=new THREE.Group(), fur=pick([0x9a8f86,0xb3a593,0x8a7b6e]);
   g.add(mesh(G.sphLo,fur,{p:[0,0.06,0],s:[0.07,0.055,0.11]})); g.add(mesh(G.sphLo,fur,{p:[0,0.08,0.1],s:[0.045,0.04,0.05]}));
@@ -2524,7 +2524,7 @@ function extraUpdate(dt){
     if(c.state==='path'&&c.pathEnd==='hide'&&!inB(c.g.position.x,c.g.position.z,-0.3)){ const p=c.g.position;
       if(!R.lastPaw||dist2(R.lastPaw,p)>=0.38){ const side=(R.pawI++%2?0.08:-0.08), hd=c.heading; const m=new THREE.Mesh(pawGeo,pawMat); m.rotation.x=-Math.PI/2; m.rotation.z=Math.PI-hd;
         m.position.set(p.x+Math.cos(hd)*side,0.015,p.z-Math.sin(hd)*side); scene.add(m); R.trail.push(m); R.lastPaw=p.clone(); } }
-    if(c.state==='hiding'){ R.hideT=(R.hideT||0)+dt; R.meowT=(R.meowT||0)-dt; if(R.meowT<=0){ const urgency=Math.min(1,R.t/120), swell=Math.min(1,R.hideT/RUN_SWELL); R.meowT=rand(3.2,5)*(1-0.45*urgency); const d=dist2(cam.target,c.g.position); const vol=clamp(1-d/40,0.6,1)*RUN_MEOW0*(1+(RUN_PEAK-1)*swell); Snd.meow(1.2-0.15*urgency,vol); if(d<6||urgency>0.6)showIcon(c,'sniff',1.6); } }
+    if(c.state==='hiding'){ R.hideT=(R.hideT||0)+dt; R.meowT=(R.meowT||0)-dt; if(R.meowT<=0){ const urgency=Math.min(1,R.t/120), swell=Math.min(1,R.hideT/RUN_SWELL); R.meowT=rand(3.2,5)*(1-0.45*urgency); const d=dist2(cam.target,c.g.position); const vol=clamp(1-d/40,0.6,1)*(1+RUN_NEAR*clamp(1-d/RUN_NEAR_D,0,1))*RUN_MEOW0*(1+(RUN_PEAK-1)*swell); Snd.meow(1.2-0.15*urgency,vol); if(d<6||urgency>0.6)showIcon(c,'sniff',1.6); } }
     if(!R.notified){ if(R.delay==null){ R.delay=(W.stat.runNotes||0)===0?5:rand(5,30); R.outT=0; }
       if(!inB(c.g.position.x,c.g.position.z,0))R.outT+=dt;
       if(R.outT>=R.delay&&(c.pathEnd==='hide'||c.state==='hiding')){ R.notified=true; W.stat.runNotes=(W.stat.runNotes||0)+1; renderMissing(); toast(c.name+' slipped out!'); Snd.meow(0.95,0.6); } }

@@ -2753,8 +2753,9 @@ function updateIntro(dt){ const c=intro.c; if(!c)return; if(c.away>0||c.outside|
   const n=W.stat.good-intro.g0; [...$('#pips').children].forEach((e,i)=>e.classList.toggle('on',i<n)); if(n>=3){ endIntro(); return; }
   const s=c.g.scale.x, h=toScreen(headOf(c)), b=toScreen(new V3(p.x-Math.sin(c.heading)*0.45*s,0.62*s,p.z-Math.cos(c.heading)*0.45*s)); if(!h.ok)return;
   $('#intro').style.setProperty('--x',h.x+'px'); $('#intro').style.setProperty('--y',h.y+'px');
-  const ht=intro.t-2.8, cyc=Math.max(0,ht)%2.8, k=clamp(cyc/1.2,0,1), e=k*k*(3-2*k), lift=cyc>1.2?(cyc-1.2)*30:0;
-  const gh=$('#ghost'); gh.style.opacity=(ht<0||handOn(c)||(P.mode&&P.mode!=='none'))?0:cyc<1.2?0.92:Math.max(0,0.92-(cyc-1.2)*1.6);
+  const ht=intro.t-2.8, vP=2.5*Math.max(60,Math.min(400,catScreenH(c)))*tempoOf(c), dur=clamp(Math.hypot(b.x-h.x,b.y-h.y)/Math.max(1,vP)*1.1,0.9,6), cT=dur+1.6;
+  if(ht>=0)intro.gp=((intro.gp||0)+dt/cT)%1; const cyc=(intro.gp||0)*cT, k=clamp(cyc/dur,0,1), e=k+(k*k*(3-2*k)-k)*0.35, lift=cyc>dur?(cyc-dur)*30:0; // even, cat-paced stroke
+  const gh=$('#ghost'); gh.style.opacity=(ht<0||handOn(c)||(P.mode&&P.mode!=='none'))?0:cyc<dur?0.92:Math.max(0,0.92-(cyc-dur)*1.6);
   gh.style.transform=`translate(${lerp(h.x,b.x,e)-30}px,${lerp(h.y,b.y,e)-30-lift}px)`; }
 $('#lessonSkip').onclick=()=>skipLesson();
 $('#introSkip').onclick=()=>{ if(br.c){ endBrushTut(false); return; } if(pl.a){ endPairTut(false); return; } if(bt.c){ bt.skipped=true; endBlinkTut(false); } else endIntro(); };

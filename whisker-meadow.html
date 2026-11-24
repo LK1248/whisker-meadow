@@ -749,6 +749,7 @@ const pv=new V3();
 function catScreenH(c){ const p=c.g.position, a=toScreen(p.clone().setY(0)), b=toScreen(p.clone().setY(0.9*c.g.scale.y)); return a.ok&&b.ok?Math.abs(a.y-b.y):999; }
 // what the running lesson allows: null = no lesson. cats: tappable/pettable cats; tools: dock tools that may be chosen
 const SHOP_FORCE=new Set(['shop','helper','roof','space']);
+function fairForce(){ if(!curHint||!W.started||W.stat.shows)return null; if(curHint.id==='show0')return 'hand'; if(curHint.id!=='show')return null; return W.cats.some(showReady)?'show':null; }
 function shopForce(){ if(!curHint||!SHOP_FORCE.has(curHint.id)||!W.started)return null; const g=guidePick(curHint.id), it=SHOP.find(x=>x.id===g); return it&&shopCan(it)?g:null; }
 function shopOk(id){ const g=shopForce(); return !g||id===g; }
 function userClose(){ if(shopForce()&&document.querySelector('#mbox [data-buy]'))return; closeModal(); }
@@ -760,6 +761,7 @@ function tutLock(){
   if(firstAdopt())return {cats:W.pickHome?W.cats.filter(readyHome):[],tools:[],fam:true};
   { const g=shopForce(); if(g)return {cats:[],tools:[],shop:g}; }
   if(tips.cur&&tips.cur.kind==='butt')return {cats:[tips.cur.c],tools:[],tapOnly:true};
+  { const f=fairForce(); if(f==='hand')return {cats:[],tools:['hand']}; if(f)return {cats:W.cats.filter(showReady),tools:[],tapOnly:true}; }
   return null; }
 function tutLockTick(){ const L=tutLock(), b=document.body; b.classList.toggle('tutLock',!!L); b.classList.toggle('faLock',!!(L&&L.fam)); b.classList.toggle('shopLock',!!(L&&L.shop));
   document.querySelectorAll('.tool').forEach(t=>t.classList.toggle('tutOk',!!(L&&L.tools.includes(t.dataset.tool)))); }
@@ -1806,12 +1808,12 @@ function birth(a,b){
 }
 let strayT=rand(60,80);
 // time to the next stray: short while there's lots of room, longer as the sanctuary fills
-const HINT_HOLD=new Set(['feed','litter','carry','shop','wand','wand2','brush','brush2','roof']);
+const HINT_HOLD=new Set(['show0','show','feed','litter','carry','shop','wand','wand2','brush','brush2','roof']);
 // calm pacing: a player who is busy with a cat or a toy is never interrupted, and events get breathing room
 function playerBusy(){ if(W.time-(W.lastInput||-99)>=6)return false; return W.tool!=='hand'||!!(S.cat&&S.cat.petT>0)||P.mode==='carry'||P.mode==='stroke'; }
 function eventOn(){ return !!(W.dropoff&&!W.dropoff.gift)||!!W.family||!!W.runaway||!!cam.meet||meetQ.length>0; }
 function calmTick(){ if(eventOn())W.lastEv=W.time; }
-function calmHold(){ return playerBusy()||W.time-(W.lastEv??-999)<(W.time<900?90:50); }
+function calmHold(){ return playerBusy()||!!fairForce()||W.time-(W.lastEv??-999)<(W.time<900?90:50); }
 function strayHold(){ return calmHold()||(!W.stat.brushTut&&W.time<900)||W.time<(W.stat.brushTutT||0)+40||!!(curHint&&HINT_HOLD.has(curHint.id)); }
 function strayGap(){ const f=W.cats.length/LV().cap; return f<0.5?rand(45,70):f<0.8?rand(75,110):rand(110,150); }
 function arriveStray(){
@@ -1927,7 +1929,7 @@ tag.el.innerHTML=`<div class="tn" id="tName"></div><div id="tTrait"></div>
   <div class="tbtns"><button id="tShow" hidden aria-label="Cat fair"></button><button id="tStay" hidden title="Keep this cat (not for adoption)">${STAY_SVG}Keep</button></div>`;
 function tagFor(c,sec){ if(tag.c!==c)W.tagShows=(W.tagShows||0)+1; tag.c=c; tag.t=Math.max(tag.t,sec); }
 function updateTag(dt){
-  if(tag.c){ tag.t-=dt; if(tag.t<=0&&!(tag.c.petT>0&&handOn(tag.c)))tag.c=null; }
+  if(tag.c){ tag.t-=dt; if(tag.t<=0&&!(tag.c.petT>0&&handOn(tag.c))&&!(fairForce()==='show'&&showReady(tag.c)))tag.c=null; }
   const c=tag.c; if(!c||intro.c||c.away>0||c.leaving||!W.started||W.paused||!$('#modal').hidden){ tag.el.hidden=true; return; }
   const top=c.g.position.clone(); top.y+=1.25*c.g.scale.x+0.35; const s=toScreen(top); if(!s.ok){ tag.el.hidden=true; return; }
   tag.el.hidden=false; const w=tag.el.offsetWidth, hh=tag.el.offsetHeight; const x=clamp(s.x-w/2,8,innerWidth-w-8), y=clamp(s.y-hh,60,innerHeight-hh-90);
@@ -1941,7 +1943,7 @@ function updateTag(dt){
 }
 for(const id of ['#tShow','#tStay'])$(id).addEventListener('pointerdown',e=>e.stopPropagation());
 $('#tShow').onclick=()=>{ if(tag.c&&!(W.family&&W.family.cat===tag.c))enterShow(tag.c); };
-$('#tStay').onclick=()=>{ const c=tag.c; if(!c)return; c.forever=!c.forever; floatWorld(c.g.position.clone().setY(1.4),c.forever?'Forever home here':'Can find a home'); tag.t=Math.max(tag.t,3); };
+$('#tStay').onclick=()=>{ const c=tag.c; if(!c||fairForce())return; c.forever=!c.forever; floatWorld(c.g.position.clone().setY(1.4),c.forever?'Forever home here':'Can find a home'); tag.t=Math.max(tag.t,3); };
 function openModal(html,noX){ $('#mbox').innerHTML=(noX?'':'<button class="x" aria-label="Close">&times;</button>')+html; $('#modal').hidden=false; const x=$('#mbox .x'); if(x)x.onclick=userClose; }
 function closeModal(){ $('#modal').hidden=true; }
 $('#modal').addEventListener('pointerdown',e=>{ if(e.target.id==='modal')userClose(); });
@@ -2074,7 +2076,7 @@ const HINTS=[
   {id:'brush',when:()=>W.time>100&&W.tool!=='brush'&&!!scruffiest(),el:'[data-tool=brush]',g:'tap',label:()=>BRUSH_HINT,done:()=>W.tool==='brush'},
   {id:'brush2',when:()=>W.tool==='brush'&&!!scruffiest(),at:()=>{ const c=scruffiest(); return c&&bodyOf(c); },g:'stroke',label:()=>BRUSH_HINT+'<span style="font-size:24px;vertical-align:8px"> ⇆</span>',done:()=>W.stat.brush>=4},
   {id:'show0',when:()=>W.tool!=='hand'&&!W.stat.shows&&W.cats.some(showReady),el:'[data-tool=hand]',g:'tap',label:()=>toolIco('hand'),done:()=>W.tool==='hand',redo:true},
-  {id:'show',when:()=>W.tool==='hand'&&W.cats.some(showReady),at:()=>headOf(W.cats.find(showReady)),g:'tap',label:()=>fairBadge(0,30),done:()=>W.stat.shows>0},
+  {id:'show',get el(){ return tag.c&&showReady(tag.c)&&!$('#tShow').hidden?'#tShow':null; },when:()=>W.tool==='hand'&&W.cats.some(showReady),at:()=>headOf(W.cats.find(showReady)),g:'tap',label:()=>fairBadge(0,30),done:()=>W.stat.shows>0},
   {id:'belly',when:()=>false&&W.cats.some(c=>c.state==='flop'&&c.offer&&c.s.trust<75),at:()=>{ const c=W.cats.find(c=>c.state==='flop'&&c.offer); return c&&bodyOf(c); },g:'none',label:'Belly? Careful!',auto:4},
   {id:'roof',when:()=>weather.raining&&!countItems('shelter'),el:'#bShop',g:'tap',label:()=>hIco(IC.shelter),done:()=>countItems('shelter')>0||!weather.raining},
   {id:'helper',when:()=>!helpers.length&&(W.cats.length>8||(W.needT||0)>60)&&shopCan(SHOP.find(x=>x.id==='helper')),el:'#bShop',g:'tap',label:()=>hIco(IC.helper),done:()=>helpers.length>0},
@@ -2087,7 +2089,7 @@ function updateHints(dt){ tutLockTick(); needTick(dt); calmTick(); if(meetQ.leng
   if(curHint){ hintT+=dt; const h=curHint;
     if(h.done&&h.done()){ if(!h.redo)hintDone.add(h.id); hideHint(); return; }
     if(h.auto&&hintT>h.auto){ if(!h.again)hintDone.add(h.id); else hintRetry[h.id]=W.time+20; hideHint(); return; }
-    if(hintT>22&&!shopForce()){ hintRetry[h.id]=W.time+50; hideHint(); return; }
+    if(hintT>22&&!shopForce()&&!fairForce()){ hintRetry[h.id]=W.time+50; hideHint(); return; }
     let x,y; if(h.el){ ({x,y}=elC(h.el)); } else { const v=h.at(); if(!v){ hideHint(); return; } const s=toScreen(v); if(!s.ok){ hintEl.hidden=true; return; } x=s.x; y=s.y; }
     hintEl.hidden=!$('#modal').hidden||W.paused||P.mode==='carry'; hintEl.style.transform=`translate(${x}px,${y}px)`;
     const lab=hintEl.querySelector('.lab'); const lw=lab.offsetWidth; lab.style.marginLeft=(Math.max(0,lw/2+8-x)-Math.max(0,x+lw/2+8-innerWidth))+'px'; lab.style.top=y<130?'48px':'-70px';
@@ -2833,6 +2835,6 @@ const musT={b:$('#bMusic')}; musT.home=musT.b.parentElement; musT.next=musT.b.ne
 $('#bPlay').onclick=()=>{ if(hasSave){ try{ loadGame(saved); }catch(e){ console.error(e); } } begin(); };
 $('#bNew').onclick=()=>{ try{ localStorage.removeItem(SAVE); localStorage.removeItem(SNAP_KEY); }catch(e){} SNAPS=[]; boardSync(true); begin(); };
 setInterval(saveGame,15000); addEventListener('pagehide',saveGame); document.addEventListener('visibilitychange',()=>{ if(document.hidden)saveGame(); });
-window.__wm={Snd,camera,shopForce,getHint:()=>curHint,startCarry,tutLock,mixHex,catScreenH,playerBusy,calmHold,eventOn,coatNow,tolFast,rPhase,metroLearn,updateBeat,shopRefresh,openShop,tempoOf,tempoTol,strokeT,updateTempo,S,endPairTut,strayHold,endBrushTut,openShop,weather,tickAll:(dt)=>{ const t=performance.now()/1000; update(dt); for(const c of W.cats)animateCat(c,dt,t); updateWand(dt,t); updateLaser(t); updateFamilyMeshes(dt,t); updateFx(dt); },snapNow,snapTake,snapFrame,snapBlocked,snapRay,snapMoments,snapTick,openSnap,getSnaps:()=>SNAPS,strayGap,getStrayT:()=>strayT,setShot:(y,c,a)=>{ SHOT_YAW=y; SHOT_CAM=c; SHOT_AT=a; },firstBye,cars,pickForHome,HINTS,showReady,updateTag,lessonOn,TREES,fadeTrees,tips,showTip,FLEA_TIP,owls,boopOwl,owlTrees,ensureBurrs,updateScruff,dustPuff,updateFleas,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
+window.__wm={Snd,fairForce,camera,shopForce,getHint:()=>curHint,startCarry,tutLock,mixHex,catScreenH,playerBusy,calmHold,eventOn,coatNow,tolFast,rPhase,metroLearn,updateBeat,shopRefresh,openShop,tempoOf,tempoTol,strokeT,updateTempo,S,endPairTut,strayHold,endBrushTut,openShop,weather,tickAll:(dt)=>{ const t=performance.now()/1000; update(dt); for(const c of W.cats)animateCat(c,dt,t); updateWand(dt,t); updateLaser(t); updateFamilyMeshes(dt,t); updateFx(dt); },snapNow,snapTake,snapFrame,snapBlocked,snapRay,snapMoments,snapTick,openSnap,getSnaps:()=>SNAPS,strayGap,getStrayT:()=>strayT,setShot:(y,c,a)=>{ SHOT_YAW=y; SHOT_CAM=c; SHOT_AT=a; },firstBye,cars,pickForHome,HINTS,showReady,updateTag,lessonOn,TREES,fadeTrees,tips,showTip,FLEA_TIP,owls,boopOwl,owlTrees,ensureBurrs,updateScruff,dustPuff,updateFleas,laser,wand,openWall,openCard,boardSync,drawBoard,wallCards,get cardBoard(){return cardBoard;},animateCat,tutQuiet,lessonCat,steerAround,obstAround,moveToward,cam,makeHelper,owls,owlHoot,helpers,personMesh,petMove,S,mice,br,startBrushTut,pondFish,petReact,giftFood,updateSafetyNet,postcard,CARD_SCENES,burrCount,brushScrub,scruffiest,firstAdopt,slowNag,showSlow,floatHourglass,guidePick,toScreen,catScreenH,step:dt=>{ update(dt); updateCamera(dt); renderer.render(scene,camera); },focusClose,leaveClose,BREEDS,exoticCoat,makeCat,applyAge,arriveStray,scratchFx,pl,startPairTut,tips,bt,startBlinkTut,tag,intro,startIntro,endIntro,fairShot,returnFromShow,W,items,cam,cars,startRomp,setDay:v=>{dayT=v;},setCollar,openCollars,P,startDropoff,updateFamilyMeshes,helpers,birds,spawnFamily,runaway,readyHome,saveGame,loadGame,pickForHome,buildItem,boop,buttTap,tapWildlife,update,enterShow,openShop,snapshot,onStroke,startCarry,makeHelper,addItem,weather,setTool,arriveStray,birth,meet};
 })();
 </script>

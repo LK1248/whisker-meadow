@@ -810,11 +810,11 @@ function nearCat(e,touch){ const lim=touch?46:26; let best=null, bd=lim;
 function toScreen(v){ pv.copy(v).project(camera); return {x:(pv.x+1)/2*innerWidth,y:(1-pv.y)/2*innerHeight,ok:pv.z<1}; }
 const HOURGLASS='<svg viewBox="0 0 40 48"><path d="M8 4h24M8 44h24" stroke="#4a3426" stroke-width="4" stroke-linecap="round"/><path d="M11 6c0 10 9 13 9 18s-9 8-9 18h18c0-10-9-13-9-18s9-8 9-18z" fill="#fff8ee" stroke="#4a3426" stroke-width="3" stroke-linejoin="round"/><path d="M15 13h10c-1 3-5 5-5 7-0-2-4-4-5-7zM13 40c1-5 7-8 7-10 0 2 6 5 7 10z" fill="#f2b04a"/></svg>';
 const slowNag={n:0,next:0};
-function floatHourglass(x,y,fast){ const d=document.createElement('div'); d.className='float hg'+(fast?' fast':''); d.innerHTML=HOURGLASS; d.style.left=x+'px'; d.style.top=y+'px'; document.body.appendChild(d); setTimeout(()=>d.remove(),1450); }
+function floatHourglass(x,y,fast){ rec('tooFast',fast?'hard':''); const d=document.createElement('div'); d.className='float hg'+(fast?' fast':''); d.innerHTML=HOURGLASS; d.style.left=x+'px'; d.style.top=y+'px'; document.body.appendChild(d); setTimeout(()=>d.remove(),1450); }
 function showSlow(){ const d=document.createElement('div'); d.className='bigSlow'; d.innerHTML=HOURGLASS+'<b>Slow</b>'; document.body.appendChild(d); setTimeout(()=>d.remove(),2800); }
 function floatAt(x,y,text,cls=''){ const d=document.createElement('div'); d.className='float '+cls; d.textContent=text; d.style.left=x+'px'; d.style.top=y+'px'; document.body.appendChild(d); setTimeout(()=>d.remove(),1450); }
 function floatWorld(v,text){ const s=toScreen(v); if(s.ok)floatAt(s.x,s.y,text); }
-function toast(html,cls='',ms=2600){ const d=document.createElement('div'); d.className='toast '+cls; d.innerHTML=html; $('#toasts').appendChild(d); setTimeout(()=>d.remove(),ms); const all=$('#toasts').children; if(all.length>3)all[0].remove(); }
+function toast(html,cls='',ms=2600){ rec('toast',String(html).replace(/<[^>]+>/g,'').slice(0,60)); const d=document.createElement('div'); d.className='toast '+cls; d.innerHTML=html; $('#toasts').appendChild(d); setTimeout(()=>d.remove(),ms); const all=$('#toasts').children; if(all.length>3)all[0].remove(); }
 
 /* ================= ITEMS ================= */
 function placeSpot(minD=1.4,edge=0.9,roof=false){ let best=null, bv=-1e9; for(let k=0;k<240;k++){ const q=rIn(edge), x=q.x, z=q.z; if(Math.abs(x)<1&&z<-LV().half+1.2)continue; if(inPond(x,z,1))continue; if((W.decoObst||[]).some(([ox,oz,orr])=>Math.hypot(x-ox,z-oz)<orr+0.9))continue;
@@ -1082,7 +1082,7 @@ function bat(c,ball){ const p=c.g.position, dx=ball.pos.x-p.x, dz=ball.pos.z-p.z
   c.nextPlay=(Math.random()<0.65&&(c.playN=(c.playN||0)+1)<4)?ball:null; if(!c.nextPlay)c.playN=0; setState(c,'idle',0.5); }
 
 /* ---------- petting ---------- */
-function onStroke(c,zone,frantic,good){
+function onStroke(c,zone,frantic,good){ rec('stroke',`${c.name} ${zone}${frantic?' frantic':''}${good?' ring':''}`);
   if(c.state==='hiding'){ foundCat(c); return; } if(c.away>0||c.carried||c.leaveT>0||c.outside||c.leaving||['boop','path','greet','bye'].includes(c.state))return; const s=c.s, brush=W.tool==='brush', now=W.time;
   const iv=now-c.lastStroke; c.lastStroke=now; c.petT=3; tagFor(c,3);
   if(!['flop','sleep','pet','eat','litter','perch','shelter'].includes(c.state)) setState(c,'pet');
@@ -1839,7 +1839,7 @@ function inherit(x,y){ let base=Math.random()<0.5?x.base:y.base, pattern=Math.ra
   if(Math.random()<0.15)base=pick(['orange','black','grey','cream','white']); if(Math.random()<0.07)base=pick(['lilac','golden']);
   if(Math.random()<0.15)pattern=pick(PATTERNS); if(Math.random()<0.1)eye=pick(EYES); if(base==='white'&&pattern!=='calico')pattern='solid'; return {base,pattern,eye}; }
 function firstAdopt(){ return !!(W.family&&!W.homes.length&&!W.stat.faSkip); }
-function skipLesson(){ if(firstAdopt()){ const f=W.family; W.stat.faSkip=1; if(!['walking','greet','bye'].includes(f.state))familyLeave('Maybe another day!'); return; }
+function skipLesson(){ rec('skip',recLesson()); if(firstAdopt()){ const f=W.family; W.stat.faSkip=1; if(!['walking','greet','bye'].includes(f.state))familyLeave('Maybe another day!'); return; }
   if(tips.cur&&(tips.cur.kind==='butt'||tips.cur.kind==='flea')){ endTip(); return; }
   if(curHint&&(shopForce()||wandForce()||fairForce())){ hintDone.add(curHint.id); if(curHint.id==='wand')hintDone.add('wand2'); if(curHint.id==='show0'||curHint.id==='show'){ hintDone.add('show'); W.stat.fairSkip=1; } hideHint(); } }
 function updateFirstAdopt(dt){ const f=W.family, on=firstAdopt()&&f.cat&&['walking','greet','bye'].includes(f.state)&&!f.cat.outside;
@@ -2097,7 +2097,7 @@ $('#bDay').classList.toggle('off',!W.dayOn);
 function openHelp(){
   const sec=(title,body,open)=>`<details${open?' open':''}><summary>${title}</summary>${body}</details>`;
   openModal(`<h3>How to play</h3><div class="help">
-  <div class="hrow"><span>Pointing hints</span><button id="hTog">${W.hints?'On':'Off'}</button></div>
+  <div class="hrow"><span>Pointing hints</span><button id="hTog">${W.hints?'On':'Off'}</button></div><div class="hrow"><span>Play log</span><span><button id="hLog">Copy</button>${navigator.share?' <button id="hLogShare">Share</button>':''}</span></div>
   ${sec('The goal',`<p>You run a cat sanctuary. Shy rescue cats arrive; you win their love, keep them healthy and happy, and help them find loving homes. There is no losing: cats never get hurt, they just get grumpy when ignored.</p>`,true)}
   ${sec(ICO_A+ICO_T+ICO_H+' The three stats',`<ul><li><b>Love</b> (heart): gentle on-beat petting, playing, feeding, blinking back, butt taps (for cats who like them), premium food. Drops when you scratch the wrong spot, pet too fast, or hold a nervous cat too long. Kittens warm up faster.</li><li><b>Groom</b> (brush): a clean, shiny coat. It fades slowly; brush to bring it back. Fair judges care a lot, families a little. A very scruffy cat catches <b>fleas</b> (tiny black dots, lots of scratching and grumbling): brush them off.</li><li><b>Health</b> (leaf): full belly, fun, a groomed coat and a clean litter box. Naps on cushions and the water fountain help.</li></ul><p>Tap a cat to see its stats above its head.</p>`)}
   ${sec('Petting rhythm',`<ul><li>Drag across the cat: one smooth stroke, then <b>wait</b>.</li><li>Keep stroking slowly: the ring by your hand fills while your hand moves over the cat, and every full ring is a happy purr. Holding still doesn't fill it, and after a few seconds of stillness the cat gets bored and wanders off.</li><li>An hourglass = slow down (a shaking one = way too fast; too much of that and the cat has had enough).</li><li>Too many fast strokes overstimulate a cat: watch for a twitching tail and sideways ears. Then it walks off, or, if it isn't fond of you yet, it scratches (band-aid!).</li></ul>`)}
@@ -2722,7 +2722,30 @@ function update(dt){
   let purr=0; for(const c of W.cats)if(c.away<=0)purr=Math.max(purr,c.purr*(handOn(c)?1:0.3)); Snd.purr(purr*0.9);
 }
 let last=performance.now();
-function frame(now){
+/* ---------- play log (always on for now): what the player did and what the game was asking for ---------- */
+const REC={k:'wm_rec',max:5000,L:[],sig:'',dirty:0,t0:Date.now()};
+try{ REC.L=JSON.parse(localStorage.getItem(REC.k)||'[]'); if(!Array.isArray(REC.L))REC.L=[]; }catch(e){ REC.L=[]; }
+function rec(ev,d){ try{ REC.L.push([Math.round((Date.now()-REC.t0)/100)/10,Math.round((W.time||0)*10)/10,ev,d==null?'':String(d)]); if(REC.L.length>REC.max)REC.L.splice(0,REC.L.length-REC.max); REC.dirty=1; }catch(e){} }
+function recSave(){ if(!REC.dirty)return; REC.dirty=0; try{ localStorage.setItem(REC.k,JSON.stringify(REC.L)); }catch(e){} }
+setInterval(recSave,4000); addEventListener('pagehide',recSave); document.addEventListener('visibilitychange',()=>{ rec(document.hidden?'hidden':'visible'); if(document.hidden)recSave(); });
+rec('session',`${new Date().toISOString()} ${innerWidth}x${innerHeight} ${matchMedia('(pointer:coarse)').matches?'touch':'mouse'}`);
+function recLesson(){ if(!W.started)return 'menu'; const p=[];
+  if(intro.c)p.push('pet:'+intro.c.name); if(bt.c)p.push('blink:'+bt.c.name); if(pl.a)p.push('pair:'+pl.stage); if(br.c)p.push('brush:'+br.c.name);
+  if(firstAdopt())p.push('adopt'+(W.pickHome?':pick':'')); { const g=shopForce(); if(g)p.push('shop:'+g); } if(tips.cur)p.push('tip:'+tips.cur.kind);
+  { const f=wandForce(); if(f)p.push('wand:'+f); } { const f=fairForce(); if(f)p.push('fair:'+f); } return p.join(',')||'free'; }
+function recTick(){ try{ const m=$('#modal'), sig=[recLesson(),'tool='+W.tool,'hint='+(curHint&&!hintEl.hidden?curHint.id:'-'),'modal='+(m.hidden?'-':((($('#mbox h3')||{}).textContent)||'?').slice(0,30)),W.paused?'paused':''].join(' | ');
+  if(sig!==REC.sig){ REC.sig=sig; rec('state',sig); } }catch(e){} }
+const recXY=e=>`@${Math.round(e.clientX/innerWidth*100)},${Math.round(e.clientY/innerHeight*100)}`;
+canvas.addEventListener('pointerdown',e=>{ if(!W.started||W.paused)return; const L=tutLock();
+  rec('down',`${P.mode||'-'}${P.mode==='catPending'&&P.cat?':'+P.cat.name+'/'+(P.zone||''):''}${P.mode==='item'&&P.item?':'+P.item.kind:''} tool=${W.tool}${L&&P.mode==='none'?' BLOCKED':''} ${recXY(e)}`); });
+addEventListener('pointerup',e=>{ if(!W.started||e.target!==canvas)return; rec('up',`${P.mode||'-'}${P.moved?' moved':''}${P.mode==='stroke'&&S.cat?' '+S.cat.name:''} ${Math.round(performance.now()-(P.t0||0))}ms`); },true);
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('button,summary,.tool'); if(!b)return; rec('click',b.id||(b.dataset&&b.dataset.tool)||b.getAttribute('aria-label')||(b.textContent||'').trim().slice(0,24)); if(b.id==='hLog')recExport(b,false); if(b.id==='hLogShare')recExport(b,true); },true);
+function recText(){ recSave(); return 'Whisker Meadow play log  (wall s since session start | game time | event | detail)\n'+REC.L.map(r=>r.join('\t')).join('\n'); }
+async function recExport(b,share){ const t=recText();
+  if(share&&navigator.share){ try{ await navigator.share({title:'Whisker Meadow play log',text:t}); b.textContent='✓'; return; }catch(e){} }
+  try{ await navigator.clipboard.writeText(t); b.textContent='✓ Copied'; return; }catch(e){}
+  openModal(`<h3>Play log</h3><textarea readonly style="width:100%;height:50vh;font:11px monospace">${t.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea>`); }
+function frame(now){ recTick();
   requestAnimationFrame(frame); const dt=Math.min(0.05,(now-last)/1000); last=now; const t=now/1000;
   if(W.started&&!W.paused)update(dt); else if(W.paused){ Snd.purr(0); hintEl.hidden=true; }
   updateTag(dt);

@@ -780,7 +780,7 @@ function tutQuiet(){ return !!(W.started&&(lessonOn()||(!W.stat.brushTut&&W.time
 // the first adopting family walking back to their car and driving away
 function firstBye(){ return !!((W.family&&W.family.first)||cars.some(k=>k.first)); }
 function lessonCat(c){ return !!c&&(c===intro.c||c===bt.c||c===pl.a||c===pl.b||c===br.c); }
-function earlyDone(){ return (W.stat.shows||0)>0||!!W.stat.fairSkip||W.time>600; } // blink + pair lessons wait for the first fair
+function earlyDone(){ return ((W.stat.showsBack||0)>0||!!W.stat.fairSkip||W.time>600)&&!W.cats.some(c=>c.away>0); } // blink + pair lessons wait for the first fair
 function blinkPending(){ return !W.stat.blinkBack&&!bt.skipped&&!bt.c&&!intro.c&&earlyDone(); }
 function focusClose(c){ if(!cam.close)cam.close={want:cam.want}; cam.close.c=c; cam.close.idle=0; cam.want=Math.min(cam.want,3.8); cam.focus=c; cam.focusT=0.3; tagFor(c,4); Snd.chirp(); }
 function leaveClose(restore){ const k=cam.close; if(!k)return; cam.close=null; if(cam.focus===k.c)cam.focus=null; if(restore)cam.want=Math.max(cam.want,k.want); }
@@ -1130,7 +1130,7 @@ function catSpace(dt){ const cs=W.cats.filter(c=>c.away<=0&&!c.carried&&!c.outsi
     const fa=PIN_ST.includes(a.state)?0:1, fb=PIN_ST.includes(b.state)?0:1; if(!fa&&!fb)continue;
     const push=Math.min(m-d,dt*(0.7+0.9*Math.max(a.speed||0,b.speed||0)))/(fa+fb); pa.x=clampX(pa.x-dx*push*fa,0.3); pa.z=clampZ(pa.z-dz*push*fa,0.3); pb.x=clampX(pb.x+dx*push*fb,0.3); pb.z=clampZ(pb.z+dz*push*fb,0.3); } }
 function updateCat(c,dt){
-  if(c.away>0){ c.away-=dt; if(c.away<=0)returnFromShow(c); return; }
+  if(c.away>0){ c.away-=dt; if(c.away<=0){ if(lessonOn()||tutLock())c.away=0.5; /* wait at the fair until the lesson is over */ else returnFromShow(c); } return; }
   landGlide(c,dt);
   const s=c.s, adult=c.age>=1, n=active().length, crowded=n>LV().cap;
   const enrich=1+0.75*items.filter(i=>['ball','tree','bed'].includes(i.kind)).length/Math.max(1,n);

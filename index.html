@@ -1727,7 +1727,8 @@ function petMove(c,len,zone){
   if(gain>0){ if(W.time-(c.petLast??-99)>5){ c.petProg=0; c.strokeErr=0; } c.petLast=W.time; c.petProg=(c.petProg||0)+gain; c.petIdle=0; if(!((c.purrBlock||0)>now))c.purr=Math.max(c.purr,0.15);
     if(c.petProg>=1){ if(!c.strokeErr)metroLearn(0); c.strokeErr=0; c.petProg=0; let z='back',best=0; for(const k in S.zones)if(S.zones[k]>best){best=S.zones[k];z=k;} S.zones={}; onStroke(c,z,false,true); } } }
 // hand resting still on a cat: 6s of patience, then it wanders off, bored
-function updatePetIdle(dt){ if(W.tool!=='hand'||P.mode!=='stroke'||!S.cat)return; const c=S.cat;
+function updatePetIdle(dt){ if(petGrace(PG.c)){ const g=PG.c; if(g.petProg>0)g.petProg=Math.min(0.97,g.petProg+dt*PET_RATE*0.15); g.petLast=W.time; g.petT=Math.max(g.petT,1); }
+  if(W.tool!=='hand'||P.mode!=='stroke'||!S.cat)return; const c=S.cat;
   if(performance.now()-(S.last||0)>120){ S.v=(S.v||0)*Math.pow(0.02,dt); c.petIdle=(c.petIdle||0)+dt; }
   if(c.petIdle>6&&!intro.c&&!bt.c&&!pl.a&&!br.c&&!['flop','sleep'].includes(c.state)){ c.petIdle=0; c.petProg=0; showIcon(c,'bored',1.6); walkAway(c,false); c.leaveT=1.2; S.cat=null; P.mode='none'; } }
 function beginStroke(c,now){ S.v=null; S.tm=null; S.samp=[]; S.moving=false; S.cat=c; S.len=0; S.zones={}; S.dir=null; S.t0=now; S.last=now; }
@@ -1750,7 +1751,9 @@ function strokeMove(e,dx,dy){
   if(!S.dir)S.dir=[ux,uy]; else { const a=lerp(S.dir[0],ux,0.3), b=lerp(S.dir[1],uy,0.3), n=Math.hypot(a,b)||1; S.dir=[a/n,b/n]; }
   S.cat.petT=Math.max(S.cat.petT,1.5);
 }
-function handOn(c){ return (P.mode==='stroke'&&S.cat===c)||(P.mode==='catPending'&&P.cat===c)||(P.type==='mouse'&&P.hoverCat===c&&!P.mode); }
+const PG={c:null,until:-1,x:0,y:0}, PG_T=0.5; // pet grace: focus outlives a lifted finger by half a second
+function petGrace(c){ return !!c&&PG.c===c&&!P.mode&&W.time<PG.until&&W.tool==='hand'&&!c.carried&&!c.leaving&&!c.outside&&!(c.away>0)&&!(c.leaveT>0); }
+function handOn(c){ return petGrace(c)||(P.mode==='stroke'&&S.cat===c)||(P.mode==='catPending'&&P.cat===c)||(P.type==='mouse'&&P.hoverCat===c&&!P.mode); }
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 canvas.addEventListener('pointerenter',()=>{ P.over=true; handVis(); });
 canvas.addEventListener('pointerleave',()=>{ P.over=false; P.hoverCat=null; handVis(); });
@@ -1761,6 +1764,7 @@ canvas.addEventListener('pointerdown',e=>{
   P.start={x:e.clientX,y:e.clientY}; P.last={...P.start}; P.t0=performance.now(); P.moved=false; handPos(e); P.down=true;
   if(e.button===2){ P.mode=tutLock()?'none':'rotate'; return; }
   let hit=pickAt(e); if(!(hit&&(hit.cat||(hit.item&&hit.item.kind!=='shelter')))&&(W.tool==='hand'||W.tool==='brush')){ const nc=nearCat(e,e.pointerType!=='mouse'); if(nc)hit=nc; }
+  if(petGrace(PG.c)&&(!hit||(hit.cat&&hit.cat!==PG.c))&&Math.hypot(e.clientX-PG.x,e.clientY-PG.y)<(e.pointerType==='mouse'?90:140))hit={cat:PG.c,zone:'back'};
   if(pl.a&&pl.stage==='carry'&&hit&&hit.cat!==pl.a)hit=null;
   { const L=tutLock(); if(L&&!(L.wandOk&&W.tool==='wand')){ if(hit&&(!hit.cat||!L.cats.includes(hit.cat)))hit=null; if(!hit||W.tool==='wand'||W.tool==='laser'){ P.mode='none'; handVis(); return; } } else if(L)hit=null; }
   if(hit&&hit.item&&hit.item.kind!=='shelter'){ P.mode='item'; P.item=hit.item; handVis(); return; }
@@ -1786,7 +1790,7 @@ canvas.addEventListener('pointermove',e=>{
   else if(P.mode==='wand')wandMove(e);
   else if(P.mode==='laser')laserMove(e);
 });
-function endPointer(e){ S.lock=null;
+function endPointer(e){ S.lock=null; const petC=P.mode==='stroke'&&W.tool==='hand'?S.cat:null;
   P.pointers.delete(e.pointerId); P.down=P.pointers.size>0; $('#ring').hidden=true;
   if(P.mode==='pinch'){ if(P.pointers.size===0)P.mode=null; handVis(); return; }
   if(P.mode==='stroke')finishStroke();
@@ -1795,6 +1799,7 @@ function endPointer(e){ S.lock=null;
   else if(P.mode==='item'&&!P.moved)useItem(P.item);
   else if(P.mode==='pan'&&!P.moved){ if(W.collarPick){ const pr=W.collarPrice||15; W.money+=pr; W.collarPick=null; hud(); toast(`Collar returned: $${pr} back`); } else if(!tapWildlife(e)&&!tapBoard(e)){ tag.c=null; leaveClose(true); } }
   else if(P.mode==='wand')wandUp(e);
+  if(petC){ PG.c=petC; PG.until=W.time+PG_T; PG.x=P.hx; PG.y=P.hy; }
   S.cat=null; P.mode=null; handVis();
 }
 canvas.addEventListener('pointerup',endPointer); canvas.addEventListener('pointercancel',endPointer);
@@ -2629,7 +2634,7 @@ const gArc=(a0,a1,r=8.6)=>{ const P2=a=>{ const t=a*Math.PI/180; return (22+r*Ma
 function touchDotTick(){ const d=$('#touchDot'), on=W.started&&!W.paused&&P.down&&P.type&&P.type!=='mouse'&&P.mode!=='pinch'&&P.mode!=='pan'&&P.mode!=='none';
   if(d.hidden!==!on)d.hidden=!on; if(on)d.style.transform=`translate(${P.hx}px,${P.hy}px)`; }
 function updateBeat(){ touchDotTick(); const el=$('#beat'); let c=null;
-  if(P.mode==='stroke'&&S.cat)c=S.cat; else if(P.mode==='catPending')c=P.cat; else if(P.type==='mouse'&&!P.mode&&P.hoverCat&&P.hoverCat.petT>0)c=P.hoverCat;
+  if(P.mode==='stroke'&&S.cat)c=S.cat; else if(P.mode==='catPending')c=P.cat; else if(petGrace(PG.c))c=PG.c; else if(P.type==='mouse'&&!P.mode&&P.hoverCat&&P.hoverCat.petT>0)c=P.hoverCat;
   if(!c||W.tool!=='hand'||c.carried||c.leaving||c.outside||!$('#modal').hidden){ el.hidden=true; return; }
   if(c.petProg&&W.time-(c.petLast??-99)>5){ c.petProg=0; c.strokeErr=0; } const fresh=W.time-c.lastStroke<0.45, bE=buttEnd(c), bOk=c.buttAnimT>c.lastStroke-0.01, bOn=bOk&&W.time<bE, bDn=bOk&&!bOn&&W.time<bE+0.5, bt=bOn||bDn, p=bt?0:fresh?1:clamp(c.petProg||0,0,1);
   el.classList.toggle('butt',bt&&!!c.buttLike); { const g=$('#beatButt'); if(bOn&&el.dataset.bt!==String(c.buttStart)){ el.dataset.bt=String(c.buttStart); const co=COATS[c.coat.base]||COATS.orange, hx=n=>'#'+n.toString(16).padStart(6,'0'); g.style.setProperty('--bb',hx(co.body)); g.style.setProperty('--bs',hx(co.stripe)); g.style.setProperty('--bl',mixHex(hx(co.body),hx(co.stripe),0.55)); g.classList.remove('go','dn'); void g.getBoundingClientRect(); g.classList.add('go'); } if(bDn&&!g.classList.contains('dn')){ g.classList.remove('go'); g.classList.add('dn'); } if(!bt){ delete el.dataset.bt; g.classList.remove('go','dn'); } }

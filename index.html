@@ -1751,7 +1751,7 @@ function strokeMove(e,dx,dy){
   if(!S.dir)S.dir=[ux,uy]; else { const a=lerp(S.dir[0],ux,0.3), b=lerp(S.dir[1],uy,0.3), n=Math.hypot(a,b)||1; S.dir=[a/n,b/n]; }
   S.cat.petT=Math.max(S.cat.petT,1.5);
 }
-const PG={c:null,until:-1,x:0,y:0}, PG_T=0.5; // pet grace: focus outlives a lifted finger by half a second
+const PG={c:null,until:-1,x:0,y:0}, PG_T=1; // pet grace: focus outlives a lifted finger by a second
 function petGrace(c){ return !!c&&PG.c===c&&!P.mode&&W.time<PG.until&&W.tool==='hand'&&!c.carried&&!c.leaving&&!c.outside&&!(c.away>0)&&!(c.leaveT>0); }
 function handOn(c){ return petGrace(c)||(P.mode==='stroke'&&S.cat===c)||(P.mode==='catPending'&&P.cat===c)||(P.type==='mouse'&&P.hoverCat===c&&!P.mode); }
 canvas.addEventListener('contextmenu',e=>e.preventDefault());

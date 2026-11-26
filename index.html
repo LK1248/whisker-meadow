@@ -2505,7 +2505,7 @@ let visitT=rand(60,90), famLogT=5;
 function famHold(){ return cardUp()||!!cam.meet||meetQ.length>0||!!(W.dropoff&&!W.dropoff.gift)||!!W.runaway||!!fairForce()||!!tips.cur||W.time-(W.lastEv??-999)<20; }
 function famDue(){ return !W.family&&visitT<=0&&(W.night||0)<0.55&&(W.cats.some(readyHome)||W.homes.length>0); }
 function spawnFamily(){ const ready=W.cats.filter(readyHome); if(!ready.length&&!W.homes.length)return; const h=LV().half; rec('family',ready.length?`arrive, ${ready.length} ready`:'arrive, none ready');
-  const want=ready.length&&Math.random()<0.7?pick(ready).trait:pick(TRAITS); const n=Math.random()<0.5?2:3; const members=[];
+  const neat=ready.filter(c=>c.s.groom>=GROOM_HOME), want=ready.length&&!W.homes.length?pick(neat.length?neat:ready).trait:ready.length&&Math.random()<0.7?pick(ready).trait:pick(TRAITS); const n=Math.random()<0.5?2:3; const members=[];
   for(let i=0;i<n;i++){ const kid=i===2||(n===2&&i===1&&Math.random()<0.4); const m=personMesh({scale:kid?0.68:1}); m.g.visible=false; m.g.position.set(-3.6+i*0.3,0,-h-8.3); m.target=m.g.position.clone(); m.route=[]; m.heading=0; m.face=0; m.speed=0; m.phase=0; scene.add(m.g); members.push(m); }
   const car=carVisit(()=>{ members.forEach((m,i)=>{ m.g.visible=true; m.route=routeIn(h,i,n); }); });
   W.family={members,want,tries:0,t:0,name:pick(FAM_NAMES),state:'arrive',car,atGate:false}; $('#family').hidden=true; }
@@ -2520,7 +2520,8 @@ function pickForHome(c){ const f=W.family; if(!f){ W.pickHome=false; return; }
   if(!readyHome(c)){ floatWorld(c.g.position.clone().setY(1.3),c.forever?'Keeping this one':'Not ready yet'); tagFor(c,4); return; }
   W.pickHome=false; f.state='walking'; f.cat=c; renderFamily('Saying hello…'); tag.c=null; walkPath(c,[new V3(rand(-.2,.2),0,-LV().half+0.85)],'greet',0.9); }
 function famGreet(c){ const f=W.family; f.state='greet'; f.greetT=3.4; f.decided=false; c.greetFlop=0; setState(c,'greet'); f.members[0].kneel=true; c.heading=Math.PI; showIcon(c,'sniff',1.3);
-  f.match=c.trait===f.want||(c.s.aff>=75&&Math.random()<0.5)||Math.random()<0.15; f.scruffy=c.s.groom<GROOM_HOME&&c.s.aff<90; if(f.scruffy)f.match=false; }
+  f.match=c.trait===f.want||(c.s.aff>=75&&Math.random()<0.5)||Math.random()<0.15; f.scruffy=c.s.groom<GROOM_HOME&&c.s.aff<90; if(f.scruffy)f.match=false;
+  if(!W.homes.length){ f.scruffy=c.s.groom<FLEA_AT; f.match=!f.scruffy&&c.s.aff>=25&&c.s.health>=30; } /* the first adoption should succeed */ }
 function backFromGate(c){ walkPath(c,[new V3(rand(-1,1),0,-LV().half+2.6)],'back',1); }
 function adoptOK(c){ const f=W.family; rec('family','adopt '+c.name); if(!W.homes.length)f.first=true; f.state='bye'; f.byeT=0; f.walking=false; f.members[0].kneel=false; const [fr,bv]=bestFriend(c); f.cats=[c];
   if(fr&&bv>=65&&readyHome(fr)){ f.cats.push(fr); W.stat.pairs++; walkPath(fr,[new V3(0.55,0,-LV().half+0.85)],'bye',1.2); }

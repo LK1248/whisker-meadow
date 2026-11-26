@@ -2855,7 +2855,7 @@ if(/[?&]dev\b/.test(location.search)){ const d=document.createElement('div'); d.
 function addGlow(grp,x,y,z,s){ const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:iconTexture('glowY'),transparent:true,depthWrite:false,opacity:0,blending:THREE.AdditiveBlending})); sp.position.set(x,y,z); sp.scale.set(s,s,s); grp.add(sp); (W.glows=W.glows||[]).push(sp); }
 const stars=(()=>{ const n=350, pos=new Float32Array(n*3); for(let i=0;i<n;i++){ const a=rand(0,6.28), e=rand(0.15,1.4), R=170; pos[i*3]=Math.cos(a)*Math.cos(e)*R; pos[i*3+1]=Math.sin(e)*R; pos[i*3+2]=Math.sin(a)*Math.cos(e)*R; }
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3)); const p=new THREE.Points(g,new THREE.PointsMaterial({color:0xffffff,size:2,sizeAttenuation:false,transparent:true,opacity:0,fog:false,depthWrite:false})); p.frustumCulled=false; scene.add(p); return p; })();
-function applySky(dt){ if(W.dayOn&&!tutQuiet())dayT=(dayT+dt)%DAYLEN; const ph=W.dayOn?dayT/DAYLEN:0.25, el=Math.sin(ph*Math.PI*2)+0.5;
+function applySky(dt){ if(W.dayOn&&!tutQuiet())dayT=(dayT+dt*(1+Math.min(1,(W.night||0)*1.5)))%DAYLEN; /* nights pass quicker */ const ph=W.dayOn?dayT/DAYLEN:0.25, el=Math.sin(ph*Math.PI*2)+0.5;
   const n=W.dayOn?clamp((0.15-el)/0.5,0,1):0, dusk=W.dayOn?clamp(1-Math.abs(el-0.2)/0.3,0,1)*(1-n):0; W.night=n;
   const sky=SKY.clone().lerp(DUSK,dusk*0.55).lerp(NIGHT,n), rainy=SKY_RAIN.clone().lerp(NIGHT,n*0.9);
   scene.background.copy(sky).lerp(rainy,weather.k); scene.fog.color.copy(scene.background);

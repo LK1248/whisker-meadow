@@ -2972,7 +2972,7 @@ const FLEA_TIP=`<svg viewBox="0 0 160 60"><circle cx="26" cy="26" r="18" fill="#
   `${ARROW(30)}<g transform="translate(92 6) scale(2)" color="#8a6a52"><g transform="rotate(-35 12 12)"><rect x="2.5" y="6.5" width="12.5" height="6.2" rx="2.6" fill="currentColor"/><path d="M4.6 13.6v3.4M7.3 13.6v3.4M10 13.6v3.4M12.7 13.6v3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M15 9.6h6.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></g></g></svg>`;
 function showTip(kind,c,svg,dur,tap){ if(kind==='butt'&&W.tool!=='hand')setTool('hand');
   if(kind==='butt'){ c.buttLike=true; if(!cam.close)cam.close={want:cam.want}; cam.close.c=c; cam.close.idle=0; cam.want=Math.min(cam.want,BUTT_ZOOM); cam.focus=c; cam.focusT=0.3; } tips.cur={kind,c,dur,tap}; tips.t=0; $('#tip').innerHTML=svg; $('#tip').hidden=false; $('#tip').style.opacity=1; if(tap){ const gh=$('#ghost'); gh.innerHTML=`<svg viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`; gh.classList.add('tap'); gh.hidden=false; } W.stat[kind+'Tip']=1; }
-function endTip(){ if(!tips.cur)return; if(tips.cur.tap){ $('#ghost').hidden=true; $('#ghost').classList.remove('tap'); } tips.cur=null; $('#tip').hidden=true; hintGap=Math.max(hintGap,3); }
+function endTip(){ if(!tips.cur)return; if(tips.cur.tap||tips.cur.kind==='flea'){ const gh=$('#ghost'); gh.hidden=true; gh.classList.remove('tap'); gh.style.opacity=''; } if(tips.cur.kind==='flea')$('[data-tool=brush]').classList.remove('tutGlow','nudge'); tips.cur=null; $('#tip').hidden=true; hintGap=Math.max(hintGap,3); }
 function updateTips(dt){ const busy=tutQuiet()||br.c||firstAdopt()||intro.c||bt.c||pl.a||!W.started||W.paused||!$('#modal').hidden;
   if(!tips.cur){ if(busy||!W.stat.brushTut||curHint||hintGap>0)return; tips.wait=(tips.wait||0)-dt; if(tips.wait>0)return; tips.wait=2;
     const flea=!W.stat.fleaTip&&active().find(c=>c.fleas&&!c.carried&&!c.outside&&c.away<=0&&toScreen(c.g.position).ok); if(flea){ if(!['sit','idle','sleep','flop'].includes(flea.state))setState(flea,'idle'); showTip('flea',flea,FLEA_TIP,8,false); return; }
@@ -2983,7 +2983,12 @@ function updateTips(dt){ const busy=tutQuiet()||br.c||firstAdopt()||intro.c||bt.
   if(T.kind==='butt'&&c.state==='idle')c.stT=Math.max(c.stT||0,2);
   if(T.kind==='butt'&&!c.buttKnown&&['idle','sit'].includes(c.state)){ const w=a=>Math.atan2(Math.sin(a),Math.cos(a)); // side-on: facing at right angles to the view
     const v=Math.atan2(camera.position.x-c.g.position.x,camera.position.z-c.g.position.z), d1=w(v+Math.PI/2-c.heading), d2=w(v-Math.PI/2-c.heading), d=Math.abs(d1)<Math.abs(d2)?d1:d2; c.heading+=d*Math.min(1,dt*4); }
-  if(T.kind==='flea'){ if(['walk','run','trot','zoom'].includes(c.state))setState(c,'idle'); if(c.state==='idle')c.stT=Math.max(c.stT||0,2); }
+  if(T.kind==='flea'){ if(['walk','run','trot','zoom'].includes(c.state))setState(c,'idle'); if(c.state==='idle')c.stT=Math.max(c.stT||0,2);
+    const gh=$('#ghost'), bb=$('[data-tool=brush]'), on=W.tool==='brush'; if(gh.hidden){ gh.innerHTML=`<svg viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`; gh.hidden=false; }
+    bb.classList.toggle('tutGlow',!on);
+    if(!on&&P.down&&P.lockPan&&W.time>(T.nudgeT||0)){ T.nudgeT=W.time+1.5; bb.classList.remove('nudge'); void bb.offsetWidth; bb.classList.add('nudge'); }
+    if(!on){ const t=elC('[data-tool=brush]'); gh.classList.add('tap'); gh.style.opacity=''; tapGesture(tips.t,t.x,t.y); }
+    else { gh.classList.remove('tap'); const b=toScreen(bodyOf(c)); if(b.ok){ const sx=Math.sin(tips.t*7)*38; gh.style.opacity=P.mode&&P.mode!=='none'?0:0.9; gh.style.transform=`translate(${b.x-30+sx}px,${b.y-40}px) rotate(${sx*0.3}deg)`; } } }
   const top=toScreen(c.g.position.clone().setY(1.35*c.g.scale.x+0.45)); if(!top.ok)return; const el=$('#tip'), w=el.offsetWidth, hh=el.offsetHeight;
   el.style.transform=`translate(${clamp(top.x-w/2,8,innerWidth-w-8)}px,${clamp(top.y-hh,60,innerHeight-hh-90)}px)`; el.style.opacity=tips.t>T.dur-0.6&&T.kind!=='flea'?0:1;
   if(T.tap){ const r=toScreen(c.core.localToWorld(new V3(0,BUTT_AIM[0],BUTT_AIM[1]))); if(r.ok){ $('#ghost').style.opacity=''; tapGesture(tips.t,r.x,r.y); } } }

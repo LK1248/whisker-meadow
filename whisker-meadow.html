@@ -1180,7 +1180,7 @@ function updateCat(c,dt){
   s.groom=Math.max(0,s.groom-dt*(0.04+(wet&&!c.outside?RAIN_GROOM:0)));
   if(wet&&!c.outside){ c.wetAcc=(c.wetAcc||0)+dt; c.dryT=0; } else { if((c.wetAcc||0)>2){ c.dryT=DRY_T; if(!c.carried)c.shake=SH_D; } c.wetAcc=0; if(c.dryT>0)c.dryT-=dt; }
   if(!c.fleas&&s.groom<FLEA_AT&&!c.outside&&Math.random()<dt/40)c.fleas=5+Math.floor(rand(0,4));
-  if(c.fleas&&s.groom>=40)c.fleas=0;
+  if(c.fleas&&s.groom>=40&&!c.fleaCaught)c.fleas=0; if(!c.fleas)c.fleaCaught=false; // caught fleas stay until brushed off
   c.fleaT=c.fleas?(c.fleaT||0)+dt:0; // how long this cat has had fleas
   if(c.fleas&&!c.outside&&!c.carried){ if(['idle','walk'].includes(c.state)&&Math.random()<dt/9){ setState(c,'itch',rand(2.4,3.2)); c.itchDur=c.stT; c.itchPh=0; }
     if(Math.random()<dt/12){ showIcon(c,'itch',1.6); if(Math.random()<0.6)Snd.meow(1.05,0.5); } }
@@ -1681,7 +1681,8 @@ function lessonFrame(dt){ if(cam.meet){ rimTick(null); return; } const L=lessonP
   cam.target.lerp(f.t,k); if(!['blink','brush'].includes(L[0])||cam.want>f.d)cam.want=lerp(cam.want,f.d,k); }
 function clampTarget(){ const B=bnd(); cam.target.x=clamp(cam.target.x,B.x0-23,B.x1+23); cam.target.z=clamp(cam.target.z,B.z0-25,B.z1+16); }
 function canRomp(o){ return ['idle','walk','watch'].includes(o.state)&&!o.carried&&!o.outside&&!o.leaving&&o.away<=0&&o.age>0.2&&o.s.fun<97&&o.petT<=0; }
-function startRomp(a,b){ for(const c of [a,b]){ setState(c,'romp',rand(9,15)); c.rompPhase='chase'; c.rompTgt=null; } a.rompP=b; b.rompP=a; a.rompRole='chaser'; b.rompRole='runner'; Snd.chirp(); }
+function startRomp(a,b){ for(const [x,y] of [[a,b],[b,a]])if(x.fleas&&!y.fleas&&y.s.groom<60&&Math.random()<0.5){ y.fleas=3+Math.floor(rand(0,3)); y.fleaCaught=true; } // fleas can hop over while playing
+  for(const c of [a,b]){ setState(c,'romp',rand(9,15)); c.rompPhase='chase'; c.rompTgt=null; } a.rompP=b; b.rompP=a; a.rompRole='chaser'; b.rompRole='runner'; Snd.chirp(); }
 function zoomBy(f){ cam.want=clamp(cam.want*f,3.2,LV().zoom*1.3); cam.userT=W.time; }
 function camUser(){ return W.time-(cam.userT??-99)<3; } // the player moved the camera just now: lessons don't steer it
 function clampIn(p){ p.x=clampX(p.x,0.2); p.z=clampZ(p.z,0.2); p.y=0; return p; }
@@ -1910,7 +1911,7 @@ function handFx(cls){ handEl.classList.remove('jerk','bump'); void handEl.offset
 /* ================= SHOWS, FAMILY, NEW ARRIVALS ================= */
 const SHOWS=['Village Cat Fair','County Cat Fair','Regional Cat Fair','National Cat Fair','Grand Cat Festival'];
 function showName(){ return SHOWS[Math.min(W.showTier,SHOWS.length-1)]; }
-function showReady(c){ const s=c.s; return (W.night||0)<0.55&&!tutQuiet()&&!(W.family&&W.family.cat===c)&&c.away<=0&&!c.carried&&!c.outside&&!c.leaving&&c.showCD<=0&&c.age>=1&&s.health>=60&&s.aff>=55&&s.groom>=GROOM_FAIR; }
+function showReady(c){ const s=c.s; return (W.night||0)<0.55&&!tutQuiet()&&!(W.family&&W.family.cat===c)&&c.away<=0&&!c.carried&&!c.outside&&!c.leaving&&c.showCD<=0&&c.age>=1&&s.health>=60&&s.aff>=55&&s.groom>=GROOM_FAIR&&!c.fleas; }
 function enterShow(c){ if(!showReady(c))return; if(c.useItem||c.state!=='idle')setState(c,'idle',1); spawnFx('spark',c.g.position.clone().setY(.5),8,.5); floatWorld(c.g.position.clone().setY(1),'To the fair!'); c.away=25; c.g.visible=false; W.stat.shows++; Snd.chime(); tag.c=null; }
 function returnFromShow(c){
   const h=LV().half; c.g.position.set(rand(-1,1),0,-h+1.5); c.g.visible=true; setState(c,'idle',3);

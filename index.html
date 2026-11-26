@@ -201,14 +201,14 @@ body.intro .dock,body.intro #hud,body.intro .top{opacity:.25;pointer-events:none
 #meet{position:fixed;left:0;right:0;bottom:0;z-index:19;display:flex;justify-content:center;padding:0 12px calc(12px + env(safe-area-inset-bottom,0px))}
 #meet .sheet{background:var(--cream);border-radius:26px;width:min(540px,100%);max-height:50vh;overflow:hidden;display:flex;flex-direction:column;box-sizing:border-box;padding:16px 16px 14px;box-shadow:0 -6px 40px rgba(60,40,30,.3);animation:pop .3s ease-out}
 #meet .nm{font:700 34px/1 var(--display);text-align:center}
-#meet .org{display:flex;justify-content:center;align-items:center;gap:6px;margin:6px 0 12px;font:700 15px var(--body);color:var(--muted)}
+#meet .org{display:flex;flex-wrap:wrap;text-align:center;justify-content:center;align-items:center;gap:2px 6px;margin:6px 0 12px;font:700 15px var(--body);color:var(--muted)}
 #meet .org svg{width:20px;height:20px}
 .roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
 .rc{border:2px solid var(--line);border-radius:14px;padding:6px 8px 8px;min-width:0}
 .rc b{display:block;font:600 14px var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rc.new{border-color:var(--pink);background:#fff0f5}
 .rc .t3{margin-top:3px;grid-template-columns:12px 1fr;gap:4px} .rc .t3 svg{width:11px;height:11px} .rc .t3 .tb{height:6px}
-#meet .big{margin-top:12px;flex:none}#meet{flex-direction:column;align-items:center}#mFam{flex:none;margin-bottom:-14px;z-index:1;pointer-events:none}#mFam img{display:block;width:min(240px,56vw,30vh);height:auto;filter:drop-shadow(0 6px 14px rgba(120,40,60,.35));animation:famPulse 1.5s ease-in-out infinite}@keyframes famPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}#meet .nm,#meet .org{flex:none}#meet .roster{flex:0 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain}
+#meet .big{margin-top:12px;flex:none}#meet{flex-direction:column;align-items:center}#mFam{flex:none;z-index:1;pointer-events:none}#meet.fam{top:0;justify-content:flex-end;pointer-events:none}#meet.fam .sheet{pointer-events:auto}#meet.fam #mFam{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center}#mFam img{display:block;width:min(240px,56vw,30vh);height:auto;filter:drop-shadow(0 6px 14px rgba(120,40,60,.35));animation:famPulse 1.5s ease-in-out infinite}@keyframes famPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}#meet .nm,#meet .org{flex:none}#meet .roster{flex:0 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain}
 #start .hbtn.ontitle{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:calc(10px + env(safe-area-inset-right,0px))}
 #start{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:linear-gradient(rgba(191,232,247,.2),rgba(255,250,242,.5));padding:16px}
 #start .card{background:var(--cream);border-radius:32px;padding:30px 28px 24px;text-align:center;width:min(380px,100%);box-shadow:0 20px 60px rgba(74,52,38,.25)}
@@ -2001,7 +2001,7 @@ function nextMeet(){
   if(!m){ W.paused=false; cam.meet=null; $('#meet').hidden=true; if(meetSaved){ cam.want=meetSaved; meetSaved=null; } handVis(); return; }
   W.paused=true; if(!meetSaved)meetSaved=cam.want; cam.meet=m.c; cam.want=4.4; tag.c=null; hideHintTemp=true;
   const kits=m.kits||[m.c]; $('#mName').textContent=kits.map(k=>k.name).join(' & ');
-  { const fe=$('#mFam'), im=m.origin==='born'?famPhoto(m.parents.filter(p=>p.g.parent),kits):null; fe.hidden=!im; if(im)fe.querySelector('img').src=im; }
+  { const fe=$('#mFam'), im=m.origin==='born'?famPhoto(m.parents.filter(p=>p.g.parent),kits):null; fe.hidden=!im; $('#meet').classList.toggle('fam',!!im); if(im)fe.querySelector('img').src=im; }
   const heart='<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="#ff6f99"/></svg>';
   const gate='<svg viewBox="0 0 24 24" fill="none" stroke="#a5754a" stroke-width="2.2"><path d="M4 21V6M20 21V6M3 6h18M7 21v-9h10v9M7 15h10"/></svg>';
   $('#mOrg').innerHTML=(m.origin==='born'?`${heart}<span>${m.parents[0].name} + ${m.parents[1].name}</span>`:m.origin==='mama'?`${gate}<span>A mama cat at the gate</span>`:m.origin==='withmama'?`${heart}<span>${m.parents[0].name}'s kitten</span>`:`${gate}<span>Found at the gate</span>`)+`<span>\u00b7 ${coatName(m.c.coat)}${m.c.age<1?' kitten':''} \u00b7 ${m.c.trait}</span>`;

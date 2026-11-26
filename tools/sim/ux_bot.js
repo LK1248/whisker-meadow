@@ -89,7 +89,7 @@ function* freeAct(){ const tool=W.tool, cs=visCats(), wts=[['pet',tool==='hand'&
   if(k==='tapcat'){ yield* tapCat(pick(cs),'free'); return; }
   if(k==='pan'){ yield* pan(); return; }
   if(k==='pinch'){ yield* pinch(); return; }
-  if(k==='ui'){ const sel=pick(['#bCats','#bShop','#bBadges','#bSnap','#bHints','#bDay']); yield* clickSel(sel,'free ui'); return; }
+  if(k==='ui'){ const sel=pick(['#bCats','#bShop','#bBadges','#bSnap','#bHints']); yield* clickSel(sel,'free ui'); return; }
   if(k==='tool'){ yield* clickSel(`[data-tool=${pick(['hand','hand','brush','laser'])}]`,'free tool'); return; }
   if(k==='ground'){ yield* tapXY(rnd(30,innerWidth-30),rnd(TOP+40,innerHeight-BOT-20),'free ground'); return; }
   note('idle'); yield Fr(R()<CFG.distract*0.3?rnd(15,40):rnd(1.5,6)); }

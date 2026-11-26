@@ -421,6 +421,8 @@ const Snd={ac:null,musicOn:true,
     this.note(1900,t+0.002,0.02,0.12,'square'); },
   ding(){ if(!this.ac)return; const t=this.ac.currentTime; this.note(1175+Math.random()*200,t,0.07,0.35,'sine'); },
   coin(){ if(!this.ac)return; const t=this.ac.currentTime; this.note(988,t,0.12,0.12,'square'); this.note(1319,t+0.08,0.12,0.3,'square'); },
+  pat(){ if(!this.ac)return; const ac=this.ac,t=ac.currentTime, s=ac.createBufferSource(); s.buffer=this.noise; const f=ac.createBiquadFilter(); f.type='lowpass'; f.frequency.value=rand(420,560); f.Q.value=1.2; const g=ac.createGain();
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.22,t+0.004); g.gain.exponentialRampToValueAtTime(0.0001,t+0.07); s.connect(f); f.connect(g); g.connect(this.sfx); s.start(t,Math.random()*0.5,0.08); },
   pop(){ if(!this.ac)return; const t=this.ac.currentTime; this.note(660,t,0.15,0.12,'sine'); },
   scoop(){ if(!this.ac)return; const ac=this.ac,t=ac.currentTime; const s=ac.createBufferSource(); s.buffer=this.noise; const f=ac.createBiquadFilter(); f.type='bandpass'; f.frequency.value=900; f.Q.value=1.5; const g=ac.createGain();
     g.gain.setValueAtTime(0.3,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.3); s.connect(f); f.connect(g); g.connect(this.sfx); s.start(t); s.stop(t+0.32); this.note(880,t+0.25,0.1,0.25,'sine'); },
@@ -2345,7 +2347,7 @@ function updateBoops(dt){ for(let i=W.boops.length-1;i>=0;i--){ const B=W.boops[
     const k=Math.min(1,B.t/(B.dur*0.8)); const sc=0.12+0.55*k+(B.t>B.dur*0.8?Math.sin((B.t-B.dur*0.8)*20)*0.04:0); B.sp.scale.set(sc,sc,sc);
     if(B.t>=B.dur||B.a.state!=='boop'||B.b.state!=='boop'){ if(B.t>=B.dur*0.7){ addBond(B.a,B.b,5); spawnFx('h',B.sp.position,5,.35); Snd.ding(); } scene.remove(B.sp); W.boops.splice(i,1); } } }
 function buttEnd(c){ return c.buttStart==null?-99:Math.max((c.buttAnimT??-99)+1,c.buttStart+2.2); }
-function buttTap(c){ if(c.away>0||c.carried||c.outside||c.leaving||['path','greet','bye'].includes(c.state))return; const s=c.s; tagFor(c,3); if(!(W.time<buttEnd(c)))c.buttStart=W.time; c.buttAnimT=W.time; c.petProg=0;
+function buttTap(c){ if(c.away>0||c.carried||c.outside||c.leaving||['path','greet','bye'].includes(c.state))return; const s=c.s; Snd.pat(); tagFor(c,3); if(!(W.time<buttEnd(c)))c.buttStart=W.time; c.buttAnimT=W.time; c.petProg=0;
   if(!['flop','sleep','boop'].includes(c.state))setState(c,'pet'); c.petT=2.5;
   if(c.buttLike){ c.elev=1.2; const fresh=W.time-(c.buttT??-99)>8; c.buttT=W.time; c.purr=Math.max(c.purr,0.8); if(!c.buttKnown)floatWorld(c.g.position.clone().setY(1.3),'Loves butt taps!');
     if(fresh){ s.aff=Math.min(100,s.aff+1); spawnFx('h',c.g.position.clone().setY(.9),1); W.stat.butt++; } }

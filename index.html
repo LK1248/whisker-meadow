@@ -809,7 +809,7 @@ function shopOk(id){ const g=shopForce(); return !g||id===g; }
 function userClose(){ const g=shopForce(); if(g&&curHint&&document.querySelector('#mbox [data-buy]')){ rec('skip','shop:'+g); hintDone.add(curHint.id); hideHint(); } closeModal(); }
 function tutLock(){
   if(intro.c)return {cats:[intro.c],tools:[]};
-  if(bt.c)return {cats:[bt.c],tools:[]};
+  if(bt.c)return {cats:[bt.c],tools:[],tapOnly:true,noCarry:true};
   if(pl.a)return {cats:pl.stage==='carry'?[pl.a]:[],tools:[]};
   if(br.c)return {cats:W.tool==='brush'?[br.c]:[],tools:['brush']};
   if(firstAdopt())return {cats:W.pickHome?W.cats.filter(readyHome):[],tools:[],fam:true};
@@ -2868,7 +2868,7 @@ function updateFireflies(dt,t){ const n=W.night||0;
 let bondT=0, famT=0, slowT=0, birdT=8;
 function update(dt){
   W.time+=dt;
-  if(P.mode==='catPending'&&!P.moved&&(W.tool==='hand'||W.tool==='brush')){ const e=performance.now()-P.t0, r=$('#ring');
+  if(P.mode==='catPending'&&!P.moved&&(W.tool==='hand'||W.tool==='brush')&&!(tutLock()||{}).noCarry){ const e=performance.now()-P.t0, r=$('#ring');
     if(e>130){ r.hidden=false; r.style.transform=`translate(${P.hx}px,${P.hy}px)`; r.style.setProperty('--p',clamp((e-130)/320,0,1)); }
     if(e>450)startCarry(P.cat); }
   updateClose(dt);

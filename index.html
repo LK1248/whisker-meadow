@@ -1568,7 +1568,14 @@ function updateWeather(dt){
 
 /* ================= CAMERA & INPUT ================= */
 const cam={theta:0.55,phi:0.98,dist:8.5,want:8.5,target:new V3(0,0.3,0),shake:0,meet:null};
-function updateCamera(dt){ lessonFrame(dt);
+const PZ={c:null,t:0}, PZ_PLANE=new THREE.Plane(new V3(0,1,0),-0.3), PZ_V=new V3();
+function petZoom(dt){ if(!dt||W.paused)return; const c=P.mode==='stroke'&&W.tool==='hand'?S.cat:petGrace(PG.c)?PG.c:null;
+  if(!c||c!==PZ.c){ PZ.c=c; PZ.t=0; return; } PZ.t+=dt;
+  if(PZ.t<3||P.mode!=='stroke'||camUser()||lessonOn()||cam.meet||cam.close)return;
+  const goal=4.4; if(cam.want<=goal)return; const nw=Math.max(goal,cam.want*(1-0.08*dt)), k=1-nw/cam.want;
+  setRay({clientX:P.hx,clientY:P.hy}); const gp=ray.ray.intersectPlane(PZ_PLANE,PZ_V); if(gp){ cam.target.x+=(gp.x-cam.target.x)*k; cam.target.z+=(gp.z-cam.target.z)*k; clampTarget(); }
+  cam.want=nw; cam.dist=Math.min(cam.dist,cam.want+0.05); }
+function updateCamera(dt){ lessonFrame(dt); petZoom(dt);
   if(cam.focusT>0&&cam.focus&&!cam.meet&&!camUser()){ cam.focusT-=dt; const fp=cam.focus.g.position; cam.target.x=lerp(cam.target.x,fp.x,Math.min(1,dt*4)); cam.target.z=lerp(cam.target.z,fp.z,Math.min(1,dt*4)); }
   if(cam.meet){ const fp=cam.meet.g.position; const fx=cam.target.x-camera.position.x, fz=cam.target.z-camera.position.z, fl=Math.hypot(fx,fz)||1;
     cam.target.x=lerp(cam.target.x,fp.x-fx/fl*1.3,Math.min(1,dt*3)); cam.target.z=lerp(cam.target.z,fp.z-fz/fl*1.3,Math.min(1,dt*3)); }
@@ -1789,6 +1796,7 @@ canvas.addEventListener('pointerdown',e=>{
   if(e.button===2){ P.mode=tutLock()?'none':'rotate'; return; }
   let hit=pickAt(e); if(!(hit&&(hit.cat||(hit.item&&hit.item.kind!=='shelter')))&&(W.tool==='hand'||W.tool==='brush')){ const nc=nearCat(e,e.pointerType!=='mouse'); if(nc)hit=nc; }
   if(petGrace(PG.c)&&(!hit||(hit.cat&&hit.cat!==PG.c))&&nearPet(PG.c,e))hit={cat:PG.c,zone:'back'};
+  if(e.pointerType!=='mouse'&&!hit&&performance.now()-(P.tapT??-1e9)<350&&Math.hypot(e.clientX-P.tapX,e.clientY-P.tapY)<50){ P.tapT=-1e9; P.mode='dzoom'; P.dz0=e.clientY; P.dzW=cam.want; rec('dzoom',''); return; }
   if(pl.a&&pl.stage==='carry'&&hit&&hit.cat!==pl.a)hit=null;
   { const L=tutLock(); if(L&&!(L.wandOk&&W.tool==='wand')){ if(hit&&(!hit.cat||!L.cats.includes(hit.cat)))hit=null; if(!hit||W.tool==='wand'||W.tool==='laser'){ P.mode='pan'; P.lockPan=true; groundAt(e,P.grab); handVis(); return; } } else if(L)hit=null; }
   if(hit&&hit.item&&hit.item.kind!=='shelter'){ P.mode='item'; P.item=hit.item; handVis(); return; }
@@ -1802,6 +1810,7 @@ canvas.addEventListener('pointermove',e=>{
   if(!W.started)return; handPos(e);
   if(P.pointers.has(e.pointerId)){ P.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY}); if(!W.paused)W.lastInput=W.time; }
   if(!P.mode||P.mode==='none'){ if(e.pointerType==='mouse'){ if(W.tool==='laser')laserMove(e); const now=performance.now(); if(now-P.hoverT>60){ P.hoverT=now; const h=pickAt(e); P.hoverCat=h&&h.cat?h.cat:null; } } return; }
+  if(P.mode==='dzoom'){ cam.want=clamp(P.dzW*Math.exp((P.dz0-e.clientY)*0.006),3.2,LV().zoom*1.3); cam.userT=W.time; return; }
   if(P.mode==='pinch'){ if(P.pointers.size<2)return; const [a,b]=[...P.pointers.values()]; const d=Math.hypot(a.x-b.x,a.y-b.y); if(P.pinch>0)zoomBy(P.pinch/d); P.pinch=d; return; }
   const dx=e.clientX-P.last.x, dy=e.clientY-P.last.y; P.last={x:e.clientX,y:e.clientY};
   if(Math.hypot(e.clientX-P.start.x,e.clientY-P.start.y)>(e.pointerType==='mouse'?8:14))P.moved=true;
@@ -1817,6 +1826,7 @@ canvas.addEventListener('pointermove',e=>{
 function endPointer(e){ S.lock=null; const petC=P.mode==='stroke'&&W.tool==='hand'?S.cat:null;
   P.pointers.delete(e.pointerId); P.down=P.pointers.size>0; $('#ring').hidden=true;
   if(P.mode==='pinch'){ if(P.pointers.size===0)P.mode=null; handVis(); return; }
+  if(P.mode==='pan'&&!P.moved&&e.pointerType!=='mouse'){ P.tapT=performance.now(); P.tapX=e.clientX; P.tapY=e.clientY; }
   if(P.mode==='stroke')finishStroke();
   if(P.mode==='catPending'&&!P.moved){ const c=P.cat; if(c.state==='hiding')foundCat(c); else if(W.runaway&&W.runaway.c===c&&c.pathEnd==='hide')caughtEarly(c); else if(W.collarPick){ setCollar(c,W.collarPick); W.collarPick=null; tagFor(c,3); spawnFx('spark',c.g.position.clone().setY(.8),5,.3); Snd.chime(); floatWorld(c.g.position.clone().setY(1.3),'Looking sharp!'); } else if(W.pickHome)pickForHome(c); else if(!lessonOn()&&!(tips.cur&&tips.cur.kind==='butt')&&!(c.blinkBackT>0)&&(!cam.close||cam.close.c!==c)&&catScreenH(c)<75)focusClose(c); else if(P.zone==='rump'&&!(c.blinkBackT>0)){ buttTap(c); PG.c=c; PG.until=W.time+0.5; PG.x=P.hx; PG.y=P.hy; } else { tagFor(c,5); if(c.blinkBackT>0)blinkBack(c); else Snd.meow(rand(1.05,1.3),0.25); } }
   else if(P.mode==='carry')dropCat(P.cat);
@@ -2914,8 +2924,9 @@ function updatePairTut(dt){
   const held=W.cats.find(c=>c.carried); if(held)pl.held=held;
   if(pl.stage==='carry'&&W.stat.drops>pl.lastDrop&&!held){ pl.lastDrop=W.stat.drops; const d=pl.held;
     // the first cat, dropped next to the second one
-    const o=d===a?b:null;
-    if(o&&dist2(o.g.position,d.g.position)<1.9*1.9){ pl.stage='watch'; pl.t=0; $('#ghost').hidden=true; if(d.state!=='boop'&&canBoop(d)&&canBoop(o)){ d.boopCD=o.boopCD=0; boop(d,o); } updatePairTut(0); return; } }
+    const o=d===a?b:d===b?a:null;
+    if(o&&dist2(o.g.position,d.g.position)<1.9*1.9){ pl.stage='watch'; pl.t=0; $('#ghost').hidden=true; if(d.state!=='boop'&&o.state!=='boop'&&!o.carried){ d.boopCD=o.boopCD=0; d.petT=o.petT=0; boop(d,o); } updatePairTut(0); return; }
+    pl.t=0; /* dropped too far (or another cat): the pointing hand starts over */ }
   const pa=a.g.position, pb=b.g.position;
   pl.clearT=(pl.clearT||0)-dt; if(pl.clearT<=0){ pl.clearT=0.5; const mid=pa.clone().add(pb).multiplyScalar(0.5), rad=Math.max(2.4,Math.sqrt(dist2(pa,pb))/2+1.6);
     for(const c of active()){ if(c===a||c===b||c.carried||c.outside||c.leaving||c.away>0)continue; const p=c.g.position, d=Math.sqrt(dist2(p,mid));

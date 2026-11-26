@@ -1945,9 +1945,10 @@ function tryFamily(){ if(firstAdopt()||tutQuiet())return;
   for(const a of act)for(const b of act){ if(a.id>=b.id||a.sex===b.sex||related(a,b)||!ok(a)||!ok(b))continue; if(getBond(a,b)>=60&&Math.random()<0.35){ birth(a,b); return; } }
 }
 function birth(a,b){
-  const room=LV().cap-W.cats.length; const n=(room>=2&&Math.random()<0.35)?2:1; const mid=a.g.position.clone().add(b.g.position).multiplyScalar(0.5);
-  for(let i=0;i<n;i++){ const k=makeCat({coat:inherit(a.coat,b.coat),age:0.02,parents:[a.id,b.id],mother:(a.sex==='f'?a:b).id,origin:'born',x:mid.x+rand(-.4,.4),z:mid.z+rand(-.4,.4),s:{aff:55,full:85,fun:75,groom:50,health:85,clean:90}}); addBond(k,a,50); addBond(k,b,50); meet(k,'born',[a,b]); }
-  a.breedCD=b.breedCD=200; a.litters=b.litters=1; a.fixed=b.fixed=true; setTimeout(()=>{ showIcon(a,'vet',2.5); showIcon(b,'vet',2.5); },3000); spawnFx('h',mid.clone().setY(.8),8,.6,0.5); Snd.chime(); W.stat.kittens+=n;
+  const room=LV().cap-W.cats.length; const n=(room>=2&&Math.random()<0.35)?2:1; const mid=a.g.position.clone().add(b.g.position).multiplyScalar(0.5), ks=[];
+  for(let i=0;i<n;i++){ const k=makeCat({coat:inherit(a.coat,b.coat),age:0.02,parents:[a.id,b.id],mother:(a.sex==='f'?a:b).id,origin:'born',x:mid.x+rand(-.4,.4),z:mid.z+rand(-.4,.4),s:{aff:55,full:85,fun:75,groom:50,health:85,clean:90}}); addBond(k,a,50); addBond(k,b,50); ks.push(k); }
+  if(!famMoment(ks,a,b,mid))for(const k of ks)meet(k,'born',[a,b]);
+  a.breedCD=b.breedCD=200; a.litters=b.litters=1; a.fixed=b.fixed=true; setTimeout(()=>{ showIcon(a,'vet',2.5); showIcon(b,'vet',2.5); },3000); spawnFx('h',mid.clone().setY(.8),4,.4,0.4); Snd.chime(); W.stat.kittens+=n;
   unlock('first_kitten'); checkCollection(); hud();
 }
 let strayT=rand(60,80);
@@ -2377,6 +2378,18 @@ function canBoop(c){ return !c.carried&&!c.outside&&!c.leaving&&c.away<=0&&(c.bo
 function boop(a,b){ const lick=getBond(a,b)>=40&&Math.random()<0.6; snapHint('boop',[a,b],0.5);
   for(const c of [a,b]){ setState(c,'boop',lick?4.4:3.4); c.boopP=c===a?b:a; c.boopCD=rand(40,70); c.boopKind=lick?'lick':'boop'; c.licker=lick&&c===a; }
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:iconTexture('h'),transparent:true,depthWrite:false})); sp.scale.set(0.12,0.12,0.12); scene.add(sp); W.boops.push({a,b,sp,t:0,dur:lick?4.2:3.2}); Snd.chirp(); }
+// newborn family moment: the parents nuzzle their kitten nose to nose while hearts float up, then the welcome card
+let FAM=null;
+function famMoment(ks,a,b,mid){ if([a,b].some(c=>c.carried||c.away>0||c.outside||c.leaving))return false;
+  const mom=a.sex==='f'?a:b, dad=mom===a?b:a, k1=ks[0], k2=ks[1]||null;
+  k1.g.position.set(mid.x,0,mid.z); if(k2){ const o=mom.g.position; k2.g.position.set(mid.x+(mid.x-o.x)*0.35,0,mid.z+(mid.z-o.z)*0.35); }
+  for(const c of [mom,dad,...ks]){ c.path=null; c.boopKind='boop'; c.licker=false; c.boopCD=rand(40,70); setState(c,'boop',3.4); }
+  k1.boopP=mom; mom.boopP=k1; if(k2){ k2.boopP=dad; dad.boopP=k2; } else dad.boopP=k1;
+  FAM={ks,mom,dad,t:0,next:0.3,i:0,w0:cam.want,a,b}; cam.focus={g:{position:mid.clone()}}; cam.focusT=3.4; cam.want=Math.min(cam.want,6.5); return true; }
+function famTick(dt){ const F=FAM; if(!F||W.paused)return; F.t+=dt;
+  if(F.t>=F.next&&F.t<3){ F.next+=0.3; const par=F.i%2?F.dad:F.mom, kit=F.ks.length>1&&F.i%2?F.ks[1]:F.ks[0], p=par.g.position, q=kit.g.position; F.i++;
+    spawnFx('h',new V3((p.x+q.x)/2+rand(-0.08,0.08),0.55+0.25*kit.g.scale.y+rand(0,0.12),(p.z+q.z)/2+rand(-0.08,0.08)),1,.12,0.32); if(F.i%3===1)Snd.ding(); }
+  if(F.t>=3.4){ FAM=null; cam.want=F.w0; for(const k of F.ks)meet(k,'born',[F.a,F.b]); } }
 function updateBoops(dt){ for(let i=W.boops.length-1;i>=0;i--){ const B=W.boops[i]; B.t+=dt; const a=B.a.g.position,b=B.b.g.position; B.sp.position.set((a.x+b.x)/2,1.05+Math.min(1,B.t/B.dur)*0.35,(a.z+b.z)/2);
     const k=Math.min(1,B.t/(B.dur*0.8)); const sc=0.12+0.55*k+(B.t>B.dur*0.8?Math.sin((B.t-B.dur*0.8)*20)*0.04:0); B.sp.scale.set(sc,sc,sc);
     if(B.t>=B.dur||B.a.state!=='boop'||B.b.state!=='boop'){ if(B.t>=B.dur*0.7){ addBond(B.a,B.b,5); spawnFx('h',B.sp.position,5,.35); Snd.ding(); } scene.remove(B.sp); W.boops.splice(i,1); } } }
@@ -2697,7 +2710,7 @@ function updateStars(){ const pts=starPts();
 function extraUpdate(dt){
   for(const it of items){ if(it.boing>0){ it.boing=Math.max(0,it.boing-dt*2.5); const k=Math.sin((1-it.boing)*Math.PI*3)*it.boing*0.14; it.mesh.scale.set(1+k*0.6,1-k,1+k*0.6); }
     if(it.kind==='ball'&&it.tier>1&&it.orb){ it.spin=Math.max(0,it.spin-dt*2); it.orb.rotation.y+=dt*(0.6+it.spin); } else if(it.kind==='bowl'&&it.water){ it.water.position.y=0.48+Math.sin(W.time*6)*0.025; } else if(it.kind==='litter'&&it.tier>=3&&it.dirt>0){ it.dirt=Math.max(0,it.dirt-dt/45); } else if(it.kind==='tree'&&it.toy){ it.toy.position.x=0.3+Math.sin(W.time*2)*0.04; } }
-  updateBoops(dt); updateDropoff(dt);
+  updateBoops(dt); famTick(dt); updateDropoff(dt);
   // night ambience: crickets fade in with the dark, an owl hoots now and then
   { const n=W.night||0; if(Snd.ac&&n>0.25&&!weather.raining){ W.crT=(W.crT??0)-dt; if(W.crT<=0){ W.crT=rand(0.25,0.9)/n; Snd.cricket(n*rand(0.5,1)); }
       W.owlT=(W.owlT??rand(8,15))-dt; if(W.owlT<=0){ W.owlT=rand(18,40); if(n>0.6){ Snd.owl(n); owlHoot(); } } } }

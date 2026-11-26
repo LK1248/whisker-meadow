@@ -125,6 +125,12 @@ body.intro .dock,body.intro #hud,body.intro .top{opacity:.25;pointer-events:none
 @keyframes twk{0%,100%{opacity:0;transform:scale(.3) rotate(0)}50%{opacity:1;transform:scale(1) rotate(45deg)}}
 .fairpic .fb{position:absolute;left:6px;top:4px;width:78px;height:78px}
 #hint{position:fixed;left:0;top:0;pointer-events:none;z-index:6}
+#lessonRim{position:fixed;left:0;top:0;width:0;height:0;z-index:6;pointer-events:none}
+#lessonRim .bb{position:absolute;left:-25px;top:-25px;width:50px;height:50px;border-radius:50%;background:var(--cream);color:var(--pink);display:grid;place-items:center;pointer-events:auto;cursor:pointer;box-shadow:0 3px 0 rgba(74,52,38,.12),0 6px 16px rgba(74,52,38,.28);animation:rimPulse 1.3s ease-in-out infinite}
+#lessonRim .bb svg{width:30px;height:30px}
+#lessonRim .ar{position:absolute;left:0;top:0;width:0;height:0}
+#lessonRim .ar::after{content:'';position:absolute;left:27px;top:-8px;border:8px solid transparent;border-left:11px solid var(--pink)}
+@keyframes rimPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.13);box-shadow:0 3px 0 rgba(74,52,38,.12),0 0 0 7px rgba(255,122,162,.28)}}
 #hint .hh{position:absolute;left:-30px;top:-22px;width:60px;height:60px}
 #hint .hh svg{width:100%;height:100%;filter:drop-shadow(0 4px 4px rgba(74,52,38,.3))}
 #hint .lab{position:absolute;left:0;top:-70px;display:flex;align-items:center;gap:4px;line-height:0;transform:translateX(-50%);white-space:nowrap;background:var(--cream);padding:7px 14px;border-radius:999px;font:600 18px var(--display);box-shadow:0 3px 0 rgba(74,52,38,.12),0 8px 18px rgba(74,52,38,.2)}
@@ -1625,7 +1631,16 @@ function fadeTrees(dt){ if(!TREES.length)return; treePrune-=dt; if(treePrune<=0)
     if(!u.own){ u.own=true; u.parts.forEach(m=>{ m.material=m.material.clone(); m.material.transparent=true; }); }
     u.parts.forEach(m=>{ m.material.opacity=u.fade; m.material.depthWrite=u.fade>0.98; }); u.fading=u.fade!==want; } }
 // ---- lesson framing: centre the cats a step is about, as close as fits them all ----
-const LF={key:'',pts:null,glide:0,want0:null,user0:-99};
+const LF={key:'',pts:null,glide:0,want0:null,user0:-99,offT:0,back:false};
+// edge marker pointing at the lesson's cat while it is out of view
+function rimTick(L){ let el=$('#lessonRim'); if(!el){ el=document.createElement('div'); el.id='lessonRim'; el.hidden=true; el.innerHTML=`<div class="ar"></div><button class="bb" aria-label="Back to the cat">${CATF}</button>`; document.body.appendChild(el);
+    el.querySelector('.bb').addEventListener('pointerdown',e=>{ e.stopPropagation(); e.preventDefault(); LF.glide=2.2; LF.back=true; LF.offT=0; Snd.ding(); }); }
+  if(!L||!W.started||W.paused||!$('#modal').hidden||P.mode==='carry'){ el.hidden=true; return; }
+  const s=toScreen(L[1][0].g.position.clone().setY(0.4)); let x=s.x, y=s.y; if(!s.ok){ x=innerWidth-x; y=innerHeight-y; }
+  if(s.ok&&x>-10&&x<innerWidth+10&&y>40&&y<innerHeight-60){ el.hidden=true; return; }
+  const m=40, top=110, bot=118, cx=innerWidth/2, cy=innerHeight/2, dx=x-cx, dy=y-cy;
+  const k=Math.min((cx-m)/Math.max(1e-6,Math.abs(dx)),(dy<0?cy-top:innerHeight-bot-cy)/Math.max(1e-6,Math.abs(dy)));
+  el.hidden=false; el.style.transform=`translate(${cx+dx*k}px,${cy+dy*k}px)`; el.querySelector('.ar').style.transform=`rotate(${Math.atan2(dy,dx)}rad)`; }
 function lessonPts(){ const ok=c=>c&&c.away<=0&&!c.outside&&!c.leaving;
   if(intro.c||!W.started)return null; // the petting lesson frames itself
   if(bt.c)return ['blink',[bt.c]]; if(pl.a)return ['pair',[pl.a,pl.b]]; if(br.c)return ['brush',[br.c]];
@@ -1638,13 +1653,16 @@ function fitFor(cats,extra){ const P=cats.map(c=>c.g.position).concat(extra||[])
   const vh=camera.fov*Math.PI/360, hh=Math.atan(Math.tan(vh)*camera.aspect), half=Math.min(vh,hh);
   return {t:new V3(cx,0.4,cz),d:clamp(r/Math.tan(half)*1.05,3.6,LV().zoom*1.6)}; }
 function offScreen(cats){ return cats.some(c=>{ const s=toScreen(c.g.position.clone().setY(0.4)); return !s.ok||s.x<innerWidth*0.08||s.x>innerWidth*0.92||s.y<innerHeight*0.15||s.y>innerHeight*0.8; }); }
-function lessonFrame(dt){ if(cam.meet)return; const L=lessonPts(), key=L?L[0]+':'+L[1].map(c=>c.name).join(','):'';
+function lessonFrame(dt){ if(cam.meet){ rimTick(null); return; } const L=lessonPts(), key=L?L[0]+':'+L[1].map(c=>c.name).join(','):'';
+  const IL=!L&&W.started&&intro.c&&intro.c.g&&!intro.c.carried?['intro',[intro.c]]:null; rimTick(L||IL); // the petting lesson frames itself, but gets the marker and the glide back too
+  if(IL){ LF.offT=offScreen(IL[1])?LF.offT+dt:0; if(LF.offT>=4){ LF.ib=2.2; LF.offT=0; } if(LF.ib>0){ LF.ib-=dt; cam.target.lerp(fitFor(IL[1]).t,Math.min(1,dt*1.6)); } } else if(!L){ LF.offT=0; LF.ib=0; }
   if(key!==LF.key){ const was=LF.key; LF.key=key;
     if(was&&!key){ if(LF.want0!=null&&LF.user0===(cam.userT??-99))cam.want=Math.max(cam.want,LF.want0); LF.want0=null; LF.glide=0; return; }
-    if(key){ if(!was){ LF.want0=cam.want; LF.user0=cam.userT??-99; } LF.glide=2.5; } }
-  if(!L)return; if(camUser()){ LF.glide=0; return; }
+    if(key){ if(!was){ LF.want0=cam.want; LF.user0=cam.userT??-99; } LF.glide=2.5; } LF.offT=0; LF.back=false; }
+  if(!L)return; LF.offT=offScreen(L[1])?LF.offT+dt:0; if(LF.offT>=4&&!(LF.back&&LF.glide>0)){ LF.glide=2.2; LF.back=true; LF.offT=0; } // out of view for 4 s: glide back
+  if(!LF.back&&W.time-(cam.userT??-99)<4){ LF.glide=0; return; }
   if(LF.glide<=0&&offScreen(L[1]))LF.glide=1.5; // a framed cat wandered out of view
-  if(LF.glide<=0)return; LF.glide-=dt; const f=fitFor(L[1],L[2]), k=Math.min(1,dt*2.5);
+  if(LF.glide<=0){ LF.back=false; return; } LF.glide-=dt; const f=fitFor(L[1],L[2]), k=Math.min(1,dt*(LF.back?1.6:2.5));
   cam.target.lerp(f.t,k); if(!['blink','brush'].includes(L[0])||cam.want>f.d)cam.want=lerp(cam.want,f.d,k); }
 function clampTarget(){ const B=bnd(); cam.target.x=clamp(cam.target.x,B.x0-23,B.x1+23); cam.target.z=clamp(cam.target.z,B.z0-25,B.z1+16); }
 function canRomp(o){ return ['idle','walk','watch'].includes(o.state)&&!o.carried&&!o.outside&&!o.leaving&&o.away<=0&&o.age>0.2&&o.s.fun<97&&o.petT<=0; }

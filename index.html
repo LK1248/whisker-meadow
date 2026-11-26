@@ -1306,6 +1306,7 @@ function animateCat(c,dt,t){
   else if(st==='pet'){ const j=c.joy||0; hz=Math.sin(t*2.2)*(0.18+0.15*j); hy=purring?Math.sin(t*2.6)*(0.3+0.3*j):0; rz=Math.sin(t*1.6)*(0.08+0.14*j); hx=-0.15-0.2*j; tailUp=0.95+0.35*j; swish=0.06+0.06*j; swSpd=2.2+6*j; eye=purring?0.42-0.2*j:1; legA=[0,0,0,0];
     if(c.lean>0){ c.lean-=dt; hx-=0.25*c.lean; rz+=0.12*c.lean; } if(c.purr>0.6||j>0.3){ const kn=0.35+0.25*j; legA=[Math.max(0,Math.sin(t*5))*-kn,Math.max(0,-Math.sin(t*5))*-kn,0,0]; } coreY=0.46-0.04*j; }
   else if(st==='eat'){ hx=0.6; rx=0.12; coreY=0.43; legA=[0,0,0,0]; }
+  else if(st==='greet'&&c.greetFlop===2){ rz=2.35+Math.sin(t*2.4)*0.1; coreY=0.36; legA=[Math.sin(t*4)*0.55-0.1,Math.sin(t*4+1.6)*0.55-0.1,0.35+Math.sin(t*3)*0.25,0.35+Math.sin(t*3+1)*0.25]; tailUp=0; swish=0.35; swSpd=4; eye=0.45; hz=-0.6; hx=-0.2; }
   else if(st==='greet'&&c.greetFlop){ rz=1.55+Math.sin(t*2.4)*0.12; coreY=0.34; legA=[Math.sin(t*4)*0.5-0.3,Math.sin(t*4+1.6)*0.5-0.3,0.4,0.4]; tailUp=0.1; swish=0.35; swSpd=4; eye=0.45; hz=-0.5; hx=-0.2; }
   else if(st==='greet'||st==='bye'){ rx=-0.45; coreY=0.44; legA=[0.45,0.45,-1.0,-1.0]; tailUp=0.7; swish=0.1; }
   else if(st==='itch'){ const D=c.itchDur||2, p=clamp(1-c.stT/D,0,1), hold=p>0.88; c.itchPh=(c.itchPh||0)+dt*(13+38*p*p); const amp=hold?0:0.34*(0.55+0.45*p);
@@ -2527,6 +2528,7 @@ function renderFamily(msg,noX){ const f=W.family, el=$('#family'); if(!f){ el.hi
 function pickForHome(c){ const f=W.family; if(!f){ W.pickHome=false; return; }
   if(!readyHome(c)){ floatWorld(c.g.position.clone().setY(1.3),c.forever?'Keeping this one':'Not ready yet'); tagFor(c,4); return; }
   W.pickHome=false; f.state='walking'; f.cat=c; renderFamily('Saying hello…'); tag.c=null; walkPath(c,[new V3(rand(-.2,.2),0,-LV().half+0.85)],'greet',0.9); }
+const BELLY_SIDE=-1; // which way to turn so a roll (core rz>0) shows the belly toward a target
 function famGreet(c){ const f=W.family; f.state='greet'; f.greetT=3.4; f.decided=false; c.greetFlop=0; setState(c,'greet'); f.members[0].kneel=true; c.heading=Math.PI; showIcon(c,'sniff',1.3);
   f.match=c.trait===f.want||(c.s.aff>=75&&Math.random()<0.5)||Math.random()<0.15; f.scruffy=c.s.groom<GROOM_HOME&&c.s.aff<90; if(f.scruffy)f.match=false;
   if(!W.homes.length){ f.scruffy=c.s.groom<FLEA_AT; f.match=!f.scruffy&&c.s.aff>=25&&c.s.health>=30; } /* the first adoption should succeed */ }
@@ -2668,7 +2670,7 @@ function extraUpdate(dt){
     if(f.state==='greet'&&f.greetT>0){ f.greetT-=dt; const c=f.cat;
       // after a short sniff the cat decides: roll over on its side for them, or turn its back and go home
       if(!f.decided&&f.greetT<=2.1){ f.decided=true;
-        if(f.match){ c.greetFlop=1; c.heading=Math.PI+(Math.random()<0.5?1.25:-1.25); c.purr=1; showIcon(c,'h',1.8); spawnFx('h',c.g.position.clone().setY(0.7),4,0.4,0.3); Snd.chirp(); }
+        if(f.match){ c.greetFlop=Math.random()<0.6?2:1; { const fm=f.members[0].g.position, cp=c.g.position, fd=Math.atan2(fm.x-cp.x,fm.z-cp.z); c.heading=fd+BELLY_SIDE*(c.greetFlop===2?1.45:1.25); } c.purr=1; showIcon(c,'h',1.8); spawnFx('h',c.g.position.clone().setY(0.7),4,0.4,0.3); Snd.chirp(); }
         else { f.greetT=0; f.tries++; f.members[0].kneel=false; c.heading=0; showIcon(c,f.scruffy?'itch':'huff',1.4); floatWorld(c.g.position.clone().setY(1.2),f.scruffy?'Needs a brush':'Not quite'); backFromGate(c);
           if(f.tries>=2)familyLeave("We'll keep looking!"); else { f.state='wait'; f.cat=null; renderFamily(); } } }
       if(f.greetT<=0&&f.match&&f.state==='greet'){ c.greetFlop=0; adoptOK(c); } }

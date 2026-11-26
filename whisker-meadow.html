@@ -2038,7 +2038,11 @@ function goalStripTick(){ const el=$('#goalStrip'); if(el&&!el.hidden)el.hidden=
 
 /* ================= UI ================= */
 function hud(){ $('#hMoney').textContent=Math.floor(W.money); $('#hMoney').parentElement.classList.toggle('low',paidN()>0&&W.money<paidN()*3); $('#hFood').textContent=W.food+(W.premium>0?` +${W.premium}★`:''); const away=W.cats.filter(c=>c.away>0).length; $('#hCats').textContent=`${W.cats.length}/${LV().cap}`; $('#hAway').hidden=!away; $('#hAwayN').textContent=away; $('#hRib').textContent=W.ribbons; $('#hStars').textContent=W.stars; { const st=W.stars, a=STAR_AT[st]||0, nx=STAR_AT[st+1]; $('#bBadges').style.setProperty('--sp',nx?clamp((starPts()-a)/(nx-a),0,1):1); $('#bStarN').textContent=st; } shopRefresh(); }
-function lockTip(){ let el=$('#lockTip'); if(!el){ el=document.createElement('div'); el.id='lockTip'; document.body.appendChild(el); el.onclick=()=>{ el.style.display='none'; }; }
+function lockTip(){ const b0=$('#bShop'); if(!curHint&&!lessonOn()&&$('#modal').hidden){ const price=($('[data-tool="laser"] .lock')||{}).textContent||'';
+    curHint={id:'laserShop',el:'#bShop',g:'tap',when:()=>false,done:()=>W.laser||!$('#modal').hidden,redo:true,auto:4,again:true}; hintT=0; hintEl.className='g-tap';
+    hintEl.querySelector('.lab').innerHTML=hIco(IC.laser,26)+(price?`<span>${price}</span>`:''); hintEl.hidden=false; hintRetry.laserShop=0;
+    b0.classList.remove('nudge'); void b0.offsetWidth; b0.classList.add('nudge'); rec('lockTip','laser:hint'); return; }
+  let el=$('#lockTip'); if(!el){ el=document.createElement('div'); el.id='lockTip'; document.body.appendChild(el); el.onclick=()=>{ el.style.display='none'; }; }
   const b=$('#bShop'), r=b.getBoundingClientRect(); el.innerHTML=hIco(IC.laser,26)+'<svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 12h14m-5-5l5 5-5 5" fill="none" stroke="#4a3426" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>'+hIco('<path d="M4 9h16l-1.5 11h-13z" fill="#ffb3c6"/><path d="M8 9V7a4 4 0 0 1 8 0v2" fill="none" stroke="#4a3426" stroke-width="2.2"/>',26);
   el.style.top=Math.round(r.bottom+8)+'px'; el.style.right=Math.round(innerWidth-r.right)+'px'; el.style.display='flex'; b.classList.remove('nudge'); void b.offsetWidth; b.classList.add('nudge');
   clearTimeout(el.tm); el.tm=setTimeout(()=>{ el.style.display='none'; b.classList.remove('nudge'); },2600); rec('lockTip','laser'); }

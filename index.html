@@ -2996,7 +2996,7 @@ function updatePairTut(dt){
   if(pl.stage==='carry'&&W.stat.drops>pl.lastDrop&&!held){ pl.lastDrop=W.stat.drops; const d=pl.held;
     // the first cat, dropped next to the second one
     const o=d===a?b:d===b?a:null;
-    if(o&&dist2(o.g.position,d.g.position)<1.9*1.9){ pl.stage='watch'; pl.t=0; $('#ghost').hidden=true; if(d.state!=='boop'&&o.state!=='boop'&&!o.carried){ d.boopCD=o.boopCD=0; d.petT=o.petT=0; boop(d,o); } updatePairTut(0); return; }
+    if(o&&dist2(o.g.position,d.g.position)<1.9){ pl.stage='watch'; pl.t=0; $('#ghost').hidden=true; if(d.state!=='boop'&&o.state!=='boop'&&!o.carried){ d.boopCD=o.boopCD=0; d.petT=o.petT=0; boop(d,o); } updatePairTut(0); return; }
     pl.t=0; /* dropped too far (or another cat): the pointing hand starts over */ }
   const pa=a.g.position, pb=b.g.position;
   pl.clearT=(pl.clearT||0)-dt; if(pl.clearT<=0){ pl.clearT=0.5; const mid=pa.clone().add(pb).multiplyScalar(0.5), rad=Math.max(2.4,Math.sqrt(dist2(pa,pb))/2+1.6);

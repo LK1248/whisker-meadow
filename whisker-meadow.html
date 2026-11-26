@@ -1226,7 +1226,7 @@ function updateCat(c,dt){
         if(prem){ s.health=Math.min(100,s.health+3); s.aff=Math.min(100,s.aff+2); c.nourT=150; spawnFx('spark',c.g.position.clone().setY(.8),3,.3); } } setState(c,'idle',rand(2,4)); } break;
     case 'litter': if(c.stT<=0){ const l=c.useItem; if(l){ l.dirt=Math.min(l.cap,l.dirt+1); updateLitter(l); } c.litterNeed=0; setState(c,'idle',rand(1,3)); } break;
     case 'perch': s.fun=Math.min(100,s.fun+dt*0.5); if(c.stT<=0)setState(c,'idle',1); break;
-    default: if(c.watchBird){ const bp=c.watchBird.g.position; c.heading=angLerp(c.heading,Math.atan2(bp.x-c.g.position.x,bp.z-c.g.position.z),dt*3); if(c.stT<=0)c.watchBird=null; }
+    default: if(c.watchBird&&Number.isFinite(c.watchBird.g.position.x+c.watchBird.g.position.z)){ const bp=c.watchBird.g.position; c.heading=angLerp(c.heading,Math.atan2(bp.x-c.g.position.x,bp.z-c.g.position.z),dt*3); if(c.stT<=0)c.watchBird=null; }
       if(c.stT<=0){ if(c.nextPlay){ const b=c.nextPlay; c.nextPlay=null; goTo(c,b.pos.x,b.pos.z,'play',b); c.run=true; } else decide(c); }
   }
 }
@@ -1254,6 +1254,7 @@ function catCircles(c){ const p=c.g.position, s=c.g.scale.x, sh=Math.sin(c.headi
   return [[p.x+fx,p.z+fz,0.3*s],[p.x-fx,p.z-fz,0.3*s],[p.x+sh*0.58*s,p.z+ch*0.58*s,hr]]; }
 function solid(c){ return c.away<=0&&!c.carried&&!c.outside&&!c.leaving&&!['litter','perch'].includes(c.state)&&!(c.state==='sleep'&&c.useItem)&&(c.jump<0.15||c.leap||c.state==='romp'); }
 function collide(){
+  for(const c of W.cats){ const p=c.g.position; if(!Number.isFinite(p.x+p.y+p.z)){ p.set(rand(-1,1),0,rand(-1,1)); c.speed=0; c.target&&c.target.copy(p); rec('nanfix',c.name); } if(!Number.isFinite(c.heading))c.heading=0; }
   const cs=active().filter(solid);
   const pinned=c=>!c.carried&&((P.mode==='stroke'||P.mode==='catPending')&&(S.cat===c||P.cat===c)||tips.cur&&['flea','butt'].includes(tips.cur.kind)&&tips.cur.c===c);
   for(const c of cs){ if(pinned(c)){ if(!c.pinP)c.pinP=c.g.position.clone(); c.speed=0; } else c.pinP=null; }
@@ -1515,7 +1516,7 @@ function makeBird(){
   const wings=[1,-1].map(sx=>{ const w=new THREE.Group(); w.position.set(0.06*sx,0.03,0); g.add(w); w.add(mesh(G.sph,shade(col,0.8),{p:[0.06*sx,0,0],s:[0.07,0.012,0.06]})); return w; });
   for(const sx of [1,-1]) g.add(mesh(G.cyl,0xf0a030,{p:[0.025*sx,-0.09,0],s:[0.006,0.05,0.006],cast:false}));
   const R=ext()+14, a=rand(0,6.28); g.position.set(Math.cos(a)*R,6,Math.sin(a)*R); scene.add(g);
-  const b={g,head,wings,state:'fly',tgt:new V3(),t:0,hopT:0,heading:0,land:null}; birdTarget(b); birds.push(b); return b;
+  const b={g,head,wings,state:'fly',tgt:new V3(),t:0,hopT:0,hopY:0,peck:0,tilt:0,heading:0,land:null}; birdTarget(b); birds.push(b); return b;
 }
 function birdTarget(b){ const r=Math.random(), E=ext();
   if(r<0.55){ b.land='ground'; const q=rIn(0.6); b.tgt.set(q.x,0.09,q.z); }

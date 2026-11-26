@@ -2245,7 +2245,6 @@ const HINTS=[
   {id:'find',when:()=>W.runaway&&W.runaway.notified&&W.runaway.c.state==='hiding',at:()=>W.runaway&&W.runaway.trailMid,g:'tap',label:()=>hIco(H_LOOK)+sized(PAWS_SVG,34,26),done:()=>!W.runaway||W.runaway.c.state!=='hiding',auto:10,again:true},
   {id:'pick',when:()=>W.pickHome&&W.cats.some(readyHome),at:()=>headOf(W.cats.find(readyHome)),g:'tap',label:()=>sized(FAM_SVG,40,30)+hIco(H_HEART,24),done:()=>!W.pickHome},
   {id:'feed',when:()=>W.time>40||(W.time>15&&W.cats.some(c=>c.s.full<60)),at:()=>{ const b=items.find(i=>i.kind==='bowl'&&i.portions<i.cap)||items.find(i=>i.kind==='bowl'); return b&&b.pos.clone().setY(0.2); },g:'tap',label:()=>hIco(IC.food),done:()=>W.stat.fills>0},
-  {id:'blink',when:()=>W.cats.some(c=>c.blinkBackT>0.5&&c.away<=0),at:()=>headOf(W.cats.find(c=>c.blinkBackT>0)),g:'tap',label:()=>H_EYES+hIco(H_HEART,24),done:()=>W.stat.blinkBack>0,auto:9,again:true},
   {id:'litter',when:()=>items.some(i=>i.kind==='litter'&&i.dirt>=2),at:()=>{ const l=items.find(i=>i.kind==='litter'&&i.dirt>=2); return l&&l.pos.clone().setY(0.3); },g:'tap',label:()=>hIco(IC.litter),done:()=>W.stat.cleaned>0},
   {id:'shop',when:()=>W.time>80&&W.money>=12&&!(weather.raining&&!countItems('shelter')),el:'#bShop',g:'tap',label:()=>hIco(IC[guidePick('shop')]||H_BAG),done:()=>W.stat.buys>0},
   {id:'brush',when:()=>W.time>100&&W.tool!=='brush'&&!!scruffiest(),el:'[data-tool=brush]',g:'tap',label:()=>BRUSH_HINT,done:()=>W.tool==='brush'},

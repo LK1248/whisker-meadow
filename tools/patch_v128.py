@@ -54,20 +54,20 @@ s = s[:m.start()] + s[m.end():]
 rep("||(firstAdopt()&&W.family.cat)){ hintEl.hidden=true; return; }", "||firstAdopt()){ hintEl.hidden=true; return; }")
 # 11/13 card queue, events wait, slow-down
 rep("function closeModal(){ $('#modal').hidden=true; }",
-    "const cardQ=[]; let cardOpen=false, cardT=0;\nfunction showCard(fn){ if(!$('#modal').hidden||cam.meet||cardQ.length){ cardQ.push(fn); return; } cardOpen=true; cardT=0; fn(); }\nfunction cardOn(){ return (cardOpen&&!$('#modal').hidden)||cardQ.length>0; }\nfunction closeModal(){ $('#modal').hidden=true; cardOpen=false; }")
+    "const cardQ=[]; let cardOpen=false, cardT=0;\nfunction showCard(fn){ if(!$('#modal').hidden||cam.meet||cardQ.length){ cardQ.push(fn); return; } cardOpen=true; cardT=0; fn(); }\nfunction cardUp(){ return (cardOpen&&!$('#modal').hidden)||cardQ.length>0; }\nfunction closeModal(){ $('#modal').hidden=true; cardOpen=false; }")
 rep("  openModal(`<div class=\"${shot?'fairpic':'center'}\">", "  showCard(()=>{ openModal(`<div class=\"${shot?'fairpic':'center'}\">")
 rep("  $('#collect').onclick=closeModal;\n}", "  $('#collect').onclick=closeModal; });\n}")
 rep("if(W.postQ.length&&W.postQ[0].t<=W.time&&$('#modal').hidden&&!W.paused&&!tutQuiet()){ const pq=W.postQ.shift(), hm=W.homes[pq.i]; if(hm){",
     "if(cardQ.length&&$('#modal').hidden&&!cam.meet&&!W.paused){ const fn=cardQ.shift(); cardOpen=true; cardT=0; fn(); }\n  if(W.postQ.length&&W.postQ[0].t<=W.time&&$('#modal').hidden&&!cardQ.length&&!W.paused&&!tutQuiet()){ const pq=W.postQ.shift(), hm=W.homes[pq.i]; if(hm){ cardOpen=true; cardT=0;")
-rep("function calmHold(){ return playerBusy()||", "function calmHold(){ return cardOn()||playerBusy()||")
-rep("if(meetQ.length&&!cam.meet&&!playerBusy())nextMeet();", "if(meetQ.length&&!cam.meet&&!playerBusy()&&!cardOn())nextMeet();")
-rep("if(!cam.meet&&!playerBusy())nextMeet(); }", "if(!cam.meet&&!playerBusy()&&!cardOn())nextMeet(); }")
+rep("function calmHold(){ return playerBusy()||", "function calmHold(){ return cardUp()||playerBusy()||")
+rep("if(meetQ.length&&!cam.meet&&!playerBusy())nextMeet();", "if(meetQ.length&&!cam.meet&&!playerBusy()&&!cardUp())nextMeet();")
+rep("if(!cam.meet&&!playerBusy())nextMeet(); }", "if(!cam.meet&&!playerBusy()&&!cardUp())nextMeet(); }")
 rep("  if(W.started&&!W.paused)update(dt); else if(W.paused){",
     "  if(cardOpen&&!$('#modal').hidden&&!W.paused)cardT+=dt; else cardT=0; const gdt=cardT>10?dt/3:dt;\n  if(W.started&&!W.paused)update(gdt); else if(W.paused){")
 rep("for(const c of W.cats)animateCat(c,W.paused?dt*0.6:dt,t);", "for(const c of W.cats)animateCat(c,W.paused?dt*0.6:gdt,t);")
 # families
 rep("let visitT=rand(60,90);",
-    "let visitT=rand(60,90), famLogT=5;\nfunction famHold(){ return cardOn()||!!cam.meet||meetQ.length>0||!!(W.dropoff&&!W.dropoff.gift)||!!W.runaway||!!fairForce()||!!tips.cur||W.time-(W.lastEv??-999)<20; }\nfunction famDue(){ return !W.family&&visitT<=0&&(W.night||0)<0.55&&(W.cats.some(readyHome)||W.homes.length>0); }")
+    "let visitT=rand(60,90), famLogT=5;\nfunction famHold(){ return cardUp()||!!cam.meet||meetQ.length>0||!!(W.dropoff&&!W.dropoff.gift)||!!W.runaway||!!fairForce()||!!tips.cur||W.time-(W.lastEv??-999)<20; }\nfunction famDue(){ return !W.family&&visitT<=0&&(W.night||0)<0.55&&(W.cats.some(readyHome)||W.homes.length>0); }")
 rep("if(!f){ if(W.cats.some(readyHome)&&!W.runaway&&(W.night||0)<0.55&&!tutQuiet()&&!strayHold()){ visitT-=dt*(W.homes.length?1:3); if(visitT<=0)spawnFamily(); } }",
     "if((famLogT-=dt)<=0){ famLogT=30; rec('famclock',`ready=${W.cats.filter(readyHome).length}/${W.cats.length} visit=${Math.round(visitT)} fam=${f?f.state:'-'} hold=${famHold()?1:0}`); }\n  if(!f){ const rdy=W.cats.some(readyHome); if((rdy||W.homes.length>0)&&!W.runaway&&(W.night||0)<0.55&&!tutQuiet()){ visitT-=dt*(W.homes.length?(rdy?1:0.6):3); if(visitT<=0&&!famHold()&&(W.homes.length||!strayHold()))spawnFamily(); } }")
 rep("if(!f.atGate&&f.state==='arrive'&&f.members.every(m=>m.g.visible&&m.route&&arrived(m))){ f.atGate=true; Snd.chime(); renderFamily(); }",

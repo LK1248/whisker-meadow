@@ -1194,6 +1194,7 @@ function updateCat(c,dt){
   if(wet&&!c.outside){ c.wetAcc=(c.wetAcc||0)+dt; c.dryT=0; } else { if((c.wetAcc||0)>2){ c.dryT=DRY_T; if(!c.carried)c.shake=SH_D; } c.wetAcc=0; if(c.dryT>0)c.dryT-=dt; }
   if(!c.fleas&&s.groom<FLEA_AT&&!c.outside&&Math.random()<dt/40)c.fleas=5+Math.floor(rand(0,4));
   if(c.fleas&&s.groom>=40)c.fleas=0;
+  c.fleaT=c.fleas?(c.fleaT||0)+dt:0; // how long this cat has had fleas
   if(c.fleas&&!c.outside&&!c.carried){ if(['idle','walk'].includes(c.state)&&Math.random()<dt/9){ setState(c,'itch',rand(2.4,3.2)); c.itchDur=c.stT; c.itchPh=0; }
     if(Math.random()<dt/12){ showIcon(c,'itch',1.6); if(Math.random()<0.6)Snd.meow(1.05,0.5); } }
   if(s.aff>30)s.aff-=dt*0.015;
@@ -3098,10 +3099,10 @@ const FLEA_TIP=`<svg viewBox="0 0 160 60"><circle cx="26" cy="26" r="18" fill="#
   `${ARROW(30)}<g transform="translate(92 6) scale(2)" color="#8a6a52"><g transform="rotate(-35 12 12)"><rect x="2.5" y="6.5" width="12.5" height="6.2" rx="2.6" fill="currentColor"/><path d="M4.6 13.6v3.4M7.3 13.6v3.4M10 13.6v3.4M12.7 13.6v3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M15 9.6h6.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></g></g></svg>`;
 function showTip(kind,c,svg,dur,tap){ if(kind==='butt'&&W.tool!=='hand')setTool('hand');
   if(kind==='butt'){ c.buttLike=true; if(!cam.close)cam.close={want:cam.want}; cam.close.c=c; cam.close.idle=0; cam.want=Math.min(cam.want,BUTT_ZOOM); cam.focus=c; cam.focusT=0.3; } tips.cur={kind,c,dur,tap}; tips.t=0; $('#tip').innerHTML=svg; $('#tip').hidden=false; $('#tip').style.opacity=1; if(tap){ const gh=$('#ghost'); gh.innerHTML=`<svg viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`; gh.classList.add('tap'); gh.hidden=false; } W.stat[kind+'Tip']=1; }
-function endTip(){ if(!tips.cur)return; if(tips.cur.tap||tips.cur.kind==='flea'){ const gh=$('#ghost'); gh.hidden=true; gh.classList.remove('tap'); gh.style.opacity=''; } if(tips.cur.kind==='flea')$('[data-tool=brush]').classList.remove('tutGlow','nudge'); tips.cur=null; $('#tip').hidden=true; hintGap=Math.max(hintGap,3); }
+function endTip(){ if(!tips.cur)return; if(tips.cur.tap||tips.cur.kind==='flea'){ const gh=$('#ghost'); gh.hidden=true; gh.classList.remove('tap'); gh.style.opacity=''; } if(tips.cur.kind==='flea'){ $('[data-tool=brush]').classList.remove('tutGlow','nudge'); tips.cur.c.fleaT=0; } tips.cur=null; $('#tip').hidden=true; hintGap=Math.max(hintGap,3); }
 function updateTips(dt){ const busy=tutQuiet()||br.c||firstAdopt()||intro.c||bt.c||pl.a||!W.started||W.paused||!$('#modal').hidden;
   if(!tips.cur){ if(busy||!W.stat.brushTut||curHint||hintGap>0)return; tips.wait=(tips.wait||0)-dt; if(tips.wait>0)return; tips.wait=2;
-    const flea=!W.stat.fleaTip&&active().find(c=>c.fleas&&!c.carried&&!c.outside&&c.away<=0&&toScreen(c.g.position).ok); if(flea){ if(!['sit','idle','sleep','flop'].includes(flea.state))setState(flea,'idle'); showTip('flea',flea,FLEA_TIP,8,false); return; }
+    const flea=active().find(c=>c.fleas&&(!W.stat.fleaTip||(c.fleaT>60&&W.time>(W.stat.fleaAgain||0)))&&!c.carried&&!c.outside&&c.away<=0&&toScreen(c.g.position).ok); if(flea){ if(!['sit','idle','sleep','flop'].includes(flea.state))setState(flea,'idle'); flea.fleaT=0; W.stat.fleaAgain=W.time+90; showTip('flea',flea,FLEA_TIP,8,false); return; }
     const flop=!W.stat.bellyTip&&active().find(c=>c.state==='flop'&&c.offer&&!c.carried); if(flop){ showTip('belly',flop,BELLY_TIP,7,false); return; }
     if(!W.stat.buttTip&&W.time>240&&!W.stat.butt&&W.tool==='hand'){ const c=active().filter(c=>!c.carried&&!c.outside&&c.away<=0&&c.s.aff>=45&&['idle','sit'].includes(c.state)).sort((x,y)=>dist2(x.g.position,cam.target)-dist2(y.g.position,cam.target))[0]; if(c)showTip('butt',c,BUTT_TIP,9,true); }
     return; }

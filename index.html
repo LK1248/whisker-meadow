@@ -805,7 +805,8 @@ const SHOP_FORCE=new Set(['shop','helper','roof','space']);
 function fairForce(){ if(!curHint||!W.started||W.stat.shows)return null; if(curHint.id==='show0')return 'hand'; if(curHint.id!=='show')return null; return W.cats.some(showReady)?'show':null; }
 function wandForce(){ return null; if(!curHint||!W.started)return null; if(curHint.id==='wand')return 'pick'; if(curHint.id==='wand2'&&W.tool==='wand'&&hintT<30)return 'sway'; return null; }
 function shopForce(){ if(!curHint||!SHOP_FORCE.has(curHint.id)||!W.started)return null; const g=guidePick(curHint.id), it=SHOP.find(x=>x.id===g); return it&&shopCan(it)?g:null; }
-function shopOk(id){ const g=shopForce(); return !g||id===g; }
+const FOODS=['food','premium']; const sameGuide=(a,b)=>a===b||(FOODS.includes(a)&&FOODS.includes(b)); // either food answers a food lesson
+function shopOk(id){ const g=shopForce(); return !g||sameGuide(id,g); }
 function userClose(){ const g=shopForce(); if(g&&curHint&&document.querySelector('#mbox [data-buy]')){ rec('skip','shop:'+g); hintDone.add(curHint.id); hideHint(); } closeModal(); }
 function tutLock(){
   if(intro.c)return {cats:[intro.c],tools:[]};
@@ -2197,14 +2198,14 @@ function openShop(guide){ guide=guide||rainGuide();
   const cards=SHOP.filter(it=>it.id!=='fire'||paidN()).map(it=>{ const avail=it.avail?it.avail():true, max=it.max?it.max():Infinity, have=it.id==='helper'?paidN():it.max?countItems(it.id):0, cost=it.cost(), need=it.need?it.need():0, starOk=W.stars>=need;
     const hn=it.homes?it.homes():0, hOk=W.homes.length>=hn; const can=shopCan(it)&&shopOk(it.id); const lbl=!avail?(it.id==='laser'?'Owned':'Maxed'):have>=max?'Full':!starOk?`★${need} needed`:!hOk?`${hn} homes needed`:it.id==='fire'?'Let one go':`$${cost}`;
     const desc=it.id==='expand'?(LEVELS[W.level+1]?`Room for ${LEVELS[W.level+1].cap} cats${LEVELS[W.level+1].ponds?' \u00b7 new pond':''}`:'Biggest already'):it.desc;
-    const gd=it.id===guide;
-    return `<div class="item${gd?' guide':''}"${gd?' data-guide':''}><div class="ico"><svg viewBox="0 0 24 24">${IC[it.id]}</svg></div><b>${it.name()}</b><span>${desc}${it.max&&max<99?` · ${have}/${max}`:''}</span><button data-buy="${it.id}" ${can?'':'disabled'}>${lbl}</button>${gd?`<svg class="gHand" viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`:''}</div>`; }).join('');
+    const gd=it.id===guide, gd2=!gd&&!!guide&&sameGuide(it.id,guide)&&can;
+    return `<div class="item${gd||gd2?' guide':''}"${gd?' data-guide':''}><div class="ico"><svg viewBox="0 0 24 24">${IC[it.id]}</svg></div><b>${it.name()}</b><span>${desc}${it.max&&max<99?` · ${have}/${max}`:''}</span><button data-buy="${it.id}" ${can?'':'disabled'}>${lbl}</button>${gd?`<svg class="gHand" viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`:''}</div>`; }).join('');
   const kinds=Object.keys(TIERS).filter(k=>k!=='wand'&&(k==='laser'?W.laser:countItems(k)>0)).filter(k=>W.tier[k]<TIERS[k].length);
   const ups=kinds.map(k=>{ const n=W.tier[k]+1, cost=upCost(k,n), sOk=W.stars>=starsFor(n), can=sOk&&W.money>=cost&&!shopForce();
     return `<div class="item"><div class="ico"><svg viewBox="0 0 24 24">${IC[k]}</svg></div><b>${TIERS[k][n-1]}</b><span>${TIER_DESC[k][n-1]}</span><button data-up="${k}" ${can?'':'disabled'}>${sOk?`$${cost}`:`★${starsFor(n)} needed`}</button></div>`; }).join('');
   openModal(`<h3>Shop</h3><div class="grid">${cards}</div>${ups?`<h3 style="margin-top:18px">Upgrades</h3><div class="grid">${ups}</div>`:''}`);
   const gEl=document.querySelector('[data-guide]'); if(gEl)setTimeout(()=>gEl.scrollIntoView({block:'center',behavior:'smooth'}),60);
-  document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{ const it=SHOP.find(x=>x.id===b.dataset.buy); const cost=it.cost(); if(W.money<cost)return; W.money-=cost; it.buy(); W.stat.buys++; Snd.coin(); hud(); if($('#modal').hidden)return; openShop(it.id===guide?null:guide); });
+  document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{ const it=SHOP.find(x=>x.id===b.dataset.buy); const cost=it.cost(); if(W.money<cost)return; W.money-=cost; it.buy(); W.stat.buys++; Snd.coin(); hud(); if($('#modal').hidden)return; openShop(sameGuide(it.id,guide)?null:guide); });
   document.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{ const k=b.dataset.up, n=W.tier[k]+1, cost=upCost(k,n); if(W.money<cost||W.stars<starsFor(n))return; W.money-=cost; W.tier[k]=n; W.stat.upgrades++;
     for(const c of W.cats)if(c.useItem&&c.useItem.kind===k&&!c.carried)setState(c,'idle',1); for(const it of items)if(it.kind===k)buildItem(it); if(k==='wand')buildWandToy(); Snd.chime(); hud(); openShop(); });
 }

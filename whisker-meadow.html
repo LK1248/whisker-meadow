@@ -2367,7 +2367,7 @@ function updateDropoff(dt){ const D=W.dropoff; if(!D)return; const h=LV().half;
   else if(D.stage==='walkout'&&arrived(D.p)){ scene.remove(D.p.g); carLeave(D.car); W.dropoff=null; } }
 function readyHome(c){ return c.age>=1&&!c.forever&&c.away<=0&&!c.outside&&!c.carried&&!c.leaving&&c.s.aff>=50&&c.s.health>=55&&W.time-c.arrivedAt>=150; }
 function canBoop(c){ return !c.carried&&!c.outside&&!c.leaving&&c.away<=0&&(c.boopCD||0)<=0&&c.petT<=0&&['idle','walk','watch'].includes(c.state); }
-const LICK_GAIN=0.15, LICKED_GAIN=0.12, LICKED_KIT=0.2, RAIN_GROOM=0.08, DRY_T=60;
+const LICK_GAIN=0.15, LICKED_GAIN=0.12, LICKED_KIT=0.2, RAIN_GROOM=0.08, DRY_T=20;
 function selfLick(c,short){ setState(c,'groom',short?rand(2.5,4):rand(3.5,6)); c.groomKind=pick(['paw','paw','paw','paw','flank','behind']); }
 function lickable(o){ return o&&!o.carried&&o.away<=0&&!o.outside&&!o.leaving&&o.age>0.05&&['idle','groom','watch','sleep'].includes(o.state)&&!(o.petT>0); }
 function kidsOf(c){ return W.cats.filter(k=>k.age<1&&k.parents&&k.parents.includes(c.id)&&lickable(k)); }

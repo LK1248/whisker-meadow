@@ -8,7 +8,7 @@
   the body, whatever anyone's stats. Being licked raises the licked cat's groom very slowly (+0.2/s kittens,
   +0.12/s grown cats), same scale as self-licking.
 - Rain: a cat out in the rain (not under a rain roof) loses groom a little (0.08/s extra, about -2 per shower).
-  Once it is out of the rain (under a roof, or the shower ends) it licks itself much more often for the next minute.
+  Once it is out of the rain (under a roof, or the shower ends) it licks itself much more often for the next 20 seconds.
 - Help: the rain roof line now mentions that rain makes cats a bit scruffy."""
 import sys
 P = 'whisker-meadow.html'
@@ -37,7 +37,7 @@ rep("  s.groom=Math.max(0,s.groom-dt*0.04);\n",
     "  if(wet&&!c.outside){ c.wetAcc=(c.wetAcc||0)+dt; c.dryT=0; } else { if((c.wetAcc||0)>2)c.dryT=DRY_T; c.wetAcc=0; if(c.dryT>0)c.dryT-=dt; }\n")
 # --- licking another cat (boop machinery, lick variant) ---
 rep("function boop(a,b){",
-    "const LICK_GAIN=0.15, LICKED_GAIN=0.12, LICKED_KIT=0.2, RAIN_GROOM=0.08, DRY_T=60;\n"
+    "const LICK_GAIN=0.15, LICKED_GAIN=0.12, LICKED_KIT=0.2, RAIN_GROOM=0.08, DRY_T=20;\n"
     "function selfLick(c,short){ setState(c,'groom',short?rand(2.5,4):rand(3.5,6)); c.groomKind=pick(['paw','paw','paw','paw','flank','behind']); }\n"
     "function lickable(o){ return o&&!o.carried&&o.away<=0&&!o.outside&&!o.leaving&&o.age>0.05&&['idle','groom','watch','sleep'].includes(o.state)&&!(o.petT>0); }\n"
     "function kidsOf(c){ return W.cats.filter(k=>k.age<1&&k.parents&&k.parents.includes(c.id)&&lickable(k)); }\n"

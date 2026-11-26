@@ -208,7 +208,7 @@ body.intro .dock,body.intro #hud,body.intro .top{opacity:.25;pointer-events:none
 .rc b{display:block;font:600 14px var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rc.new{border-color:var(--pink);background:#fff0f5}
 .rc .t3{margin-top:3px;grid-template-columns:12px 1fr;gap:4px} .rc .t3 svg{width:11px;height:11px} .rc .t3 .tb{height:6px}
-#meet .big{margin-top:12px;flex:none}#meet .nm,#meet .org{flex:none}#meet .roster{flex:0 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain}
+#meet .big{margin-top:12px;flex:none}#meet{flex-direction:column;align-items:center}#mFam{flex:none;margin-bottom:-14px;z-index:1;pointer-events:none}#mFam img{display:block;width:min(240px,56vw,30vh);height:auto;filter:drop-shadow(0 6px 14px rgba(120,40,60,.35));animation:famPulse 1.5s ease-in-out infinite}@keyframes famPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}#meet .nm,#meet .org{flex:none}#meet .roster{flex:0 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain}
 #start .hbtn.ontitle{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:calc(10px + env(safe-area-inset-right,0px))}
 #start{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:linear-gradient(rgba(191,232,247,.2),rgba(255,250,242,.5));padding:16px}
 #start .card{background:var(--cream);border-radius:32px;padding:30px 28px 24px;text-align:center;width:min(380px,100%);box-shadow:0 20px 60px rgba(74,52,38,.25)}
@@ -328,7 +328,7 @@ body.tutLock .hbtn,body.tutLock #bCats,body.tutLock .tool:not(.tutOk):not(.on){p
 <div id="toasts"></div><div id="snapFlash"></div>
 <div id="modal" hidden><div class="box" id="mbox"></div></div>
 <div id="family" hidden></div>
-<div id="meet" hidden><div class="sheet"><div class="nm" id="mName"></div><div class="org" id="mOrg"></div><div class="roster" id="mRoster"></div><button class="big" id="mOk">Hello!</button></div></div>
+<div id="meet" hidden><div id="mFam" hidden><img alt=""></div><div class="sheet"><div class="nm" id="mName"></div><div class="org" id="mOrg"></div><div class="roster" id="mRoster"></div><button class="big" id="mOk">Hello!</button></div></div>
 
 <div id="start">
   <div class="card">
@@ -1965,7 +1965,7 @@ function tryFamily(){ if(firstAdopt()||tutQuiet())return;
 function birth(a,b){
   const room=LV().cap-W.cats.length; const n=(room>=2&&Math.random()<0.35)?2:1; const mid=a.g.position.clone().add(b.g.position).multiplyScalar(0.5), ks=[];
   for(let i=0;i<n;i++){ const k=makeCat({coat:inherit(a.coat,b.coat),age:0.02,parents:[a.id,b.id],mother:(a.sex==='f'?a:b).id,origin:'born',x:mid.x+rand(-.4,.4),z:mid.z+rand(-.4,.4),s:{aff:55,full:85,fun:75,groom:50,health:85,clean:90}}); addBond(k,a,50); addBond(k,b,50); ks.push(k); }
-  if(!famMoment(ks,a,b,mid))for(const k of ks)meet(k,'born',[a,b]);
+  if(!famMoment(ks,a,b,mid))meet(ks[0],'born',[a,b],ks);
   a.breedCD=b.breedCD=200; a.litters=b.litters=1; a.fixed=b.fixed=true; setTimeout(()=>{ showIcon(a,'vet',2.5); showIcon(b,'vet',2.5); },3000); spawnFx('h',mid.clone().setY(.8),4,.4,0.4); Snd.chime(); W.stat.kittens+=n;
   unlock('first_kitten'); checkCollection(); hud();
 }
@@ -1995,20 +1995,21 @@ function checkCollection(){ W.stat.coatsMax=Math.max(W.stat.coatsMax||0,new Set(
 // meet sheet (pauses play, focuses the new cat, shows everyone at a glance)
 const meetQ=[]; let meetSaved=null;
 function coatNow(c){ if(!c||!c.core)return; ensureBurrs(c); updateScruff(c); updateSheen(c,0); updateFleas(c,0.05); }
-function meet(c,origin,parents){ W.lastEv=W.time; if(origin==='stray'&&W.stat.brushTut&&c.s.groom<FLEA_AT&&!c.fleas&&Math.random()<0.4)c.fleas=5+Math.floor(rand(0,4)); coatNow(c); meetQ.push({c,origin,parents}); if(!cam.meet&&!playerBusy()&&!cardUp()&&!lessonBusy())nextMeet(); }
+function meet(c,origin,parents,kits){ W.lastEv=W.time; if(origin==='stray'&&W.stat.brushTut&&c.s.groom<FLEA_AT&&!c.fleas&&Math.random()<0.4)c.fleas=5+Math.floor(rand(0,4)); coatNow(c); if(kits)kits.forEach(coatNow); meetQ.push({c,origin,parents,kits}); if(!cam.meet&&!playerBusy()&&!cardUp()&&!lessonBusy())nextMeet(); }
 function nextMeet(){
   const m=meetQ.shift();
   if(!m){ W.paused=false; cam.meet=null; $('#meet').hidden=true; if(meetSaved){ cam.want=meetSaved; meetSaved=null; } handVis(); return; }
   W.paused=true; if(!meetSaved)meetSaved=cam.want; cam.meet=m.c; cam.want=4.4; tag.c=null; hideHintTemp=true;
-  $('#mName').textContent=m.c.name;
+  const kits=m.kits||[m.c]; $('#mName').textContent=kits.map(k=>k.name).join(' & ');
+  { const fe=$('#mFam'), im=m.origin==='born'?famPhoto(m.parents.filter(p=>p.g.parent),kits):null; fe.hidden=!im; if(im)fe.querySelector('img').src=im; }
   const heart='<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="#ff6f99"/></svg>';
   const gate='<svg viewBox="0 0 24 24" fill="none" stroke="#a5754a" stroke-width="2.2"><path d="M4 21V6M20 21V6M3 6h18M7 21v-9h10v9M7 15h10"/></svg>';
   $('#mOrg').innerHTML=(m.origin==='born'?`${heart}<span>${m.parents[0].name} + ${m.parents[1].name}</span>`:m.origin==='mama'?`${gate}<span>A mama cat at the gate</span>`:m.origin==='withmama'?`${heart}<span>${m.parents[0].name}'s kitten</span>`:`${gate}<span>Found at the gate</span>`)+`<span>\u00b7 ${coatName(m.c.coat)}${m.c.age<1?' kitten':''} \u00b7 ${m.c.trait}</span>`;
-  $('#mRoster').innerHTML=W.cats.map(c=>`<div class="rc ${c===m.c?'new':''}"><b>${c.name}${c.age<1?' <small>kitten</small>':''}</b>
+  $('#mRoster').innerHTML=W.cats.map(c=>`<div class="rc ${kits.includes(c)?'new':''}"><b>${c.name}${c.age<1?' <small>kitten</small>':''}</b>
     <div class="t3">${ICO_A}<div class="tb"><i style="width:${c.s.aff}%;background:#ff7aa2"></i></div></div>
     <div class="t3">${ICO_T}<div class="tb"><i style="width:${c.s.groom}%;background:#b98af0"></i></div></div>
     <div class="t3">${ICO_H}<div class="tb"><i style="width:${c.s.health}%;background:#5fb35a"></i></div></div></div>`).join('');
-  $('#meet').hidden=false; handVis(); Snd.meow(m.c.age<1?1.45:1.15,0.6); spawnFx('h',m.c.g.position.clone().setY(1),4,.4);
+  $('#meet').hidden=false; handVis(); Snd.meow(m.c.age<1?1.45:1.15,0.6); if(m.origin==='born')Snd.chime(); spawnFx('h',m.c.g.position.clone().setY(1),4,.4);
 }
 $('#mOk').onclick=nextMeet;
 let hideHintTemp=false;
@@ -2425,7 +2426,7 @@ function famMoment(ks,a,b,mid){ if([a,b].some(c=>c.carried||c.away>0||c.outside|
 function famTick(dt){ const F=FAM; if(!F||W.paused)return; F.t+=dt;
   if(F.t>=F.next&&F.t<3){ F.next+=0.3; const par=F.i%2?F.dad:F.mom, kit=F.ks.length>1&&F.i%2?F.ks[1]:F.ks[0], p=par.g.position, q=kit.g.position; F.i++;
     spawnFx('h',new V3((p.x+q.x)/2+rand(-0.08,0.08),0.55+0.25*kit.g.scale.y+rand(0,0.12),(p.z+q.z)/2+rand(-0.08,0.08)),1,.12,0.32); if(F.i%3===1)Snd.ding(); }
-  if(F.t>=3.4){ FAM=null; cam.want=F.w0; for(const k of F.ks)meet(k,'born',[F.a,F.b]); } }
+  if(F.t>=3.4){ FAM=null; cam.want=F.w0; meet(F.ks[0],'born',[F.a,F.b],F.ks); } }
 function updateBoops(dt){ for(let i=W.boops.length-1;i>=0;i--){ const B=W.boops[i]; B.t+=dt; const a=B.a.g.position,b=B.b.g.position; B.sp.position.set((a.x+b.x)/2,1.05+Math.min(1,B.t/B.dur)*0.35,(a.z+b.z)/2);
     const k=Math.min(1,B.t/(B.dur*0.8)); const sc=0.12+0.55*k+(B.t>B.dur*0.8?Math.sin((B.t-B.dur*0.8)*20)*0.04:0); B.sp.scale.set(sc,sc,sc);
     if(B.t>=B.dur||B.a.state!=='boop'||B.b.state!=='boop'){ if(B.t>=B.dur*0.7){ addBond(B.a,B.b,5); spawnFx('h',B.sp.position,5,.35); Snd.ding(); } scene.remove(B.sp); W.boops.splice(i,1); } } }
@@ -2655,6 +2656,19 @@ function portrait(c){ try{
   x.fillStyle='#c8553d'; x.fillRect(26,130,34,40); x.fillStyle='#5fb35a'; [[43,118,16],[32,108,11],[54,106,12],[43,96,10]].forEach(([a,b,r])=>{x.beginPath();x.arc(a,b,r,0,7);x.fill();});
   x.drawImage(pRen.domElement,40,22,240,180);
   return cv.toDataURL('image/jpeg',0.78); }catch(e){ return null; } }
+function famPhoto(par,kits){ try{ if(!pRen)portrait(par[0]||kits[0]); const all=[...par,...kits], sc=(par[0]||kits[0]).g.scale.x;
+  const saved=all.map(c=>({c,parent:c.g.parent,pos:c.g.position.clone(),rot:c.g.rotation.y,hd:c.heading,st:c.state,stT:c.stT,sit:c.sit,iv:c.icon.visible,go:c.glow.material.opacity}));
+  for(const c of all){ pScene.add(c.g); c.icon.visible=false; c.glow.material.opacity=0; }
+  par.forEach((c,i)=>{ c.g.position.set((par.length>1?(i?0.48:-0.48):0)*sc,0,-0.35*sc); cardPose(c,'idle',true,par.length>1?(i?-0.4:0.4):0); });
+  kits.forEach((c,i)=>{ const n=kits.length; c.g.position.set((n>1?(i?0.28:-0.28):0)*sc,0,0.42*sc); cardPose(c,'idle',true,n>1?(i?-0.3:0.3):0); });
+  pCam.fov=30; pCam.position.set(0,1.4*sc,3.95*sc); pCam.lookAt(0,0.4*sc,0); pCam.aspect=1; pCam.updateProjectionMatrix(); pRen.setSize(440,440,false); pRen.render(pScene,pCam);
+  const cv=document.createElement('canvas'); cv.width=cv.height=360; const x=cv.getContext('2d'), H=new Path2D('M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z');
+  const at=k=>x.setTransform(k,0,0,k,180-12*k,186-13.3*k); // heart centred at (180,186)
+  at(21.5); const g=x.createLinearGradient(0,4,0,22); g.addColorStop(0,'#ff9fbf'); g.addColorStop(1,'#ff5f8f'); x.fillStyle=g; x.fill(H);
+  at(19); x.fillStyle='#fff3f7'; x.fill(H); x.save(); x.clip(H); x.setTransform(1,0,0,1,0,0); x.fillStyle='rgba(255,182,206,.45)'; x.beginPath(); x.ellipse(180,262,120,30,0,0,7); x.fill(); x.drawImage(pRen.domElement,22,40,316,316); x.restore();
+  for(const v of saved){ const c=v.c; v.parent.add(c.g); c.g.position.copy(v.pos); c.g.rotation.y=v.rot; c.heading=v.hd; c.state=v.st; c.stT=v.stT; c.sit=v.sit; c.icon.visible=v.iv; c.glow.material.opacity=v.go; c.bat=0; }
+  pCam.aspect=4/3; pCam.updateProjectionMatrix(); pRen.setSize(320,240,false);
+  return cv.toDataURL('image/png'); }catch(e){ return null; } }
 // ---- postcards from new homes: little staged photos ----
 const CARD_SCENES={
   selfie:{line:(n)=>`${n} figured out the phone camera.`},

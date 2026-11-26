@@ -1157,7 +1157,7 @@ function updateCat(c,dt){
   if((c.purrBlock||0)>W.time)c.purr=0; if(c.petT<=0){ c.purr=Math.max(0,c.purr-dt*0.6); c.joy=Math.max(0,(c.joy||0)-dt*0.25); }
   if(c.over>=3)overReact(c);
   // look up at you and slow-blink
-  if(s.aff>=35&&!c.carried&&['idle','pet','shelter','watch'].includes(c.state)&&c.gaze<=0&&(!tutQuiet()||(blinkPending()&&!lessonOn()&&!S.cat&&P.mode!=='carry'))){ c.gazeT-=dt; if(c.gazeT<=0){ c.gazeT=rand(22,45)*(s.aff>70?0.6:1); c.gaze=10; c.gazeBl=false; c.gazeBl2=false; c.blinkBackT=10.5; W.stat.gazes++; if(!W.stat.blinkBack&&!bt.c&&!bt.skipped&&!intro.c&&W.started&&!W.paused&&earlyDone())startBlinkTut(c); if(c.state==='idle'){ c.stT=Math.max(c.stT,10); c.sit=true; } } }
+  if(s.aff>=35&&!c.carried&&['idle','pet','shelter','watch'].includes(c.state)&&c.gaze<=0&&(c.state!=='pet'||Math.abs(angDiff(c.heading,Math.atan2(camera.position.x-c.g.position.x,camera.position.z-c.g.position.z)))<0.95)&&(!tutQuiet()||(blinkPending()&&!lessonOn()&&!S.cat&&P.mode!=='carry'))){ c.gazeT-=dt; if(c.gazeT<=0){ c.gazeT=rand(22,45)*(s.aff>70?0.6:1); c.gaze=10; c.gazeBl=false; c.gazeBl2=false; c.blinkBackT=10.5; W.stat.gazes++; if(!W.stat.blinkBack&&!bt.c&&!bt.skipped&&!intro.c&&W.started&&!W.paused&&earlyDone())startBlinkTut(c); if(c.state==='idle'){ c.stT=Math.max(c.stT,10); c.sit=true; } } }
   c.stretchT-=dt; if(c.stretchT<=0&&c.state==='idle'&&!c.carried&&c.stretch<=0){ c.stretchT=rand(35,70); c.stretch=1.8; c.stretchKind=pick(['bow','arch']); c.stT=Math.max(c.stT,2.2); }
   if(c.petT>0&&!c.carried&&s.aff>=45&&c.hbCD<=0&&W.time-c.lastStroke>0.8&&handOn(c)&&Math.random()<dt*1.8){ c.hb=0.55; c.hbCD=rand(2,4); s.aff=Math.min(100,s.aff+1); handFx('bump'); Snd.chirp(); spawnFx('h',c.g.position.clone().setY(1),1); }
   c.meowT-=dt;

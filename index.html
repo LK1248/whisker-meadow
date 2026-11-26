@@ -144,6 +144,8 @@ body.intro .dock,body.intro #hud,body.intro .top{opacity:.25;pointer-events:none
 .toast{background:rgba(74,52,38,.86);color:#fff;padding:7px 16px;border-radius:999px;font:600 16px var(--display);white-space:nowrap;animation:pop .3s ease-out}
 .toast.badge{background:linear-gradient(#ffe48a,#f6c443);color:#5a3d00}
 .toast.snap{background:#fff;padding:6px 6px 14px;border-radius:4px;transform:rotate(-3deg);box-shadow:0 6px 18px rgba(0,0,0,.3);animation:snapIn .5s ease-out}
+.snapFly{position:fixed;left:50%;top:42%;z-index:30;width:200px;margin:-80px 0 0 -106px;background:#fff;padding:6px 6px 14px;border-radius:4px;box-shadow:0 8px 24px rgba(0,0,0,.35);pointer-events:none;transform:rotate(-3deg);animation:snapIn .6s ease-out;transition:transform 1.9s cubic-bezier(.45,.05,.4,1),opacity .4s 1.6s}
+.snapFly img{display:block;width:200px;height:150px;object-fit:cover;border-radius:2px}
 .toast.snap img{display:block;width:132px;height:99px;object-fit:cover;border-radius:2px}
 @keyframes snapIn{0%{transform:translateY(-30px) rotate(8deg) scale(.6);opacity:0}100%{transform:rotate(-3deg);opacity:1}}
 #snapFlash{position:fixed;inset:0;background:#fff;pointer-events:none;z-index:6;opacity:0;transition:opacity .45s}
@@ -265,7 +267,7 @@ h3 .cnt{color:#e0507a;font-size:20px;margin-left:6px}
 #start .new{background:#f3e7d6;color:var(--ink);box-shadow:none;font-size:18px;min-height:48px;padding:0 24px;margin-top:12px}
 @media (max-width:640px){
   .chip{font-size:15px;padding:3px 10px 3px 4px} .chip svg{width:22px;height:22px}
-  .hbtn .lbl{display:none}#bBadges{position:relative;overflow:visible}#bBadges::after{content:'';position:absolute;inset:-5px;border-radius:50%;pointer-events:none;background:conic-gradient(#f6c443 calc(var(--sp,0)*1turn),rgba(160,130,90,.28) 0);-webkit-mask:radial-gradient(circle,transparent 22.5px,#000 23.5px);mask:radial-gradient(circle,transparent 22.5px,#000 23.5px)}#bBadges .sn{position:absolute;right:-5px;bottom:-5px;min-width:19px;height:19px;padding:0 4px;box-sizing:border-box;border-radius:10px;background:var(--pink);color:#fff;font:800 11px/19px var(--body);text-align:center;box-shadow:0 0 0 2px var(--cream)}.cf{width:64%;height:64%;display:block}.toast .tc .cf{display:inline-block;width:1.15em;height:1.15em;vertical-align:-.2em;margin-right:5px;color:#e1a06a}.gm .cf{width:15px;height:15px;margin:2.5px auto 0}.badge-i:not(.t1):not(.t2):not(.t3) .cf{opacity:.45}.sstat{display:flex;gap:10px;align-items:center;margin:-2px 0 12px;font:700 14px var(--body);color:var(--muted)}.sstat svg{width:20px;height:20px;vertical-align:-5px}.sstat .bar{flex:1;height:10px;border-radius:5px;background:#efe5d8;overflow:hidden}.sstat .bar i{display:block;height:100%;background:#f6c443;border-radius:5px} .hbtn{width:44px;padding:0;justify-content:center}
+  .hbtn .lbl{display:none}#bBadges{position:relative;overflow:visible}#bBadges::after{content:'';position:absolute;inset:-5px;border-radius:50%;pointer-events:none;background:conic-gradient(#f6c443 calc(var(--sp,0)*1turn),rgba(160,130,90,.28) 0);-webkit-mask:radial-gradient(circle,transparent 22.5px,#000 23.5px);mask:radial-gradient(circle,transparent 22.5px,#000 23.5px)}#bBadges .sn{position:absolute;z-index:1;right:-5px;bottom:-5px;min-width:19px;height:19px;padding:0 4px;box-sizing:border-box;border-radius:10px;background:var(--pink);color:#fff;font:800 11px/19px var(--body);text-align:center;box-shadow:0 0 0 2px var(--cream)}.cf{width:64%;height:64%;display:block}.toast .tc .cf{display:inline-block;width:1.15em;height:1.15em;vertical-align:-.2em;margin-right:5px;color:#e1a06a}.gm .cf{width:15px;height:15px;margin:2.5px auto 0}.badge-i:not(.t1):not(.t2):not(.t3) .cf{opacity:.45}.sstat{display:flex;gap:10px;align-items:center;margin:-2px 0 12px;font:700 14px var(--body);color:var(--muted)}.sstat svg{width:20px;height:20px;vertical-align:-5px}.sstat .bar{flex:1;height:10px;border-radius:5px;background:#efe5d8;overflow:hidden}.sstat .bar i{display:block;height:100%;background:#f6c443;border-radius:5px} .hbtn{width:44px;padding:0;justify-content:center}
   .tool{width:60px;height:58px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -296,7 +298,7 @@ body.tutLock .hbtn,body.tutLock #bCats,body.tutLock .tool:not(.tutOk):not(.on){p
 <div class="dock pill" id="dock">
   <button class="tool on" data-tool="hand" aria-label="Pet"><svg viewBox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="16" rx="5" ry="4.2"/><circle cx="5.6" cy="10" r="2.3"/><circle cx="9.6" cy="6.3" r="2.3"/><circle cx="14.4" cy="6.3" r="2.3"/><circle cx="18.4" cy="10" r="2.3"/></svg>Pet</button>
   <button class="tool" data-tool="brush" aria-label="Brush"><svg viewBox="0 0 24 24"><g transform="rotate(-35 12 12)"><rect x="2.5" y="6.5" width="12.5" height="6.2" rx="2.6" fill="currentColor"/><path d="M4.6 13.6v3.4M7.3 13.6v3.4M10 13.6v3.4M12.7 13.6v3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M15 9.6h6.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></g></svg>Brush</button>
-  <button class="tool locked" data-tool="laser" aria-label="Laser pointer"><span class="lock">$25</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="13" width="11" height="5" rx="2.5" transform="rotate(-35 8 15.5)" fill="currentColor" fill-opacity=".3"/><path d="M13 10l5-3.5"/><circle cx="20" cy="5.5" r="2.2" fill="#e2574c" stroke="none"/></svg>Laser</button>
+  <button class="tool locked" data-tool="laser" aria-label="Laser pointer"><span class="lock">$100</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="13" width="11" height="5" rx="2.5" transform="rotate(-35 8 15.5)" fill="currentColor" fill-opacity=".3"/><path d="M13 10l5-3.5"/><circle cx="20" cy="5.5" r="2.2" fill="#e2574c" stroke="none"/></svg>Laser</button>
 </div>
 
 <div id="tag" hidden></div><div id="intro" hidden></div><div id="ghost" hidden></div><div id="pips" hidden></div><div id="tip" hidden></div><div id="scratch"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><g fill="none" stroke="#d81e3a" stroke-linecap="round" filter="drop-shadow(0 0 1px rgba(120,0,20,.6))"><path pathLength="1" stroke-width="3.6" d="M18 8 Q42 46 74 92"/><path pathLength="1" stroke-width="4.4" d="M30 4 Q54 44 86 90"/><path pathLength="1" stroke-width="3.2" d="M42 2 Q64 40 96 84"/></g></svg></div><div id="tapRing"></div><button id="introSkip" hidden aria-label="Skip">&#9197;</button><button id="lessonSkip" hidden aria-label="Skip">&#9197;</button>
@@ -632,7 +634,7 @@ function snapTake(k,cats,ach){ try{
   const img=out.toDataURL('image/jpeg',0.82), rec={k,img,at:W.time,n:cats.length,ach:ach||null,id:Date.now()};
   const i=SNAPS.findIndex(s=>s.k===k), fresh=i<0; if(i>=0)SNAPS.splice(i,1); SNAPS.unshift(rec); snapSave();
   snapCD=rand(130,170); Snd.shutter(); const fl=$('#snapFlash'); fl.style.transition='none'; fl.style.opacity=0.55; void fl.offsetWidth; fl.style.transition=''; fl.style.opacity=0;
-  toast(`<img src="${img}" alt="">`,'snap',3200); boardPop(); W.stat.snaps=Math.max(W.stat.snaps||0,SNAPS.length);
+  if(fresh&&SNAPS.length===1&&!(W.stat.snaps>0))snapFly(img); else { toast(`<img src="${img}" alt="">`,'snap',3200); boardPop(); } W.stat.snaps=Math.max(W.stat.snaps||0,SNAPS.length);
   return rec; }catch(e){ console.error(e); return null; } }
 // ---- adoption card wall: thank-you postcards pinned on a corkboard by the house ----
 let cardBoard=null, boardSig='', boardT=0; const boardImgs={};
@@ -675,6 +677,13 @@ function openWall(){ const L=wallCards();
   bindCards(openWall); document.querySelectorAll('#mbox [data-sk]').forEach(b=>b.onclick=()=>{ Snd.ding(); openSnap(b.dataset.sk); }); }
 function openSnap(k){ const s=snapHave(k); if(!s)return; const a=s.ach&&ACH.find(x=>x[0]===s.ach);
   openModal(`<div class="snapBig"><img src="${s.img}" alt=""><span class="k">${SNAP_KINDS[k]}${a?' · ★':''}</span></div><button class="big" id="pcBack" aria-label="Back to the card wall">↩</button>`,true); $('#pcBack').onclick=openWall; }
+// first photo ever: show it big, then float it over to the corkboard so players see where photos live
+function snapFly(img){ const d=document.createElement('div'); d.className='snapFly'; d.innerHTML=`<img src="${img}" alt="">`; document.body.appendChild(d);
+  if(cardBoard&&!cam.meet&&!camUser()){ const bp=cardBoard.getWorldPosition(new V3()), q=bp.clone().project(camera); if(q.z>=1||Math.abs(q.x)>0.75||Math.abs(q.y)>0.8){ cam.focus={g:{position:new V3(bp.x-0.6,0,bp.z+0.3)}}; cam.focusT=3.4; } }
+  setTimeout(()=>{ let tx=innerWidth*0.85, ty=innerHeight*0.4; if(cardBoard){ const p=cardBoard.getWorldPosition(new V3()).project(camera); if(p.z<1){ tx=(p.x+1)/2*innerWidth; ty=(1-p.y)/2*innerHeight; } }
+    tx=Math.max(24,Math.min(innerWidth-24,tx)); ty=Math.max(24,Math.min(innerHeight-24,ty)); const r=d.getBoundingClientRect(), dx=tx-(r.left+r.width/2), dy=ty-(r.top+r.height/2);
+    d.style.animation='none'; d.style.transform=`translate(${dx}px,${dy}px) rotate(6deg) scale(.12)`; d.style.opacity='0'; }, 1500);
+  setTimeout(()=>{ d.remove(); boardPop(); Snd.ding(); }, 3450); }
 function boardPop(){ boardSync(true); if(!cardBoard)return; const p=cardBoard.getWorldPosition(new V3()); p.y+=0.2; spawnFx('spark',p,8,.6); spawnFx('h',p,3,.4); }
 function sanctuaryHouse(){
   const g=new THREE.Group();
@@ -2094,7 +2103,7 @@ const SHOP=[
   {id:'collar',name:()=>'Collar',desc:'Pick a color, then tap a cat',cost:()=>15,buy(){ W.money+=15; setTimeout(openCollars,0); }},
   {id:'ball',name:()=>TIERS.ball[W.tier.ball-1],desc:'Bat & chase',cost:()=>12,max:()=>2+W.level*2,buy(){addItem('ball');}},
   {id:'bed',name:()=>TIERS.bed[W.tier.bed-1],desc:'Cozy naps',cost:()=>15,max:()=>1+W.level,buy(){addItem('bed');}},
-  {id:'laser',name:()=>'Laser pointer',desc:'Zoomies!',cost:()=>25,avail:()=>!W.laser,buy(){W.laser=true;refreshDock();}},
+  {id:'laser',name:()=>'Laser pointer',desc:'Zoomies!',cost:()=>100,avail:()=>!W.laser,buy(){W.laser=true;refreshDock();}},
   {id:'shelter',name:()=>TIERS.shelter[W.tier.shelter-1],desc:'Dry in the rain',cost:()=>40,max:()=>Math.max(1,Math.round(LV().cap/7)),buy(){addItem('shelter');}},
   {id:'tree',name:()=>TIERS.tree[W.tier.tree-1],desc:'A perch with a view',cost:()=>35,max:()=>W.level+1,buy(){addItem('tree');}},
   {id:'bowl',name:()=>TIERS.bowl[W.tier.bowl-1],desc:'More dinner seats',cost:()=>20,max:()=>W.level+1,buy(){addItem('bowl');}},

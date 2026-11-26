@@ -25,8 +25,8 @@ rep("const st=P.mode==='stroke'&&S.cat===c?(c.beatSt=TG.c===c&&TG.shown>0.5?TG.s
     "const st=P.mode==='stroke'&&S.cat===c?(TG.c===c&&TG.shown>0.5?(c.beatT=W.time,c.beatSt=TG.st):W.time-(c.beatT??-99)<1.6?c.beatSt:(c.beatSt=null)):petGrace(c)||(P.mode==='catPending'&&P.cat===c&&W.time-(c.beatT??-99)<1.6)?c.beatSt:null;")
 # 4 redirect only near the cat
 rep("const PG={c:null,until:-1,x:0,y:0}, PG_T=1;",
-    "function nearCat(c,e){ const sc=toScreen(c.g.position.clone().setY(0.35*c.g.scale.y)); if(!sc.ok)return false; const m=e.pointerType==='mouse'; return Math.hypot(e.clientX-sc.x,e.clientY-sc.y)<clamp(catScreenH(c)*0.9,m?40:60,m?120:160); }\nconst PG={c:null,until:-1,x:0,y:0}, PG_T=1;")
-rep("&&Math.hypot(e.clientX-PG.x,e.clientY-PG.y)<(e.pointerType==='mouse'?90:140))hit={cat:PG.c,zone:'back'};", "&&nearCat(PG.c,e))hit={cat:PG.c,zone:'back'};")
+    "function nearPet(c,e){ const sc=toScreen(c.g.position.clone().setY(0.35*c.g.scale.y)); if(!sc.ok)return false; const m=e.pointerType==='mouse'; return Math.hypot(e.clientX-sc.x,e.clientY-sc.y)<clamp(catScreenH(c)*0.9,m?40:60,m?120:160); }\nconst PG={c:null,until:-1,x:0,y:0}, PG_T=1;")
+rep("&&Math.hypot(e.clientX-PG.x,e.clientY-PG.y)<(e.pointerType==='mouse'?90:140))hit={cat:PG.c,zone:'back'};", "&&nearPet(PG.c,e))hit={cat:PG.c,zone:'back'};")
 # 5 locked laser bubble
 rep("function setTool(t){ if(t==='laser'&&!W.laser){ openShop('laser'); return; }",
     """function lockTip(){ let el=$('#lockTip'); if(!el){ el=document.createElement('div'); el.id='lockTip'; document.body.appendChild(el); el.onclick=()=>{ el.style.display='none'; }; }

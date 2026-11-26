@@ -1762,7 +1762,7 @@ function strokeMove(e,dx,dy){
   if(!S.dir)S.dir=[ux,uy]; else { const a=lerp(S.dir[0],ux,0.3), b=lerp(S.dir[1],uy,0.3), n=Math.hypot(a,b)||1; S.dir=[a/n,b/n]; }
   S.cat.petT=Math.max(S.cat.petT,1.5);
 }
-function nearCat(c,e){ const sc=toScreen(c.g.position.clone().setY(0.35*c.g.scale.y)); if(!sc.ok)return false; const m=e.pointerType==='mouse'; return Math.hypot(e.clientX-sc.x,e.clientY-sc.y)<clamp(catScreenH(c)*0.9,m?40:60,m?120:160); }
+function nearPet(c,e){ const sc=toScreen(c.g.position.clone().setY(0.35*c.g.scale.y)); if(!sc.ok)return false; const m=e.pointerType==='mouse'; return Math.hypot(e.clientX-sc.x,e.clientY-sc.y)<clamp(catScreenH(c)*0.9,m?40:60,m?120:160); }
 const PG={c:null,until:-1,x:0,y:0}, PG_T=1; // pet grace: focus outlives a lifted finger by a second
 function petGrace(c){ return !!c&&PG.c===c&&!P.mode&&W.time<PG.until&&W.tool==='hand'&&!c.carried&&!c.leaving&&!c.outside&&!(c.away>0)&&!(c.leaveT>0); }
 function handOn(c){ return petGrace(c)||(P.mode==='stroke'&&S.cat===c)||(P.mode==='catPending'&&P.cat===c)||(P.type==='mouse'&&P.hoverCat===c&&!P.mode); }
@@ -1775,7 +1775,7 @@ canvas.addEventListener('pointerdown',e=>{
   P.start={x:e.clientX,y:e.clientY}; P.last={...P.start}; P.t0=performance.now(); P.moved=false; P.lockPan=false; handPos(e); P.down=true;
   if(e.button===2){ P.mode=tutLock()?'none':'rotate'; return; }
   let hit=pickAt(e); if(!(hit&&(hit.cat||(hit.item&&hit.item.kind!=='shelter')))&&(W.tool==='hand'||W.tool==='brush')){ const nc=nearCat(e,e.pointerType!=='mouse'); if(nc)hit=nc; }
-  if(petGrace(PG.c)&&(!hit||(hit.cat&&hit.cat!==PG.c))&&nearCat(PG.c,e))hit={cat:PG.c,zone:'back'};
+  if(petGrace(PG.c)&&(!hit||(hit.cat&&hit.cat!==PG.c))&&nearPet(PG.c,e))hit={cat:PG.c,zone:'back'};
   if(pl.a&&pl.stage==='carry'&&hit&&hit.cat!==pl.a)hit=null;
   { const L=tutLock(); if(L&&!(L.wandOk&&W.tool==='wand')){ if(hit&&(!hit.cat||!L.cats.includes(hit.cat)))hit=null; if(!hit||W.tool==='wand'||W.tool==='laser'){ P.mode='pan'; P.lockPan=true; groundAt(e,P.grab); handVis(); return; } } else if(L)hit=null; }
   if(hit&&hit.item&&hit.item.kind!=='shelter'){ P.mode='item'; P.item=hit.item; handVis(); return; }

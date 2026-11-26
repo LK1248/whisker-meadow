@@ -1890,7 +1890,7 @@ let strayT=rand(60,80);
 // time to the next stray: short while there's lots of room, longer as the sanctuary fills
 const HINT_HOLD=new Set(['show0','show','feed','litter','carry','shop','wand','wand2','brush','brush2','roof']);
 // calm pacing: a player who is busy with a cat or a toy is never interrupted, and events get breathing room
-function playerBusy(){ if(W.time-(W.lastInput||-99)>=6)return false; return W.tool!=='hand'||!!(S.cat&&S.cat.petT>0)||P.mode==='carry'||P.mode==='stroke'; }
+function playerBusy(){ if(W.time-(W.lastInput||-99)>=6)return false; return (W.tool!=='hand'&&W.tool!=='brush')||!!(S.cat&&S.cat.petT>0)||P.mode==='carry'||P.mode==='stroke'; }
 function eventOn(){ return !!(W.dropoff&&!W.dropoff.gift)||!!W.family||!!W.runaway||!!cam.meet||meetQ.length>0; }
 function calmTick(){ if(eventOn())W.lastEv=W.time; }
 function calmHold(){ return cardUp()||playerBusy()||!!wandForce()||!!(tips.cur&&tips.cur.kind==='flea')||!!fairForce()||W.time-(W.lastEv??-999)<(W.time<900?90:50); }
@@ -2740,7 +2740,7 @@ function updateFireflies(dt,t){ const n=W.night||0;
 let bondT=0, famT=0, slowT=0, birdT=8;
 function update(dt){
   W.time+=dt;
-  if(P.mode==='catPending'&&!P.moved&&W.tool==='hand'){ const e=performance.now()-P.t0, r=$('#ring');
+  if(P.mode==='catPending'&&!P.moved&&(W.tool==='hand'||W.tool==='brush')){ const e=performance.now()-P.t0, r=$('#ring');
     if(e>130){ r.hidden=false; r.style.transform=`translate(${P.hx}px,${P.hy}px)`; r.style.setProperty('--p',clamp((e-130)/320,0,1)); }
     if(e>450)startCarry(P.cat); }
   updateClose(dt);

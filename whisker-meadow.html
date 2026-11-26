@@ -673,12 +673,27 @@ function openWall(){ const L=wallCards();
 function openSnap(k){ const s=snapHave(k); if(!s)return; const a=s.ach&&ACH.find(x=>x[0]===s.ach);
   openModal(`<div class="snapBig"><img src="${s.img}" alt=""><span class="k">${SNAP_KINDS[k]}${a?' · ★':''}</span></div><button class="big" id="pcBack" aria-label="Back to the card wall">↩</button>`,true); $('#pcBack').onclick=openWall; }
 // first photo ever: show it big, then float it over to the corkboard so players see where photos live
+const SF={on:false};
+function boardView(){ if(!cardBoard)return {ok:true,x:0,y:0}; const q=cardBoard.getWorldPosition(new V3()).project(camera); return {ok:q.z<1&&Math.abs(q.x)<0.8&&q.y<0.62&&q.y>-0.55,x:q.x,y:q.y,z:q.z}; }
 function snapFly(img){ const d=document.createElement('div'); d.className='snapFly'; d.innerHTML=`<img src="${img}" alt="">`; document.body.appendChild(d);
-  if(cardBoard&&!cam.meet&&!camUser()){ const bp=cardBoard.getWorldPosition(new V3()), q=bp.clone().project(camera); if(q.z>=1||Math.abs(q.x)>0.75||Math.abs(q.y)>0.8){ cam.focus={g:{position:new V3(bp.x-0.6,0,bp.z+0.3)}}; cam.focusT=3.4; } }
-  setTimeout(()=>{ let tx=innerWidth*0.85, ty=innerHeight*0.4; if(cardBoard){ const p=cardBoard.getWorldPosition(new V3()).project(camera); if(p.z<1){ tx=(p.x+1)/2*innerWidth; ty=(1-p.y)/2*innerHeight; } }
-    tx=Math.max(24,Math.min(innerWidth-24,tx)); ty=Math.max(24,Math.min(innerHeight-24,ty)); const r=d.getBoundingClientRect(), dx=tx-(r.left+r.width/2), dy=ty-(r.top+r.height/2);
-    d.style.animation='none'; d.style.transform=`translate(${dx}px,${dy}px) rotate(6deg) scale(.12)`; d.style.opacity='0'; }, 1500);
-  setTimeout(()=>{ d.remove(); boardPop(); Snd.ding(); }, 3450); }
+  Object.assign(SF,{on:true,ph:'out',t:0,el:d,t0:cam.target.clone(),w0:cam.want,u0:cam.userT??-99,cam:!cam.meet,goal:null}); }
+// the smallest change that brings the board into view: zoom out first, drift toward the board only as much as needed
+function boardGoal(){ if(!cardBoard)return null; const bp=cardBoard.getWorldPosition(new V3()), t0=SF.t0, w0=SF.w0, cp=camera.position.clone(), tt=new V3();
+  const look=(t,d)=>{ camera.position.set(t.x+d*Math.sin(cam.phi)*Math.sin(cam.theta),t.y+d*Math.cos(cam.phi),t.z+d*Math.sin(cam.phi)*Math.cos(cam.theta)); camera.lookAt(t); camera.updateMatrixWorld(); return boardView().ok; };
+  let g=null; if(look(t0,w0))g={t:t0.clone(),d:w0,move:false};
+  for(let f=0;!g&&f<=0.9001;f+=0.1)for(let d=w0;d<=Math.max(w0,Math.min(LV().zoom*2.2,w0*1.7))+0.01;d+=w0*0.1){ tt.lerpVectors(t0,new V3(bp.x,t0.y,bp.z),f); if(look(tt,d)){ g={t:tt.clone(),d:d+w0*0.05,move:true}; break; } }
+  camera.position.copy(cp); camera.lookAt(cam.target); camera.updateMatrixWorld(); return g; }
+function snapFlyGo(){ const d=SF.el; let tx=innerWidth*0.85, ty=innerHeight*0.4; const v=boardView(); if(v.z<1){ tx=(v.x+1)/2*innerWidth; ty=(1-v.y)/2*innerHeight; }
+  tx=Math.max(24,Math.min(innerWidth-24,tx)); ty=Math.max(24,Math.min(innerHeight-24,ty)); const r=d.getBoundingClientRect(), dx=tx-(r.left+r.width/2), dy=ty-(r.top+r.height/2);
+  d.style.animation='none'; d.style.transform=`translate(${dx}px,${dy}px) rotate(6deg) scale(.12)`; d.style.opacity='0'; }
+// runs every frame from updateCamera: zoom out -> fly -> land -> wait 0.5 s -> glide back
+function snapFlyTick(dt){ if(!SF.on)return; SF.t+=dt; const mine=SF.cam&&(cam.userT??-99)===SF.u0&&!cam.meet; if(!mine)SF.cam=false;
+  if(SF.ph==='out'){ if(SF.cam&&!SF.goal)SF.goal=boardGoal();
+    if(SF.cam&&SF.goal){ const e=Math.min(1,SF.t/1.8), k=e*e*(3-2*e); cam.target.lerpVectors(SF.t0,SF.goal.t,k); cam.want=cam.dist=SF.w0+(SF.goal.d-SF.w0)*k; }
+    if(SF.t>=(SF.cam&&SF.goal&&SF.goal.move?1.9:1.3)){ SF.ph='fly'; SF.t=0; snapFlyGo(); } }
+  else if(SF.ph==='fly'){ if(SF.t>=1.95){ SF.el.remove(); boardPop(); Snd.ding(); SF.ph='rest'; SF.t=0; } }
+  else if(SF.ph==='rest'){ if(SF.t>=0.5){ SF.ph='back'; SF.t=0; } }
+  else if(SF.ph==='back'){ if(SF.cam){ const k=Math.min(1,dt*1.4); cam.target.lerp(SF.t0,k); cam.want=lerp(cam.want,SF.w0,k); } if(SF.t>=2.6||!SF.cam){ if(SF.cam)cam.want=SF.w0; SF.on=false; } } }
 function boardPop(){ boardSync(true); if(!cardBoard)return; const p=cardBoard.getWorldPosition(new V3()); p.y+=0.2; spawnFx('spark',p,8,.6); spawnFx('h',p,3,.4); }
 function sanctuaryHouse(){
   const g=new THREE.Group();
@@ -1592,7 +1607,7 @@ function petZoom(dt){ if(!dt||W.paused)return; const c=P.mode==='stroke'&&W.tool
   const goal=4.4; if(cam.want<=goal)return; const nw=Math.max(goal,cam.want*(1-0.08*dt)), k=1-nw/cam.want;
   setRay({clientX:P.hx,clientY:P.hy}); const gp=ray.ray.intersectPlane(PZ_PLANE,PZ_V); if(gp){ cam.target.x+=(gp.x-cam.target.x)*k; cam.target.z+=(gp.z-cam.target.z)*k; clampTarget(); }
   cam.want=nw; cam.dist=Math.min(cam.dist,cam.want+0.05); }
-function updateCamera(dt){ lessonFrame(dt); petZoom(dt);
+function updateCamera(dt){ snapFlyTick(dt); lessonFrame(dt); petZoom(dt);
   if(cam.focusT>0&&cam.focus&&!cam.meet&&!camUser()){ cam.focusT-=dt; const fp=cam.focus.g.position; cam.target.x=lerp(cam.target.x,fp.x,Math.min(1,dt*4)); cam.target.z=lerp(cam.target.z,fp.z,Math.min(1,dt*4)); }
   if(cam.meet){ const fp=cam.meet.g.position; const fx=cam.target.x-camera.position.x, fz=cam.target.z-camera.position.z, fl=Math.hypot(fx,fz)||1;
     cam.target.x=lerp(cam.target.x,fp.x-fx/fl*1.3,Math.min(1,dt*3)); cam.target.z=lerp(cam.target.z,fp.z-fz/fl*1.3,Math.min(1,dt*3)); }

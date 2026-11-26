@@ -991,10 +991,11 @@ function buildCatMesh(cat){
   const B=BREEDS[cat.coat.base];
   if(B){ const ax=[0.36,0.33,0.58];
     // a spot sitting on the surface of an ellipsoid (centre pulled in a little so it reads as a flat-ish patch)
-    const spot=(parent,col,dir,eax,zone,r)=>{ const d=new V3(...dir).normalize(); const t=1/Math.sqrt((d.x/eax[0])**2+(d.y/eax[1])**2+(d.z/eax[2])**2); const P=d.multiplyScalar(t); const n=P.clone().normalize();
+    const spot=(parent,col,dir,eax,zone,r,flat)=>{ const d=new V3(...dir).normalize(); const t=1/Math.sqrt((d.x/eax[0])**2+(d.y/eax[1])**2+(d.z/eax[2])**2); const P=d.multiplyScalar(t); const n=P.clone().normalize();
+      if(flat){ const m=add(parent,G.sph,col,[P.x,P.y,P.z],[r,r,r*0.2],zone); m.quaternion.setFromUnitVectors(new V3(0,0,1),n); return m; } /* a thin disc along the fur */
       const m=add(parent,G.sph,col,[P.x-n.x*r*0.6,P.y-n.y*r*0.6,P.z-n.z*r*0.6],[r,r,r],zone); return m; };
     if(B.rosettes) for(let i=0;i<B.rosettes;i++){ const d=[rand(-1,1),rand(-0.15,1),rand(-0.9,0.9)]; spot(core,dark,d,ax,'back',0.075); spot(core,0xc98a45,d,ax,'back',0.045); }
-    if(B.spots){ for(let i=0;i<B.spots;i++)spot(core,dark,[rand(-1,1),rand(-0.2,1),rand(-0.9,0.9)],ax,'back',0.05); for(let i=0;i<4;i++)spot(head,dark,[rand(-0.8,0.8),rand(0.5,1),rand(-0.6,0.1)],[0.3,0.27,0.27],'head',0.035); }
+    if(B.spots){ for(let i=0;i<B.spots;i++)spot(core,dark,[rand(-1,1),rand(-0.2,1),rand(-0.9,0.9)],ax,'back',0.05,true); for(let i=0;i<4;i++)spot(head,dark,[rand(-0.8,0.8),rand(0.5,1),rand(-0.6,0.1)],[0.3,0.27,0.27],'head',0.035,true); }
     if(B.ruff){ add(core,G.sph,light,[0,0.12,0.4],[0.33,0.3,0.24],'chest'); add(head,G.sph,light,[0.17,-0.1,0.02],[0.14,0.13,0.12],'cheek'); add(head,G.sph,light,[-0.17,-0.1,0.02],[0.14,0.13,0.12],'cheek'); }
     if(B.points){ const pc=dark; head.traverse(o=>{ if(o.isMesh&&o.userData.zone==='chin')o.material=M(pc); }); add(head,G.sph,pc,[0,-0.06,0.2],[0.14,0.1,0.08],'chin');
       cat.ears.forEach(e=>{ e.children[0].material=M(pc); }); cat.tail.forEach((m,i)=>{ if(i>=2)m.material=M(pc); });

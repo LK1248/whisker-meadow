@@ -1086,6 +1086,8 @@ function decide(c){
   if(c.litterNeed>rand(70,100)){ const L=nearest(items.filter(i=>i.kind==='litter'&&i.dirt<i.cap-0.5&&!i.occupant),c); if(L){ goTo(c,L.pos.x,L.pos.z,'litter',L); return; } c.litterNeed=45; showIcon(c,'smell',3); }
   if(laser.active&&s.fun<98&&dist2(p,laser.pos)<9){ setState(c,'laser',8); return; }
   if(wand.active&&s.fun<97&&s.aff>8&&dist2(p,wand.feather)<6&&Math.random()<0.85){ setState(c,'chase',8); return; }
+  if(c.dryT>0&&c.age>0.25&&Math.random()<0.45){ selfLick(c); return; } // just out of the rain: lots of licking
+  if(lickSocial(c))return;
   const r=Math.random();
   if(W.time>20&&(W.night||0)<0.5&&Math.random()<0.11){ setState(c,'sleep',rand(5,11)); return; } // daytime catnap
   if(r<0.16&&s.fun<88){ const b=nearest(items.filter(i=>i.kind==='ball'),c); if(b){ goTo(c,b.pos.x,b.pos.z,'play',b); return; } }
@@ -1094,7 +1096,7 @@ function decide(c){
     const bf=butterflies.find(b=>dist2(b.g.position,p)<4); if(bf){ c.watch=bf; setState(c,'watch',rand(5,8)); return; } }
   if(r<0.37){ const t=pick(items.filter(i=>i.kind==='tree'&&freeSpot(i)>=0)); if(t){ const [x,z]=approach(c,t,0.5); goTo(c,x,z,'perch',t); return; } }
   if(r<0.43&&s.aff>35&&s.fun>30&&c.age>0.3&&!(lessonOn()&&(c===intro.c||c===bt.c||c===pl.a||c===br.c))){ setState(c,'flop',rand(6,11)); return; }
-  if(r<0.47&&c.age>0.25){ setState(c,'groom',rand(4,7)); c.groomKind=pick(['paw','paw','flank','tail','behind']); return; }
+  if(r<0.47&&c.age>0.25&&s.groom>40){ selfLick(c); return; }
   if(r<0.52&&W.time>45){ const b=pick(items.filter(i=>i.kind==='bed'&&!i.occupant)); if(b&&Math.random()<0.8){ goTo(c,b.pos.x,b.pos.z,'bed',b); return; } setState(c,'sleep',rand(8,14)); return; }
   if(r<0.8){ const [fr,v]=bestFriend(c); if(fr&&v>25&&fr.away<=0&&Math.random()<0.45){ const fp=fr.g.position; goTo(c,fp.x+rand(-1,1),fp.z+rand(-1,1),null); return; }
     if(ponds().length&&Math.random()<0.18){ const [px,pz,pr]=pick(ponds()); const a=rand(0,6.28); goTo(c,px+Math.cos(a)*(pr+0.55),pz+Math.sin(a)*(pr+0.55),'pond',{px,pz}); return; }
@@ -1104,6 +1106,7 @@ function decide(c){
 }
 function arrive(c){
   const a=c.after, it=c.afterData; c.after=null; c.run=false;
+  if(a==='lick'){ if(it&&lickStart(c,it.o,it.part))return; setState(c,'idle',rand(1.5,3)); return; }
   if(a==='eat'&&it.portions>0){ setState(c,'eat',3.5); c.heading=Math.atan2(it.pos.x-c.g.position.x,it.pos.z-c.g.position.z); c.useItem=it; return; }
   if(a==='litter'&&it.dirt<it.cap&&!it.occupant){ setState(c,'litter',3.5); c.g.position.set(it.pos.x,0,it.pos.z); c.useItem=it; it.occupant=c; return; }
   if(a==='play'){ c.ball=it; c.heading=Math.atan2(it.pos.x-c.g.position.x,it.pos.z-c.g.position.z); setState(c,'stalk',rand(0.5,1)); return; }
@@ -1187,7 +1190,8 @@ function updateCat(c,dt){
   const wet=weather.raining&&!shelterOf(c.g.position)&&!c.carried;
   s.full=Math.max(0,s.full-dt*(adult?0.2:0.26));
   s.fun=Math.max(0,s.fun-dt*0.17*(crowded?1.6:1)*(wet?1.5:1)/enrich);
-  s.groom=Math.max(0,s.groom-dt*0.04);
+  s.groom=Math.max(0,s.groom-dt*(0.04+(wet&&!c.outside?RAIN_GROOM:0)));
+  if(wet&&!c.outside){ c.wetAcc=(c.wetAcc||0)+dt; c.dryT=0; } else { if((c.wetAcc||0)>2)c.dryT=DRY_T; c.wetAcc=0; if(c.dryT>0)c.dryT-=dt; }
   if(!c.fleas&&s.groom<FLEA_AT&&!c.outside&&Math.random()<dt/40)c.fleas=5+Math.floor(rand(0,4));
   if(c.fleas&&s.groom>=40)c.fleas=0;
   if(c.fleas&&!c.outside&&!c.carried){ if(['idle','walk'].includes(c.state)&&Math.random()<dt/9){ setState(c,'itch',rand(2.4,3.2)); c.itchDur=c.stT; c.itchPh=0; }
@@ -1236,16 +1240,17 @@ function updateCat(c,dt){
         if(c.rompT<=0&&c.rompRole==='chaser'){ if(Math.random()<0.55){ c.rompPhase=o.rompPhase='chase'; c.rompRole='runner'; o.rompRole='chaser'; c.rompTgt=null; o.rompTgt=null; } else { addBond(c,o,4); heartBetween(c,o); setState(c,'idle',2); setState(o,'idle',2); } } }
       break; }
     case 'greet': case 'bye': break;
-    case 'groom': if(s.full>=60&&s.fun>=45)s.groom=Math.min(100,s.groom+dt*0.7); if(c.stT<=0){ if(c.groomKind==='paw'&&Math.random()<0.4){ c.groomKind=pick(['flank','tail']); c.stT=rand(3,5); } else setState(c,'idle',rand(2,4)); } break;
-    case 'boop': { const o=c.boopP; if(!o||o.state!=='boop'||o.away>0){ setState(c,'idle',1.5); break; } const op=o.g.position,p=c.g.position, d=dist2(p,op), want=(c.boopKind==='lick'?1.32:1.56)*(c.g.scale.x+o.g.scale.x)/2;
-      c.heading=angLerp(c.heading,Math.atan2(op.x-p.x,op.z-p.z),dt*6); if(c.landTo||o.landTo){ c.stT=Math.max(c.stT,1); } else if(d>want){ c.speed=lerp(c.speed,0.5,Math.min(1,dt*4)); p.x+=Math.sin(c.heading)*c.speed*dt; p.z+=Math.cos(c.heading)*c.speed*dt; }
+    case 'groom': s.groom=Math.min(100,s.groom+dt*LICK_GAIN); if(c.stT<=0){ if(c.groomKind==='paw'&&Math.random()<0.35){ c.groomKind=pick(['flank','behind']); c.stT=rand(2.5,4); } else setState(c,'idle',rand(2,4)); } break;
+    case 'boop': { const o=c.boopP; if(!o||o.state!=='boop'||o.away>0){ setState(c,'idle',1.5); break; } const op=o.g.position,p=c.g.position, d=dist2(p,op), want=c.licker&&c.lickPart==='body'?0.62*c.g.scale.x+0.22*o.g.scale.x:c.licker&&o.age<1?0.6*c.g.scale.x+0.55*o.g.scale.x:(c.boopKind==='lick'?1.32:1.56)*(c.g.scale.x+o.g.scale.x)/2;
+      if(o.licker&&c.boopKind==='lick')s.groom=Math.min(100,s.groom+dt*(c.age<1?LICKED_KIT:LICKED_GAIN));
+      if(!c.lickBody)c.heading=angLerp(c.heading,Math.atan2(op.x-p.x,op.z-p.z),dt*6); if(c.landTo||o.landTo){ c.stT=Math.max(c.stT,1); } else if(d>want){ c.speed=lerp(c.speed,0.5,Math.min(1,dt*4)); p.x+=Math.sin(c.heading)*c.speed*dt; p.z+=Math.cos(c.heading)*c.speed*dt; }
       else if(d<want-0.04){ const bx=p.x-op.x, bz=p.z-op.z, n=Math.hypot(bx,bz)||1, ux=n>0.01?bx/n:Math.sin(c.heading+Math.PI), uz=n>0.01?bz/n:Math.cos(c.heading+Math.PI); p.x+=ux*0.8*dt; p.z+=uz*0.8*dt; c.speed=0.2; c.stT=Math.max(c.stT,1.5); }
       else c.speed=lerp(c.speed,0,Math.min(1,dt*8));
       if(c.stT<=0)setState(c,'idle',2); break; }
     case 'pet': c.petT-=dt; if(c.turnTo!==undefined){ c.heading=angLerp(c.heading,c.turnTo,dt*1.5); if(Math.abs(angDiff(c.heading,c.turnTo))<0.05)c.turnTo=undefined; } if(c.petT<=0&&c.gaze<=0)setState(c,'idle',rand(1.5,3)); break;
     case 'flop': c.petT-=dt; if(c.stT<=0&&c.petT<=0)setState(c,'idle',1); break;
     case 'sleep': c.petT-=dt; s.health=Math.min(100,s.health+dt*(c.useItem?0.25*(c.useItem.tier||1):0.1)); if(c.stT<=0){ setState(c,'idle',2.5); c.stretch=1.8; c.stretchKind=pick(['bow','arch']); } break;
-    case 'shelter': c.petT-=dt; if(c.stT<=0){ if(weather.raining)c.stT=rand(3,6); else setState(c,'idle',1); } break;
+    case 'shelter': c.petT-=dt; if(c.dryT>0&&c.age>0.25&&Math.random()<dt/5){ selfLick(c,true); break; } if(c.stT<=0){ if(weather.raining)c.stT=rand(3,6); else setState(c,'idle',1); } break;
     case 'walk': if(c.after==='play'&&c.afterData)c.target.copy(c.afterData.pos);
       if(moveToward(c,dt,c.run?2.4:(adult?0.9:1.15),c.after==='play'?(c.afterData.tier>1?0.95:0.55):0.15)||c.stT<=0)arrive(c); break;
     case 'stalk': if(c.ball)c.heading=angLerp(c.heading,Math.atan2(c.ball.pos.x-c.g.position.x,c.ball.pos.z-c.g.position.z),dt*6); c.crouch=0.1; if(c.stT<=0){ hop(c,0.12,0.3); bat(c,c.ball); } break;
@@ -1348,7 +1353,7 @@ function animateCat(c,dt,t){
     else if(gk==='flank'){ rx=-0.4; coreY=0.43; legA=[0.4,0.4,-1.0,-1.0]; hx=0.45+lick; hy=1.35; hz=0.2; tailUp=-0.4; }
     else if(gk==='tail'){ coreY=0.3; legA=[1.3,1.3,-1.3,-1.3]; hx=0.55+lick; hy=0.95; tailUp=-1.1; swish=0.02; }
     else { rx=-0.6; coreY=0.4; legA=[0.35,0.35,-2.3+Math.sin(t*2)*0.1,-1.0]; hx=0.75+lick; hy=1.25; hz=0.25; tailUp=-0.9; } }
-  else if(st==='boop'&&!moving){ legA=[0,0,0,0]; tailUp=1.0; swish=0.05; if(c.licker){ hx=0.15+Math.sin(t*9)*0.18; hz=Math.sin(t*4.5)*0.2; eye=0.5; } else { eye=c.boopKind==='lick'?0.15:0.45; hx=c.boopKind==='lick'?0.25:-0.05; hz=c.boopKind==='lick'?-0.25:0; } }
+  else if(st==='boop'&&!moving){ legA=[0,0,0,0]; tailUp=1.0; swish=0.05; if(c.licker){ hx=(c.lickPart==='body'?0.5:c.boopP&&c.boopP.age<1?0.35:0.15)+Math.sin(t*9)*0.18; hz=Math.sin(t*4.5)*0.2; eye=0.5; } else { eye=c.boopKind==='lick'?0.15:0.45; hx=c.boopKind==='lick'?0.25:-0.05; hz=c.boopKind==='lick'?-0.25:0; } }
   else if(st==='litter'){ rx=-0.35; coreY=0.42; legA=[0.35,0.35,-1,-1]; baseY=0.2; tailUp=0.2; }
   else if(st==='perch'){ coreY=0.3; hx=0.15; legA=[1.3,1.3,-1.3,-1.3]; baseY=c.perchY||1.15; tailUp=-1.2; swish=0.25; }
   if(c.crouch>0){ coreY=0.34; rx=0.12; if(!moving)legA=[0.6,0.6,-0.6,-0.6]; tailUp=0; swish=0.5; rz=Math.sin(t*14)*0.05; c.crouch-=dt; }
@@ -2215,7 +2220,7 @@ function openHelp(){
   ${sec('Petting rhythm',`<ul><li>Drag across the cat: one smooth stroke, then <b>wait</b>.</li><li>Keep stroking slowly: the ring by your hand fills while your hand moves over the cat, and every full ring is a happy purr. Holding still doesn't fill it, and after a few seconds of stillness the cat gets bored and wanders off.</li><li>An hourglass = slow down (a shaking one = way too fast; too much of that and the cat has had enough).</li><li>Too many fast strokes overstimulate a cat: watch for a twitching tail and sideways ears. Then it walks off, or, if it isn't fond of you yet, it scratches (band-aid!).</li></ul>`)}
   ${sec('Where to pet',`<ul><li><b>Head, cheeks, chin</b>: favourites.</li><li><b>Back</b>: fine. <b>Tail</b>: no!</li><li><b>Belly</b>: only when a cat rolls over and has Love 75+. Otherwise it's a trap.</li><li><b>Butt taps</b>: tap the rump once. Some cats love it, some don't: find out!</li><li>Happy cats headbutt your hand, knead, lean in and slow-blink. When a cat looks up and slowly blinks at you, <b>tap it to blink back</b>.</li></ul>`)}
   ${sec('Tools',`<ul><li><b>Pet</b>: stroke; press and hold a cat to carry it (relaxed cats flop, nervous ones wiggle free). Drop it next to another cat to introduce them.</li><li><b>Brush</b>: scrub back and forth, gently, to clean the coat. Too fast and the cat grumbles, then leaves or scratches. Cats that don't love you yet only tolerate very slow brushing, so pet a new rescue first. A scruffy cat (Groom under 35) looks dull and dusty, with bed-head, muddy socks and bits of leaf and twig in its fur; brushing cleans it up, and a really clean coat shines. Love comes from petting; brushing raises Groom (it helps health, wins fairs and gets rid of fleas). Cats also groom themselves a little when happy and fed.</li><li><b>Laser</b> (shop): drag the dot and cats sprint and pounce. Upgraded, it ends on a treat.</li><li>Bowls and litter boxes can be tapped with any tool.</li></ul>`)}
-  ${sec('Daily care',`<ul><li>Tap a bowl to fill it (uses premium food first, then kibble).</li><li>Tap the litter box to scoop it; dirty boxes make the meadow smelly.</li><li>A rain roof keeps cats dry in showers.</li><li>Helpers fill bowls, scoop and pet cats, for $6 a minute. Unpaid helpers rest.</li><li>The donation jar by the gate collects money when your cats are happy.</li></ul>`)}
+  ${sec('Daily care',`<ul><li>Tap a bowl to fill it (uses premium food first, then kibble).</li><li>Tap the litter box to scoop it; dirty boxes make the meadow smelly.</li><li>A rain roof keeps cats dry in showers. Cats left out in the rain get a little scruffy.</li><li>Helpers fill bowls, scoop and pet cats, for $6 a minute. Unpaid helpers rest.</li><li>The donation jar by the gate collects money when your cats are happy.</li></ul>`)}
   ${sec('Cat fair',`<p>A grown cat with <b>Love 55+, Groom 50+ and Health 60+</b> gets a <b>Fair!</b> button on its tag. The better groomed, the higher it places and the bigger the prize. Every cat wins a category (Best Purr, Fluffiest Coat, Most Improved, Bravest Rescue, Best Dressed...) and prize money. Winning moves you up to bigger fairs.</p>`)}
   ${sec('New cats & kittens',`<ul><li>Rescuers drive up and drop off strays, sometimes a mama with kittens.</li><li>Close friends touch noses and lick each other. A happy, bonded, unrelated pair may have <b>one</b> litter, then both get a vet visit.</li><li>Kittens stay near mum until they grow up (about 3 minutes).</li></ul>`)}
   ${sec('Adoption',`<ul><li>A cat is <b>ready for a home</b> after settling in (about 2½ minutes) with Love 50+ and Health 55+. Ribbons don't matter, but a family turns down a very scruffy cat (Groom under 30) unless it adores people (Love 90+).</li><li>Families drive up and say what they'd love (a calm cat, a playful cat...). Tap <b>Pick a cat</b>, then a cat with a little house. A good personality match goes home; best friends go together.</li><li>No money changes hands. Postcards arrive later and get pinned on the card board by the house: tap it to see them all. They're also in Badges → Happy Tails.</li><li>Tap <b>Keep</b> on a cat to keep it forever. Tap × to send a family off.</li></ul>`)}
@@ -2375,6 +2380,19 @@ function updateDropoff(dt){ const D=W.dropoff; if(!D)return; const h=LV().half;
   else if(D.stage==='walkout'&&arrived(D.p)){ scene.remove(D.p.g); carLeave(D.car); W.dropoff=null; } }
 function readyHome(c){ return c.age>=1&&!c.forever&&c.away<=0&&!c.outside&&!c.carried&&!c.leaving&&c.s.aff>=50&&c.s.health>=55&&W.time-c.arrivedAt>=150; }
 function canBoop(c){ return !c.carried&&!c.outside&&!c.leaving&&c.away<=0&&(c.boopCD||0)<=0&&c.petT<=0&&['idle','walk','watch'].includes(c.state); }
+const LICK_GAIN=0.15, LICKED_GAIN=0.12, LICKED_KIT=0.2, RAIN_GROOM=0.08, DRY_T=60;
+function selfLick(c,short){ setState(c,'groom',short?rand(2.5,4):rand(3.5,6)); c.groomKind=pick(['paw','paw','paw','paw','flank','behind']); }
+function lickable(o){ return o&&!o.carried&&o.away<=0&&!o.outside&&!o.leaving&&o.age>0.05&&['idle','groom','watch','sleep'].includes(o.state)&&!(o.petT>0); }
+function kidsOf(c){ return W.cats.filter(k=>k.age<1&&k.parents&&k.parents.includes(c.id)&&lickable(k)); }
+// a parent licks its kitten (any stats); a loving cat licks a bonded friend's head
+function lickSocial(c){ if(tutQuiet()||c.age<1||(c.lickCD||0)>W.time)return false; const p=c.g.position;
+  if(Math.random()<0.16){ const k=pick(kidsOf(c)); if(k){ c.lickCD=W.time+rand(25,45); goNear(c,k,k.age<0.5?0.7:0.9,{o:k,part:Math.random()<0.5?'head':'body'}); return true; } }
+  if(c.s.aff>50&&Math.random()<0.06){ const o=active().filter(o=>o!==c&&o.age>=0.25&&getBond(c,o)>=40&&lickable(o)&&dist2(o.g.position,p)<9).sort((a,b)=>getBond(c,b)-getBond(c,a))[0]; if(o){ c.lickCD=W.time+rand(60,100); goNear(c,o,1.1,{o,part:'head'}); return true; } }
+  return false; }
+function goNear(c,o,d,data){ const op=o.g.position, p=c.g.position, dx=p.x-op.x, dz=p.z-op.z, n=Math.hypot(dx,dz)||1; goTo(c,op.x+dx/n*d,op.z+dz/n*d,'lick',data); }
+function lickStart(a,b,part){ if(!lickable(b)||dist2(a.g.position,b.g.position)>2.2)return false; const dur=rand(3.5,5);
+  for(const c of [a,b]){ setState(c,'boop',dur); c.boopP=c===a?b:a; c.boopKind='lick'; c.licker=c===a; c.lickPart=c===a?part:null; c.lickBody=c===b&&part==='body'; }
+  a.boopCD=b.boopCD=rand(30,50); if(b.age<1&&b.parents&&b.parents.includes(a.id))spawnFx('h',b.g.position.clone().setY(0.7*b.g.scale.y+0.4),1,.1); return true; }
 function boop(a,b){ const lick=getBond(a,b)>=40&&Math.random()<0.6; snapHint('boop',[a,b],0.5);
   for(const c of [a,b]){ setState(c,'boop',lick?4.4:3.4); c.boopP=c===a?b:a; c.boopCD=rand(40,70); c.boopKind=lick?'lick':'boop'; c.licker=lick&&c===a; }
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:iconTexture('h'),transparent:true,depthWrite:false})); sp.scale.set(0.12,0.12,0.12); scene.add(sp); W.boops.push({a,b,sp,t:0,dur:lick?4.2:3.2}); Snd.chirp(); }

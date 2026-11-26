@@ -866,7 +866,8 @@ function useItem(it){
     fillBowl(it); W.stat.fills++; Snd.pop(); spawnFx('spark',it.pos.clone().setY(.3),4,.3); hud(); }
   else if(it.kind==='litter'){ if(it.dirt<0.5){ floatWorld(it.pos.clone().setY(.5),'Clean'); return; }
     it.dirt=0; updateLitter(it); W.stat.cleaned++; Snd.scoop(); spawnFx('spark',it.pos.clone().setY(.4),5,.4); if(W.stat.cleaned>=10)unlock('spotless'); }
-  else if(it.kind==='ball'){ it.vel.set(rand(-3,3),0,rand(-3,3)); Snd.jingle(); }
+  else if(it.kind==='ball'&&!(it.tier>1)){ it.vel.set(rand(-3,3),0,rand(-3,3)); Snd.jingle(); }
+  else { if(it.kind==='ball'){ it.spin=4; Snd.jingle(); } else Snd.pop(); it.boing=1; }
 }
 
 /* ================= CATS ================= */
@@ -1793,7 +1794,7 @@ canvas.addEventListener('pointerdown',e=>{
   if(PG.c&&!(hit&&hit.cat===PG.c))PG.until=-1;
   if(e.pointerType!=='mouse'&&!hit&&performance.now()-(P.tapT??-1e9)<350&&Math.hypot(e.clientX-P.tapX,e.clientY-P.tapY)<50){ P.tapT=-1e9; P.mode='dzoom'; P.dz0=e.clientY; P.dzW=cam.want; rec('dzoom',''); return; }
   if(pl.a&&pl.stage==='carry'&&hit&&hit.cat!==pl.a)hit=null;
-  { const L=tutLock(); if(L&&!(L.wandOk&&W.tool==='wand')){ if(hit&&(!hit.cat||!L.cats.includes(hit.cat)))hit=null; if(!hit||W.tool==='wand'||W.tool==='laser'){ P.mode='pan'; P.lockPan=true; groundAt(e,P.grab); handVis(); return; } } else if(L)hit=null; }
+  { const L=tutLock(); if(L&&!(L.wandOk&&W.tool==='wand')){ if(!(hit&&hit.cat&&L.cats.includes(hit.cat))&&!(tips.cur&&tips.cur.kind==='butt')){ const nc=L.cats.find(c=>nearPet(c,e)); if(nc)hit={cat:nc,zone:'back'}; } if(hit&&(!hit.cat||!L.cats.includes(hit.cat)))hit=null; if(!hit||W.tool==='wand'||W.tool==='laser'){ P.mode='pan'; P.lockPan=true; groundAt(e,P.grab); handVis(); return; } } else if(L)hit=null; }
   if(hit&&hit.item&&hit.item.kind!=='shelter'){ P.mode='item'; P.item=hit.item; handVis(); return; }
   if(W.tool==='wand'){ P.mode='wand'; wandDown(e); return; }
   if(W.tool==='laser'){ P.mode='laser'; laserMove(e); return; }
@@ -2491,7 +2492,7 @@ function comeHome(c){ const R=W.runaway, h=LV().half; clearTrail(); $('#missing'
 let visitT=rand(60,90), famLogT=5;
 function famHold(){ return cardUp()||!!cam.meet||meetQ.length>0||!!(W.dropoff&&!W.dropoff.gift)||!!W.runaway||!!fairForce()||!!tips.cur||W.time-(W.lastEv??-999)<20; }
 function famDue(){ return !W.family&&visitT<=0&&(W.night||0)<0.55&&(W.cats.some(readyHome)||W.homes.length>0); }
-function spawnFamily(){ const ready=W.cats.filter(readyHome); if(!ready.length&&!W.homes.length)return; const h=LV().half; rec('family',ready.length?`arrive, ${ready.length} ready`:'arrive, none ready');
+function spawnFamily(){ const ready=W.cats.filter(readyHome); if(!ready.length)return; const h=LV().half; rec('family',ready.length?`arrive, ${ready.length} ready`:'arrive, none ready');
   const neat=ready.filter(c=>c.s.groom>=GROOM_HOME), want=ready.length&&!W.homes.length?pick(neat.length?neat:ready).trait:ready.length&&Math.random()<0.7?pick(ready).trait:pick(TRAITS); const n=Math.random()<0.5?2:3; const members=[];
   for(let i=0;i<n;i++){ const kid=i===2||(n===2&&i===1&&Math.random()<0.4); const m=personMesh({scale:kid?0.68:1}); m.g.visible=false; m.g.position.set(-3.6+i*0.3,0,-h-8.3); m.target=m.g.position.clone(); m.route=[]; m.heading=0; m.face=0; m.speed=0; m.phase=0; scene.add(m.g); members.push(m); }
   const car=carVisit(()=>{ members.forEach((m,i)=>{ m.g.visible=true; m.route=routeIn(h,i,n); }); });
@@ -2613,7 +2614,8 @@ function starPts(){ const a=active().filter(c=>!c.outside); const happy=a.length
 function updateStars(){ const pts=starPts();
   let st=1; for(let i=2;i<=5;i++)if(pts>=STAR_AT[i])st=i; if(st>W.stars){ W.stars=st; toast('★'.repeat(st)+' Sanctuary!','badge',3600); Snd.chime(); spawnFx('spark',new V3(0,2.5,-LV().half-3),12,1.5); } }
 function extraUpdate(dt){
-  for(const it of items){ if(it.kind==='ball'&&it.tier>1&&it.orb){ it.spin=Math.max(0,it.spin-dt*2); it.orb.rotation.y+=dt*(0.6+it.spin); } else if(it.kind==='bowl'&&it.water){ it.water.position.y=0.48+Math.sin(W.time*6)*0.025; } else if(it.kind==='litter'&&it.tier>=3&&it.dirt>0){ it.dirt=Math.max(0,it.dirt-dt/45); } else if(it.kind==='tree'&&it.toy){ it.toy.position.x=0.3+Math.sin(W.time*2)*0.04; } }
+  for(const it of items){ if(it.boing>0){ it.boing=Math.max(0,it.boing-dt*2.5); const k=Math.sin((1-it.boing)*Math.PI*3)*it.boing*0.14; it.mesh.scale.set(1+k*0.6,1-k,1+k*0.6); }
+    if(it.kind==='ball'&&it.tier>1&&it.orb){ it.spin=Math.max(0,it.spin-dt*2); it.orb.rotation.y+=dt*(0.6+it.spin); } else if(it.kind==='bowl'&&it.water){ it.water.position.y=0.48+Math.sin(W.time*6)*0.025; } else if(it.kind==='litter'&&it.tier>=3&&it.dirt>0){ it.dirt=Math.max(0,it.dirt-dt/45); } else if(it.kind==='tree'&&it.toy){ it.toy.position.x=0.3+Math.sin(W.time*2)*0.04; } }
   updateBoops(dt); updateDropoff(dt);
   // night ambience: crickets fade in with the dark, an owl hoots now and then
   { const n=W.night||0; if(Snd.ac&&n>0.25&&!weather.raining){ W.crT=(W.crT??0)-dt; if(W.crT<=0){ W.crT=rand(0.25,0.9)/n; Snd.cricket(n*rand(0.5,1)); }

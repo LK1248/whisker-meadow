@@ -291,7 +291,7 @@ body.tutLock .hbtn,body.tutLock #bCats,body.tutLock .tool:not(.tutOk):not(.on){p
 <div class="dock pill" id="dock">
   <button class="tool on" data-tool="hand" aria-label="Pet"><svg viewBox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="16" rx="5" ry="4.2"/><circle cx="5.6" cy="10" r="2.3"/><circle cx="9.6" cy="6.3" r="2.3"/><circle cx="14.4" cy="6.3" r="2.3"/><circle cx="18.4" cy="10" r="2.3"/></svg>Pet</button>
   <button class="tool" data-tool="brush" aria-label="Brush"><svg viewBox="0 0 24 24"><g transform="rotate(-35 12 12)"><rect x="2.5" y="6.5" width="12.5" height="6.2" rx="2.6" fill="currentColor"/><path d="M4.6 13.6v3.4M7.3 13.6v3.4M10 13.6v3.4M12.7 13.6v3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M15 9.6h6.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></g></svg>Brush</button>
-  <button class="tool locked" data-tool="laser" aria-label="Laser pointer"><span class="lock">$100</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="13" width="11" height="5" rx="2.5" transform="rotate(-35 8 15.5)" fill="currentColor" fill-opacity=".3"/><path d="M13 10l5-3.5"/><circle cx="20" cy="5.5" r="2.2" fill="#e2574c" stroke="none"/></svg>Laser</button>
+  <button class="tool locked" data-tool="laser" aria-label="Laser pointer"><span class="lock">★2</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="13" width="11" height="5" rx="2.5" transform="rotate(-35 8 15.5)" fill="currentColor" fill-opacity=".3"/><path d="M13 10l5-3.5"/><circle cx="20" cy="5.5" r="2.2" fill="#e2574c" stroke="none"/></svg>Laser</button>
 </div>
 
 <div id="tag" hidden></div><div id="intro" hidden></div><div id="ghost" hidden></div><div id="pips" hidden></div><div id="tip" hidden></div><div id="scratch"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><g fill="none" stroke="#d81e3a" stroke-linecap="round" filter="drop-shadow(0 0 1px rgba(120,0,20,.6))"><path pathLength="1" stroke-width="3.6" d="M18 8 Q42 46 74 92"/><path pathLength="1" stroke-width="4.4" d="M30 4 Q54 44 86 90"/><path pathLength="1" stroke-width="3.2" d="M42 2 Q64 40 96 84"/></g></svg></div><div id="tapRing"></div><button id="introSkip" hidden aria-label="Skip">&#9197;</button><button id="lessonSkip" hidden aria-label="Skip">&#9197;</button>
@@ -359,7 +359,7 @@ function clampZ(z,m){ const B=bnd(); return clamp(z,B.z0+m,B.z1-m); }
 function ext(){ const B=bnd(); return Math.max(-B.x0,B.x1,-B.z0,B.z1); }
 function outPt(d){ const B=bnd(), s=Math.floor(Math.random()*4); if(s===0)return {x:rand(B.x0-d,B.x1+d),z:B.z0-d}; if(s===1)return {x:B.x1+d,z:rand(B.z0-d,B.z1+d)}; if(s===2)return {x:rand(B.x0-d,B.x1+d),z:B.z1+d}; return {x:B.x0-d,z:rand(B.z0-d,B.z1+d)}; }
 function fencePt(){ const B=bnd(), s=Math.floor(Math.random()*4); if(s===0){ let x=rand(B.x0+0.8,B.x1-0.8); if(Math.abs(x)<1)x=B.x1*0.6; return [x,B.z0]; } if(s===1)return [B.x1,rand(B.z0+0.8,B.z1-0.8)]; if(s===2)return [rand(B.x0+0.8,B.x1-0.8),B.z1]; return [B.x0,rand(B.z0+0.8,B.z1-0.8)]; }
-const W={started:false,paused:false,time:0,money:40,food:10,premium:0,dayOn:store.get('wm_daynight')!==false,night:0,level:1,cats:[],tool:'hand',laser:false,ribbons:0,wins:0,streak:0,bestStreak:0,showTier:0,earned:0,aidT:0,
+const W={started:false,paused:false,time:0,money:100,food:10,premium:0,dayOn:store.get('wm_daynight')!==false,night:0,level:1,cats:[],tool:'hand',laser:false,ribbons:0,wins:0,streak:0,bestStreak:0,showTier:0,earned:0,aidT:0,
   stars:1,homes:[],tier:{tree:1,bed:1,ball:1,bowl:1,litter:1,shelter:1,wand:1,laser:1},achT:{},goals:[],lastInput:0,maxCats:3,tagShows:0,family:null,pickHome:false,runaway:null,postQ:[],boops:[],
   hints:store.get('wm_hints')!==false,ach:{},stat:{good:0,fills:0,drops:0,cleaned:0,pounces:0,brush:0,shows:0,showsBack:0,buys:0,belly:0,kittens:0,laserP:0,blinkBack:0,gazes:0,scratches:0,rescues:0,pairs:0,patient:0,found:0,upgrades:0,rare:0,coatsMax:0,butt:0,quick:0}};
 const STAT0=JSON.parse(JSON.stringify(W.stat));
@@ -1064,6 +1064,8 @@ function shelterPick(c){ const sh=items.filter(i=>i.kind==='shelter'); if(!sh.le
   return sh.map(s=>({s,score:Math.hypot(s.pos.x-p.x,s.pos.z-p.z)+shelterLoad(s,c)*2.2+(shelterLoad(s,c)>=4?8:0)})).sort((a,b)=>a.score-b.score)[0].s; }
 function shelterOf(p){ return items.find(i=>i.kind==='shelter'&&Math.abs(p.x-i.pos.x)<1.0&&Math.abs(p.z-i.pos.z)<1.0); }
 
+const LASER_SEE=['idle','watch','groom','sit'];
+function laserGo(c){ setState(c,'laser',c.s.fun>=95?rand(3,5):rand(7,11)); } // a cat with full fun chases in short bursts
 function decide(c){
   const s=c.s, p=c.g.position;
   if(c.age<0.7&&c.mother){ const mum=W.cats.find(m=>m.id===c.mother&&m.away<=0&&!m.outside&&!m.leaving); if(mum&&Math.random()<0.5){ const mp=mum.g.position; goTo(c,mp.x+rand(-0.7,0.7),mp.z+rand(-0.7,0.7),null); return; } }
@@ -1074,7 +1076,7 @@ function decide(c){
     if(s.full<35&&c.age>0.2){ setState(c,'idle',rand(5,8)); c.sit=true; c.beg=c.stT; showIcon(c,'hungry',2.5); c.meowT=Math.min(c.meowT,rand(0.5,1.5)); return; } /* ask the player for food */
     if(Math.random()<0.5)showIcon(c,'hungry',2.5); }
   if(c.litterNeed>rand(70,100)){ const L=nearest(items.filter(i=>i.kind==='litter'&&i.dirt<i.cap-0.5&&!i.occupant),c); if(L){ goTo(c,L.pos.x,L.pos.z,'litter',L); return; } c.litterNeed=45; showIcon(c,'smell',3); }
-  if(laser.active&&s.fun<98&&dist2(p,laser.pos)<9){ setState(c,'laser',8); return; }
+  if(laser.active&&W.time>(c.laserCD||0)&&dist2(p,laser.pos)<9){ laserGo(c); return; }
   if(wand.active&&s.fun<97&&s.aff>8&&dist2(p,wand.feather)<6&&Math.random()<0.85){ setState(c,'chase',8); return; }
   if(c.dryT>0&&c.age>0.25&&!(c.shake>0)&&Math.random()<0.45){ selfLick(c); return; } // just out of the rain: lots of licking
   if(lickSocial(c))return;
@@ -1213,6 +1215,7 @@ function updateCat(c,dt){
   if(c.held&&!c.carried){ c.speed=0; return; }
   if(c.carried){ c.speed=0; c.holdT+=dt; if(pl.a===c&&pl.stage==='carry')c.holdT=0; if(c.holdT>=c.tol){ if(c.s.aff<35){ c.bat=0.5; c.snap=0.3; Snd.meow(0.8,0.9); scratchFx(); c.s.aff=Math.max(0,c.s.aff-4); } hopFree(c); } return; }
   c.stT-=dt;
+  if(laser.active&&W.time>(c.laserCD||0)&&(LASER_SEE.includes(c.state)||(c.state==='walk'&&!c.after))&&c.away<=0&&!c.outside&&!c.leaving&&c.age>0.1&&!(c.petT>0)&&!c.helped&&dist2(c.g.position,laser.pos)<9&&Math.random()<dt*(c.s.fun>=95?0.6:1.8))laserGo(c);
   if(!['walk','chase','laser','stalkBird','watch','path','boop','romp','hiding'].includes(c.state)) c.speed=lerp(c.speed,0,Math.min(1,dt*8));
   if(c.lunge>0){ c.lunge-=dt; const p=c.g.position, ls=c.lungeSp||1.6; p.x+=Math.sin(c.heading)*ls*dt; p.z+=Math.cos(c.heading)*ls*dt; if(c.lunge<=0)c.lungeSp=0; }
   switch(c.state){
@@ -1264,7 +1267,7 @@ function updateCat(c,dt){
       else if(d<1.1&&wand.fSpeed<0.5){ c.crouch=0.3; c.heading=angLerp(c.heading,Math.atan2(f.x-c.g.position.x,f.z-c.g.position.z),dt*6); }
       else moveToward(c,dt,adult?2.0:2.2,0.6);
       if(c.stT<=0&&s.fun>90)setState(c,'idle',2); break; }
-    case 'laser': { if(!laser.active||s.fun>=99){ setState(c,'idle',1.5); break; } c.target.copy(laser.pos); const d=dist2(c.g.position,laser.pos);
+    case 'laser': { if(!laser.active){ setState(c,'idle',1.5); break; } if(c.stT<=0.05){ c.laserCD=W.time+(s.fun>=95?rand(4,9):rand(1.5,3.5)); setState(c,'idle',rand(1,2)); break; } c.target.copy(laser.pos); const d=dist2(c.g.position,laser.pos);
       if(d<1.4&&c.pounceT<=0&&c.hopT<=0){ c.heading=Math.atan2(laser.pos.x-c.g.position.x,laser.pos.z-c.g.position.z); hop(c,(0.25+d*0.18)*c.g.scale.x,0.45); c.lunge=0.45; c.lungeSp=d/0.45; c.reach=0.2; c.pounceT=0.9; s.fun=Math.min(100,s.fun+3.5); W.stat.laserP++;
         if(W.tier.laser>=2&&W.stat.laserP%8===0){ s.aff=Math.min(100,s.aff+1.5); s.full=Math.min(100,s.full+5); spawnFx('h',c.g.position.clone().setY(.8),2); floatWorld(c.g.position.clone().setY(1),'Treat!'); } }
       if(c.hopT<=0||c.leap)moveToward(c,dt,4.6,0.3); break; }
@@ -2059,7 +2062,8 @@ function setTool(t){ if(t==='laser'&&!W.laser){ lockTip(); return; } W.tool=t; d
   if(t==='wand'){ wand.tip.copy(cam.target).setY(0.5); wand.anchor.copy(cam.target).setY(0); wand.feather.copy(wand.tip).setY(0.1); wand.lastAct=W.time; }
   if(t==='laser'){ laser.pos.copy(cam.target).setY(0); laser.lastMove=W.time; } handVis(); }
 document.querySelectorAll('.tool').forEach(b=>b.onclick=()=>{ const L=tutLock(), t=b.dataset.tool; if(L&&t!==W.tool&&!L.tools.includes(t))return; setTool(t); });
-function refreshDock(){ const lb=$('[data-tool=laser]'); lb.classList.toggle('locked',!W.laser); lb.querySelector('.lock').hidden=W.laser; }
+const LASER_COST=150, LASER_STARS=2;
+function refreshDock(){ const lb=$('[data-tool=laser]'); lb.classList.toggle('locked',!W.laser); const lk=lb.querySelector('.lock'); lk.hidden=W.laser; lk.textContent=W.stars>=LASER_STARS?'$'+LASER_COST:'★'+LASER_STARS; }
 const RIB_SVG='<svg viewBox="0 0 24 24"><path d="M8 13l-3 9 4-2 2 3 2-8zM16 13l3 9-4-2-2 3-2-8z" fill="#cfe0ff"/><circle cx="12" cy="9" r="6.5" fill="#ffcf3f" stroke="#fff" stroke-width="1.5"/></svg>';
 // rosette: pink before a cat's first fair, then the colour of its best ribbon so far
 function fairBadge(best,w){ const col=['#ff8fb1','#ffcf3f','#c9d3de','#e1a06a'][best]||'#ff8fb1', tail=best?'#5b8def':'#ff6f99';
@@ -2151,7 +2155,7 @@ const SHOP=[
   {id:'collar',name:()=>'Collar',desc:'Pick a color, then tap a cat',cost:()=>15,buy(){ W.money+=15; setTimeout(openCollars,0); }},
   {id:'ball',name:()=>TIERS.ball[W.tier.ball-1],desc:'Bat & chase',cost:()=>12,max:()=>2+W.level*2,buy(){addItem('ball');}},
   {id:'bed',name:()=>TIERS.bed[W.tier.bed-1],desc:'Cozy naps',cost:()=>15,max:()=>1+W.level,buy(){addItem('bed');}},
-  {id:'laser',name:()=>'Laser pointer',desc:'Zoomies!',cost:()=>100,avail:()=>!W.laser,buy(){W.laser=true;refreshDock();}},
+  {id:'laser',name:()=>'Laser pointer',desc:'Zoomies!',cost:()=>LASER_COST,need:()=>LASER_STARS,avail:()=>!W.laser,buy(){W.laser=true;refreshDock();}},
   {id:'shelter',name:()=>TIERS.shelter[W.tier.shelter-1],desc:'Dry in the rain',cost:()=>40,max:()=>Math.max(1,Math.round(LV().cap/7)),buy(){addItem('shelter');}},
   {id:'tree',name:()=>TIERS.tree[W.tier.tree-1],desc:'A perch with a view',cost:()=>35,max:()=>W.level+1,buy(){addItem('tree');}},
   {id:'bowl',name:()=>TIERS.bowl[W.tier.bowl-1],desc:'More dinner seats',cost:()=>20,max:()=>W.level+1,buy(){addItem('bowl');}},
@@ -2744,7 +2748,7 @@ const STAR_AT=[0,0,20,50,95,160];
 function starPts(){ const a=active().filter(c=>!c.outside); const happy=a.length?a.reduce((s,c)=>s+(c.s.aff+c.s.health)/2,0)/a.length:0;
   return W.homes.length*12+W.stat.rescues*4+W.ribbons*2+W.level*6+W.stat.kittens*2+W.stat.found*3+(happy>=70?10:happy>=55?5:0); }
 function updateStars(){ const pts=starPts();
-  let st=1; for(let i=2;i<=5;i++)if(pts>=STAR_AT[i])st=i; if(st>W.stars){ W.stars=st; toast('★'.repeat(st)+' Sanctuary!','badge',3600); Snd.chime(); spawnFx('spark',new V3(0,2.5,-LV().half-3),12,1.5); } }
+  let st=1; for(let i=2;i<=5;i++)if(pts>=STAR_AT[i])st=i; if(st>W.stars){ W.stars=st; refreshDock(); toast('★'.repeat(st)+' Sanctuary!','badge',3600); Snd.chime(); spawnFx('spark',new V3(0,2.5,-LV().half-3),12,1.5); } }
 function extraUpdate(dt){
   for(const it of items){ if(it.boing>0){ it.boing=Math.max(0,it.boing-dt*2.5); const k=Math.sin((1-it.boing)*Math.PI*3)*it.boing*0.14; it.mesh.scale.set(1+k*0.6,1-k,1+k*0.6); }
     if(it.kind==='ball'&&it.tier>1&&it.orb){ it.spin=Math.max(0,it.spin-dt*2); it.orb.rotation.y+=dt*(0.6+it.spin); } else if(it.kind==='bowl'&&it.water){ it.water.position.y=0.48+Math.sin(W.time*6)*0.025; } else if(it.kind==='litter'&&it.tier>=3&&it.dirt>0){ it.dirt=Math.max(0,it.dirt-dt/45); } else if(it.kind==='tree'&&it.toy){ it.toy.position.x=0.3+Math.sin(W.time*2)*0.04; } }

@@ -1746,8 +1746,8 @@ function brushScrub(c,len,zone){
   c.petT=3; tagFor(c,3); if(!['sleep','pet','eat','litter','perch','shelter'].includes(c.state))setState(c,'pet');
   if(zone==='tail'){ c.flick=0.4; return; }
   // speed: looser than petting, and it grows with Love (a wary rescue only puts up with very slow brushing)
-  { const D=2.5*Math.max(60,Math.min(400,catScreenH(c))), loveF=br.c===c?Math.max(1,clamp((c.s.aff-10)/60,0.4,1.3)):clamp((c.s.aff-10)/60,0.4,1.3), vMax=D*0.7*1.4*loveF*(c.trait==='shy'?0.87:1), v=S.v||0, now=W.time, hy=P.hy-(P.type==='mouse'?62:112);
-    if(v>vMax*2.2){ const hard=v>vMax*4.5; c.over+=len/D*(hard?1.2:0.5);
+  { const D=2.5*Math.max(60,Math.min(400,catScreenH(c))), loveF=br.c===c?1.3*Math.max(1,clamp((c.s.aff-10)/60,0.4,1.15)):clamp((c.s.aff-10)/60,0.4,1.15), vMax=D*0.7*1.4*loveF*(c.trait==='shy'?0.87:1), v=S.v||0, now=W.time, hy=P.hy-(P.type==='mouse'?62:112);
+    if(v>vMax*1.5){ const hard=v>vMax*3; c.over+=len/D*(hard?1.4:0.6);
       if(now>(c.hgT||0)){ c.hgT=now+(hard?0.9:1.1); floatHourglass(P.hx,hy,hard); slowNag.n++; if(slowNag.n>=4&&now>slowNag.next){ slowNag.n=0; slowNag.next=now+40; showSlow(); } }
       if(c.over>=1.5&&now>(c.grumbleT||0)){ c.grumbleT=now+2.5; showIcon(c,'angry',1.4); c.earFlat=1; Snd.meow(0.78,0.9); }
       return; } }

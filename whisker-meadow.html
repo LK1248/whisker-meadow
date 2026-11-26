@@ -1894,7 +1894,8 @@ function playerBusy(){ if(W.time-(W.lastInput||-99)>=6)return false; return W.to
 function eventOn(){ return !!(W.dropoff&&!W.dropoff.gift)||!!W.family||!!W.runaway||!!cam.meet||meetQ.length>0; }
 function calmTick(){ if(eventOn())W.lastEv=W.time; }
 function calmHold(){ return cardUp()||playerBusy()||!!wandForce()||!!(tips.cur&&tips.cur.kind==='flea')||!!fairForce()||W.time-(W.lastEv??-999)<(W.time<900?90:50); }
-function strayHold(){ return calmHold()||(!W.stat.brushTut&&W.time<900)||W.time<(W.stat.brushTutT||0)+40||!!(curHint&&HINT_HOLD.has(curHint.id)); }
+function lessonBusy(){ return !!(bt.c||pl.a||br.c); }
+function strayHold(){ return calmHold()||lessonBusy()||(!W.stat.brushTut&&W.time<900)||W.time<(W.stat.brushTutT||0)+40||!!(curHint&&HINT_HOLD.has(curHint.id)); }
 function strayGap(){ const f=W.cats.length/LV().cap; return f<0.5?rand(45,70):f<0.8?rand(75,110):rand(110,150); }
 function arriveStray(){
   const h=LV().half, room=LV().cap-W.cats.length; if(room<=0)return;
@@ -1911,7 +1912,7 @@ function checkCollection(){ W.stat.coatsMax=Math.max(W.stat.coatsMax||0,new Set(
 // meet sheet (pauses play, focuses the new cat, shows everyone at a glance)
 const meetQ=[]; let meetSaved=null;
 function coatNow(c){ if(!c||!c.core)return; ensureBurrs(c); updateScruff(c); updateSheen(c,0); updateFleas(c,0.05); }
-function meet(c,origin,parents){ W.lastEv=W.time; if(origin==='stray'&&W.stat.brushTut&&c.s.groom<FLEA_AT&&!c.fleas&&Math.random()<0.4)c.fleas=5+Math.floor(rand(0,4)); coatNow(c); meetQ.push({c,origin,parents}); if(!cam.meet&&!playerBusy()&&!cardUp())nextMeet(); }
+function meet(c,origin,parents){ W.lastEv=W.time; if(origin==='stray'&&W.stat.brushTut&&c.s.groom<FLEA_AT&&!c.fleas&&Math.random()<0.4)c.fleas=5+Math.floor(rand(0,4)); coatNow(c); meetQ.push({c,origin,parents}); if(!cam.meet&&!playerBusy()&&!cardUp()&&!lessonBusy())nextMeet(); }
 function nextMeet(){
   const m=meetQ.shift();
   if(!m){ W.paused=false; cam.meet=null; $('#meet').hidden=true; if(meetSaved){ cam.want=meetSaved; meetSaved=null; } handVis(); return; }
@@ -2186,7 +2187,7 @@ const HINTS=[
 const hintDone=new Set(), hintRetry={}; let curHint=null, hintT=0, hintGap=0;
 function hideHint(){ curHint=null; hintEl.hidden=true; hintGap=4; }
 function needTick(dt){ const cs=active(), hungry=cs.filter(c=>c.s.full<30).length, fleas=cs.filter(c=>c.fleas).length; W.needT=hungry>2||fleas>1?(W.needT||0)+dt:Math.max(0,(W.needT||0)-dt*0.5); }
-function updateHints(dt){ tutLockTick(); needTick(dt); calmTick(); if(meetQ.length&&!cam.meet&&!playerBusy()&&!cardUp())nextMeet(); if(tutQuiet()||intro.c||bt.c||pl.a||br.c||firstAdopt()){ hintEl.hidden=true; return; }
+function updateHints(dt){ tutLockTick(); needTick(dt); calmTick(); if(meetQ.length&&!cam.meet&&!playerBusy()&&!cardUp()&&!lessonBusy())nextMeet(); if(tutQuiet()||intro.c||bt.c||pl.a||br.c||firstAdopt()){ hintEl.hidden=true; return; }
   if(curHint){ hintT+=dt; const h=curHint;
     if(h.done&&h.done()){ if(!h.redo)hintDone.add(h.id); hideHint(); return; }
     if(h.auto&&hintT>h.auto){ if(!h.again)hintDone.add(h.id); else hintRetry[h.id]=W.time+20; hideHint(); return; }

@@ -13,7 +13,7 @@ N = {
 "Pumpkin": ("דלעת", "Citrouille", "Тыковка", "Zucca", "호박", "かぼちゃ"),
 "Juniper": ("ערער", "Genièvre", "Можжевелка", "Ginepro", "주니퍼", "ジュニパー"),
 "Waffles": ("וופל", "Gaufrette", "Вафелька", "Cialda", "와플", "ワッフル"),
-"Pip": ("פיפ", "Pépin", "Пип", "Pip", "핍", "ピップ"),
+"Pip": ("פיפ", "Pépin", "Пип", "Semino", "핍", "ピップ"),
 "Hazel": ("לוזי", "Noisette", "Орешка", "Nocciola", "헤이즐", "ヘーゼル"),
 "Nori": ("נורי", "Nori", "Нори", "Nori", "김", "のり"),
 "Sesame": ("שומשום", "Sésame", "Кунжут", "Sesamo", "참깨", "ごま"),
@@ -50,3 +50,18 @@ N = {
 "Bean": ("שעועית", "Haricot", "Фасолька", "Fagiolo", "콩이", "まめ"),
 }
 SLOW = ("לאט", "Doucement", "Медленно", "Piano", "천천히", "ゆっくり")
+# Family surnames: spelled out in each script (French and Italian use the Latin spelling).
+FAM = {
+"Rivera": ("ריברה", "Rivera", "Ривера", "Rivera", "리베라", "リベラ"),
+"Okafor": ("אוקפור", "Okafor", "Окафор", "Okafor", "오카포", "オカフォー"),
+"Lindqvist": ("לינדקוויסט", "Lindqvist", "Линдквист", "Lindqvist", "린드크비스트", "リンドクヴィスト"),
+"Tanaka": ("טנאקה", "Tanaka", "Танака", "Tanaka", "다나카", "田中"),
+"Haddad": ("חדאד", "Haddad", "Хаддад", "Haddad", "하다드", "ハッダード"),
+"Murphy": ("מרפי", "Murphy", "Мёрфи", "Murphy", "머피", "マーフィー"),
+"Kowalski": ("קובלסקי", "Kowalski", "Ковальски", "Kowalski", "코발스키", "コワルスキー"),
+"Nguyen": ("נגוין", "Nguyen", "Нгуен", "Nguyen", "응우옌", "グエン"),
+"Silva": ("סילבה", "Silva", "Силва", "Silva", "실바", "シルバ"),
+"Ahmed": ("אחמד", "Ahmed", "Ахмед", "Ahmed", "아메드", "アハメド"),
+"Cohen": ("כהן", "Cohen", "Коэн", "Cohen", "코헨", "コーエン"),
+"Rossi": ("רוסי", "Rossi", "Росси", "Rossi", "로시", "ロッシ"),
+}

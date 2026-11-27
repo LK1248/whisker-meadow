@@ -1,6 +1,6 @@
 /* ================= LANGUAGES ================= */
 /* The game is written in English; T() swaps any English text for the chosen language as it reaches the screen
-   (DOM text, a few attributes, canvas text). Cat and family names are left alone. */
+   (DOM text, a few attributes, canvas text). Cat and family names come from the same table. */
 const LANGS=['en','he','fr','ru','it','ko','ja'];
 const LANG_NAMES={en:'English',he:'עברית',fr:'Français',ru:'Русский',it:'Italiano',ko:'한국어',ja:'日本語'};
 const LANG=(()=>{ let l=null; try{ const m=location.hash.match(/lang=([a-z]{2})/); l=m?m[1]:localStorage.getItem('wm_lang'); }catch(e){} return LANGS.includes(l)?l:'en'; })();

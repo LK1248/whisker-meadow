@@ -14,8 +14,8 @@ def rep(old, new, count=1):
     s = s.replace(old, new)
 
 LG = ['he', 'fr', 'ru', 'it', 'ko', 'ja']
-from s_names import N, SLOW
-D = dict(S); D.update(EXTRA); D.update(N); D['Slow'] = SLOW
+from s_names import N, SLOW, FAM
+D = dict(S); D.update(EXTRA); D.update(N); D.update(FAM); D['Slow'] = SLOW
 EN_B = ['Ginger', 'Black', 'Grey', 'Cream', 'White', 'Lilac', 'Golden']
 EN_P = ['', ' tabby', ' tuxedo', ' socks']
 for bi, b in enumerate(EN_B):

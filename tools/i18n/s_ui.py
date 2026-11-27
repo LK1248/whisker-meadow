@@ -1,9 +1,9 @@
 # English -> (he, fr, ru, it, ko, ja). {0},{1}.. are filled-in parts (names, numbers), translated in turn.
 S = {
 # ---- title / start
-"Whisker": ("אחו", "Prairie", "Усатый", "Prato", "수염", "ねこひげ"),
-"Meadow": ("השפמים", "des Moustaches", "луг", "dei Baffi", "초원", "草原"),
-"Whisker Meadow": ("אחו השפמים", "Prairie des Moustaches", "Усатый луг", "Prato dei Baffi", "수염 초원", "ねこひげ草原"),
+"Whisker": ("שפמי", "Prairie", "Усатый", "Prato", "수염", "ねこひげ"),
+"Meadow": ("האחו", "des Moustaches", "луг", "dei Baffi", "초원", "草原"),
+"Whisker Meadow": ("שפמי האחו", "Prairie des Moustaches", "Усатый луг", "Prato dei Baffi", "수염 초원", "ねこひげ草原"),
 "Cat Sanctuary": ("מקלט חתולים", "Refuge pour chats", "Приют для кошек", "Rifugio per gatti", "고양이 보호소", "ねこの保護施設"),
 "Welcome!": ("ברוכים הבאים!", "Bienvenue !", "Добро пожаловать!", "Benvenuti!", "환영해요!", "ようこそ！"),
 "Make shy cats happy.": ("שמחו חתולים ביישנים.", "Rends heureux des chats timides.", "Сделайте робких кошек счастливыми.", "Rendi felici i gatti timidi.", "수줍은 고양이들을 행복하게 해 주세요.", "シャイな猫たちを幸せにしよう。"),
@@ -315,7 +315,7 @@ S = {
 "{0} min": ("{0} דק׳", "{0} min", "{0} мин", "{0} min", "{0}분", "{0}分"),
 "Cats": ("חתולים", "Chats", "Кошки", "Gatti", "고양이", "猫"),
 "Homes": ("בתים", "Foyers", "Дома", "Case", "입양", "里親"),
-"My Whisker Meadow: {0} cats, {1} ribbons, score {2}.": ("אחו השפמים שלי: {0} חתולים, {1} סרטים, ניקוד {2}.", "Ma Prairie des Moustaches : {0} chats, {1} rubans, score {2}.", "Мой Усатый луг: кошек {0}, лент {1}, счёт {2}.", "Il mio Prato dei Baffi: {0} gatti, {1} coccarde, punti {2}.", "나의 수염 초원: 고양이 {0}마리, 리본 {1}개, 점수 {2}.", "わたしのねこひげ草原：猫{0}匹、リボン{1}個、スコア{2}。"),
+"My Whisker Meadow: {0} cats, {1} ribbons, score {2}.": ("שפמי האחו שלי: {0} חתולים, {1} סרטים, ניקוד {2}.", "Ma Prairie des Moustaches : {0} chats, {1} rubans, score {2}.", "Мой Усатый луг: кошек {0}, лент {1}, счёт {2}.", "Il mio Prato dei Baffi: {0} gatti, {1} coccarde, punti {2}.", "나의 수염 초원: 고양이 {0}마리, 리본 {1}개, 점수 {2}.", "わたしのねこひげ草原：猫{0}匹、リボン{1}個、スコア{2}。"),
 "My meadow": ("האחו שלי", "Ma prairie", "Мой луг", "Il mio prato", "나의 초원", "わたしの草原"),
 "Keep playing": ("להמשיך לשחק", "Continuer à jouer", "Играть дальше", "Continua a giocare", "계속 놀기", "あそびつづける"),
 "Snapshot of your cat meadow": ("תמונה של אחו החתולים שלכם", "Photo de ta prairie à chats", "Снимок вашего кошачьего луга", "Foto del tuo prato dei gatti", "고양이 초원 스냅샷", "ねこ草原のスナップ"),

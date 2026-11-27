@@ -1738,18 +1738,24 @@ function fitFor(cats,extra){ const P=cats.map(c=>c.g.position).concat(extra||[])
   const vh=camera.fov*Math.PI/360, hh=Math.atan(Math.tan(vh)*camera.aspect), half=Math.min(vh,hh);
   return {t:new V3(cx,0.4,cz),d:clamp(r/Math.tan(half)*1.05,3.6,LV().zoom*1.6)}; }
 function offScreen(cats){ return cats.some(c=>{ const s=toScreen(c.g.position.clone().setY(0.4)); return !s.ok||s.x<innerWidth*0.08||s.x>innerWidth*0.92||s.y<innerHeight*0.15||s.y>innerHeight*0.8; }); }
+function camFree(){ return LF.ph!=='out'&&LF.ph!=='pan'; } // false while a lesson's zoom-out / pan is running
 function lessonFrame(dt){ if(cam.meet){ rimTick(null); return; } const L=lessonPts(), key=L?L[0]+':'+L[1].map(c=>c.name).join(','):'';
   const IL=!L&&W.started&&intro.c&&intro.c.g&&!intro.c.carried?['intro',[intro.c]]:null; rimTick(L||IL); // the petting lesson frames itself, but gets the marker and the glide back too
   if(IL){ LF.offT=offScreen(IL[1])?LF.offT+dt:0; if(LF.offT>=4){ LF.ib=2.2; LF.offT=0; } if(LF.ib>0){ LF.ib-=dt; cam.target.lerp(fitFor(IL[1]).t,Math.min(1,dt*1.6)); } } else if(!L){ LF.offT=0; LF.ib=0; }
   if(key!==LF.key){ const was=LF.key; LF.key=key;
     if(was&&!key){ if(LF.want0!=null&&LF.user0===(cam.userT??-99))cam.want=Math.max(cam.want,LF.want0); LF.want0=null; LF.glide=0; return; }
-    if(key){ if(!was){ LF.want0=cam.want; LF.user0=cam.userT??-99; } LF.glide=2.5; } LF.offT=0; LF.back=false; }
+    if(key){ if(!was){ LF.want0=cam.want; LF.user0=cam.userT??-99; } LF.glide=2.5; } LF.offT=0; LF.back=false; LF.ph=null; }
   if(L&&L[0]==='adoptIn')LF.glide=1; // keeps following the family as it walks in
   if(!L)return; LF.offT=offScreen(L[1])?LF.offT+dt:0; if(LF.offT>=4&&!(LF.back&&LF.glide>0)){ LF.glide=2.2; LF.back=true; LF.offT=0; } // out of view for 4 s: glide back
   if(!LF.back&&W.time-(cam.userT??-99)<4){ LF.glide=0; return; }
   if(LF.glide<=0&&offScreen(L[1]))LF.glide=1.5; // a framed cat wandered out of view
-  if(LF.glide<=0){ LF.back=false; return; } LF.glide-=dt; const f=fitFor(L[1],L[2]), k=Math.min(1,dt*(L[0]==='adoptIn'?0.7:LF.back?1.6:2.5)); // the family's approach: a slow glide
-  cam.target.lerp(f.t,k); if(!['blink','brush'].includes(L[0])||cam.want>f.d)cam.want=lerp(cam.want,f.d,k); }
+  if(LF.glide<=0){ LF.back=false; LF.ph=null; return; }
+  if(L[0]!=='adoptIn'){ const f=fitFor(L[1],L[2]), far=Math.hypot(f.t.x-cam.target.x,f.t.z-cam.target.z);
+    if(LF.ph==null&&far>2.5){ LF.ph='out'; LF.outW=Math.min(LV().zoom*1.1,Math.max(cam.dist,LF.want0||0,f.d)+far*0.45); } // far away: zoom out, pan, then zoom in
+    if(LF.ph==='out'){ cam.want=lerp(cam.want,LF.outW,Math.min(1,dt*1.6)); if(cam.dist>LF.outW-0.35)LF.ph='pan'; return; }
+    if(LF.ph==='pan'){ const st=Math.min(far,Math.max(dt*1.2,far*(1-Math.exp(-dt*1.6)))); cam.target.x+=(f.t.x-cam.target.x)/(far||1)*st; cam.target.z+=(f.t.z-cam.target.z)/(far||1)*st; if(far<0.4){ LF.ph='in'; LF.glide=Math.max(LF.glide,2); } return; } }
+  LF.glide-=dt; const f=fitFor(L[1],L[2]), k=Math.min(1,dt*(L[0]==='adoptIn'?0.7:LF.back?1.6:2.5)); // the family's approach: a slow glide
+  cam.target.lerp(f.t,k); if(!['blink','brush'].includes(L[0])||cam.want>f.d)cam.want=lerp(cam.want,f.d,LF.ph==='in'?Math.min(1,dt*1.3):k); }
 function clampTarget(){ const B=bnd(); cam.target.x=clamp(cam.target.x,B.x0-23,B.x1+23); cam.target.z=clamp(cam.target.z,B.z0-25,B.z1+16); }
 function canRomp(o){ return ['idle','walk','watch'].includes(o.state)&&!o.carried&&!o.outside&&!o.leaving&&o.away<=0&&o.age>0.2&&o.s.fun<97&&o.petT<=0; }
 function startRomp(a,b){ for(const [x,y] of [[a,b],[b,a]])if(x.fleas&&!y.fleas&&y.s.groom<60&&Math.random()<0.5){ y.fleas=3+Math.floor(rand(0,3)); y.fleaCaught=true; } // fleas can hop over while playing
@@ -2349,7 +2355,8 @@ function updateHints(dt){ tutLockTick(); needTick(dt); calmTick(); const gapOk=u
     const lab=hintEl.querySelector('.lab'); const lw=lab.offsetWidth; lab.style.marginLeft=(Math.max(0,lw/2+8-x)-Math.max(0,x+lw/2+8-innerWidth))+'px'; lab.style.top=y<130?'48px':'-70px';
     return; }
   hintGap-=dt; if(hintGap>0||!W.hints||!W.started||W.paused||tips.cur||!gapOk||meetQ.length||cardQ.length)return;
-  for(const h of HINTS){ if(hintDone.has(h.id)||(hintRetry[h.id]&&W.time<hintRetry[h.id]))continue; if(HINT_HOLD.has(h.id)&&evBusy())continue; /* guided lessons wait for events */ if(h.done&&h.done()&&h.when()){ hintDone.add(h.id); continue; } if(h.when()){ curHint=h; hintT=0; hintEl.className='g-'+h.g; { const L=typeof h.label==='function'?h.label():h.label, lb=hintEl.querySelector('.lab'); if(L.startsWith('<'))lb.innerHTML=L; else lb.textContent=L; } hintEl.hidden=false; break; } }
+  const petting=petRecent();
+  for(const h of HINTS){ if(hintDone.has(h.id)||(hintRetry[h.id]&&W.time<hintRetry[h.id]))continue; if(petting&&h.id!=='pet'&&h.id!=='belly')continue; /* don't cut into petting */ if(HINT_HOLD.has(h.id)&&evBusy())continue; /* guided lessons wait for events */ if(h.done&&h.done()&&h.when()){ hintDone.add(h.id); continue; } if(h.when()){ curHint=h; hintT=0; hintEl.className='g-'+h.g; { const L=typeof h.label==='function'?h.label():h.label, lb=hintEl.querySelector('.lab'); if(L.startsWith('<'))lb.innerHTML=L; else lb.textContent=L; } hintEl.hidden=false; break; } }
 }
 
 /* ================= SNAPSHOT ================= */
@@ -3082,7 +3089,7 @@ $('#introSkip').onclick=()=>{ if(br.c){ endBrushTut(false); return; } if(pl.a){ 
 // first slow blink: spotlight the face, the cat looks right at you and blinks very slowly; "closed eyes = love"; a faint hand boops the nose
 const bt={c:null,t:0,n0:0,lastB:-9};
 const BLINK_EQ='<div class="eq"><svg viewBox="0 0 150 46"><g fill="none" stroke="#4a3426" stroke-width="5" stroke-linecap="round"><path d="M10 20q12 12 24 0"/><path d="M44 20q12 12 24 0"/><path d="M80 17h14M80 27h14"/></g><path d="M122 40s-17-10.5-17-22a9 9 0 0 1 17-5 9 9 0 0 1 17 5c0 11.5-17 22-17 22z" fill="#ff6f99"/></svg></div>';
-function startBlinkTut(c){ if(bt.c||intro.c||pl.a||firstAdopt()||tutLock()||evBusy()||tips.cur||!uiGapOk())return; /* never barge into another lesson */ Object.assign(bt,{c,t:0,n0:W.stat.blinkBack,lastB:-9,want:cam.want}); cam.want=3.3; hideHint(); hintDone.add('blink'); tag.c=null; if(W.tool!=='hand')setTool('hand');
+function startBlinkTut(c){ if(bt.c||intro.c||pl.a||firstAdopt()||tutLock()||evBusy()||tips.cur||!uiGapOk()||petRecent())return; /* never barge into another lesson, or into petting */ Object.assign(bt,{c,t:0,n0:W.stat.blinkBack,lastB:-9,want:cam.want}); cam.want=3.3; hideHint(); hintDone.add('blink'); tag.c=null; if(W.tool!=='hand')setTool('hand');
   document.body.classList.add('intro'); for(const id of ['#intro','#ghost','#pips','#introSkip'])$(id).hidden=false; $('#intro').classList.remove('off');
   const gh=$('#ghost'); gh.innerHTML=`<svg viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`; gh.classList.add('tap'); $('#pips').innerHTML=BLINK_EQ; }
 function endBlinkTut(ok){ const c=bt.c; if(!c)return; bt.c=null; cam.want=Math.max(bt.want||0,LV().zoom*0.75); document.body.classList.remove('intro');
@@ -3103,12 +3110,12 @@ function endBrushTut(ok){ const c=br.c; if(!c)return; br.c=null; br.done=true; W
   $('#intro').classList.add('off'); setTimeout(()=>{ if(!intro.c&&!bt.c&&!pl.a&&!br.c)$('#intro').hidden=true; },750); for(const id of ['#ghost','#pips','#introSkip'])$(id).hidden=true; $('#ghost').classList.remove('tap');
   if(ok){ spawnFx('spark',c.g.position.clone().setY(0.9*c.g.scale.y),14,0.5,0.18); Snd.chime(); tagFor(c,4); } hintGap=8; }
 function updateBrushTut(dt){
-  if(!br.c){ br.wait=(br.wait||0)-dt; if(br.wait<=0){ br.wait=3; if(brushReady()&&uiGapOk())startBrushTut(); } return; }
+  if(!br.c){ br.wait=(br.wait||0)-dt; if(br.wait<=0){ br.wait=3; if(brushReady()&&uiGapOk()&&!petRecent())startBrushTut(); } return; }
   const c=br.c; if(c.away>0||c.outside||c.leaving||c.carried){ endBrushTut(false); return; } br.t+=dt; tag.c=null;
   if(burrCount(c)===0){ endBrushTut(true); return; }
   if(br.stage==='tool'&&W.tool==='brush'){ br.stage='scrub'; br.t=0; }
   if(br.stage==='scrub'&&W.tool!=='brush')br.stage='tool';
-  const p=c.g.position; if(!camUser())cam.target.lerp(new V3(p.x,0.4,p.z),Math.min(1,dt*3));
+  const p=c.g.position; if(!camUser()&&camFree())cam.target.lerp(new V3(p.x,0.4,p.z),Math.min(1,dt*3));
   if(!['pet','sleep'].includes(c.state)){ if(c.state!=='idle')setState(c,'idle',3); c.stT=Math.max(c.stT||0,2); }
   const b=toScreen(bodyOf(c)); if(!b.ok)return;
   const io=$('#intro'), bb=$('[data-tool=brush]'), onTool=br.stage==='tool'&&br.t>1.6;
@@ -3126,7 +3133,7 @@ function tapGesture(t,x,y){ const cyc=t%1.5, gh=$('#ghost'), press=cyc>0.55&&cyc
   if(press&&!tapGesture.on){ ring.classList.remove('go'); void ring.offsetWidth; ring.classList.add('go'); } tapGesture.on=press; }
 function updateBlinkTut(dt){ const c=bt.c; if(!c)return; if(c.away>0||c.outside||c.leaving||c.carried){ endBlinkTut(false); return; }
   if(W.stat.blinkBack>bt.n0){ endBlinkTut(true); return; } bt.t+=dt; tag.c=null;
-  const p=c.g.position; if(!camUser())cam.target.lerp(new V3(p.x,0.4,p.z),Math.min(1,dt*3));
+  const p=c.g.position; if(!camUser()&&camFree())cam.target.lerp(new V3(p.x,0.4,p.z),Math.min(1,dt*3));
   if(c.state!=='idle')setState(c,'idle',3); c.stT=Math.max(c.stT||0,2); c.sit=true; c.heading=Math.atan2(camera.position.x-p.x,camera.position.z-p.z);
   c.gaze=Math.max(c.gaze,5); c.gazeBl=c.gazeBl2=true; c.blinkBackT=Math.max(c.blinkBackT,5);
   if(bt.t-bt.lastB>5){ bt.lastB=bt.t; c.sbLen=3.4; c.slowBlink=3.4; }
@@ -3153,7 +3160,7 @@ function endPairTut(ok){ const {a,b}=pl; if(!a)return; for(const c of W.cats)c.c
   if(ok){ addBond(a,b,15); const m=a.g.position.clone().add(b.g.position).multiplyScalar(0.5).setY(1); spawnFx('h',m,14,0.9,0.6); Snd.chime(); }
   hintGap=8; }
 function updatePairTut(dt){
-  if(!pl.a){ pl.wait=(pl.wait||0)-dt; if(pl.wait<=0){ pl.wait=3; if(pairReady()&&uiGapOk())startPairTut(); } return; }
+  if(!pl.a){ pl.wait=(pl.wait||0)-dt; if(pl.wait<=0){ pl.wait=3; if(pairReady()&&uiGapOk()&&!petRecent())startPairTut(); } return; }
   const {a,b}=pl; if([a,b].some(c=>c.away>0||c.outside||c.leaving)){ endPairTut(false); return; } pl.t+=dt; tag.c=null;
   const held=W.cats.find(c=>c.carried); if(held)pl.held=held;
   if(pl.stage==='carry'&&W.stat.drops>pl.lastDrop&&!held){ pl.lastDrop=W.stat.drops; const d=pl.held;
@@ -3170,7 +3177,7 @@ function updatePairTut(dt){
     for(const c of [a,b])if(!c.carried&&c.state!=='boop'){ if(c.state==='walk'&&c===b&&c.path)continue; if(c.state!=='idle')setState(c,'idle',3); c.stT=Math.max(c.stT||0,2); }
   }
   // camera + spotlight on both cats
-  const mid=pa.clone().add(pb).multiplyScalar(0.5); if(!camUser())cam.target.lerp(new V3(mid.x,0.4,mid.z),Math.min(1,dt*2.5));
+  const mid=pa.clone().add(pb).multiplyScalar(0.5); if(!camUser()&&camFree())cam.target.lerp(new V3(mid.x,0.4,mid.z),Math.min(1,dt*2.5));
   if(!camUser()){ const vh=camera.fov*Math.PI/360, hh=Math.atan(Math.tan(vh)*camera.aspect), half=Math.min(vh,hh), need=(Math.sqrt(dist2(pa,pb))/2+1.1)/Math.tan(half)*0.95;
     cam.want=Math.max(cam.want,Math.min(need,LV().zoom*1.6)); }
   const sa=toScreen(new V3(pa.x,0.5,pa.z)), sb=toScreen(new V3(pb.x,0.5,pb.z)); if(!sa.ok||!sb.ok)return;

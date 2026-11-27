@@ -1026,6 +1026,7 @@ function hop(c,h,dur=0.5){ c.hopT=dur; c.hopDur=dur; c.hopH=h; }
 function kt(c){ return c.age<1?1.8-0.8*c.age:1; }
 
 function setState(c,st,dur=0){
+  if(st!=='pet')c.loafPet=null; // petting a cat woken from sleep keeps it in its loaf
   const it=c.useItem;
   if(it){ if(it.occupant===c)it.occupant=null; if(it.occ){ const k=it.occ.indexOf(c); if(k>=0)it.occ[k]=null; }
     if(c.state==='litter'||c.state==='perch'||(c.state==='sleep'&&it.kind==='bed')){ const p=c.g.position; p.x+=Math.sin(c.heading)*0.8; p.z+=Math.cos(c.heading)*0.8; } }
@@ -1131,7 +1132,7 @@ function onStroke(c,zone,frantic,good){ rec('stroke',`${c.name} ${zone}${frantic
   if(c.state==='hiding'){ foundCat(c); return; } if(c.away>0||c.carried||c.leaveT>0||c.outside||c.leaving||['boop','path','greet','bye'].includes(c.state))return; const s=c.s, brush=W.tool==='brush', now=W.time;
   const iv=now-c.lastStroke; c.lastStroke=now; c.petT=3; tagFor(c,3);
   if(!['flop','sleep','pet','eat','litter','perch','shelter'].includes(c.state)) setState(c,'pet');
-  if(c.state==='sleep'){ setState(c,'pet'); c.slowBlink=1.9; c.purr=Math.max(c.purr,0.4); } // woken by a gentle stroke: no fuss, a sleepy blink and a purr
+  if(c.state==='sleep'){ const ly=c.useItem&&c.useItem.kind==='bed'?0.08:0; setState(c,'pet'); c.loafPet={y:ly}; c.slowBlink=1.9; c.purr=Math.max(c.purr,0.4); } // woken by a gentle stroke: no fuss, a sleepy blink and a purr
   if(zone==='belly'){ if(c.state==='flop'){ belly(c,frantic); return; } zone='chest'; }
   if(zone==='tail'){ c.over+=1.2; c.flick=0.6; if(c.over>=1.5)showIcon(c,'angry',1.2); return; }
   let like={head:1,cheek:1.1,chin:1.2,back:0.7,rump:0.6,chest:0.35,leg:0.15}[zone]??0.3;
@@ -1147,9 +1148,9 @@ function onStroke(c,zone,frantic,good){ rec('stroke',`${c.name} ${zone}${frantic
     unlock('first_purr'); if(c.streak>=10)unlock('rhythm');
     // the cat warms up: after 2 on-beat strokes it leans in and rubs, after 3 it shows off every stroke
     if(!brush&&c.streak>=2){ c.joy=Math.min(1,(c.streak-1)/3); c.lean=1.4; spawnFx('h',c.g.position.clone().setY(1.1*c.g.scale.x),1); }
-    if(!brush&&!W.stat.bellyTip&&(W.stat.good||0)>=10&&s.aff>=35&&c.state==='pet'&&c.age>=0.5&&!lessonOn()&&!tips.cur&&!tutLock()&&!evBusy()&&!shopForce()&&!wandForce()&&!fairForce()){ setState(c,'flop',30); c.offer=true; c.petT=3; showTip('belly',c,BELLY_TIP,999,false); }
+    if(!brush&&!c.loafPet&&!W.stat.bellyTip&&(W.stat.good||0)>=10&&s.aff>=35&&c.state==='pet'&&c.age>=0.5&&!lessonOn()&&!tips.cur&&!tutLock()&&!evBusy()&&!shopForce()&&!wandForce()&&!fairForce()){ setState(c,'flop',30); c.offer=true; c.petT=3; showTip('belly',c,BELLY_TIP,999,false); }
     else if(!brush&&c.streak>=3){ const r=Math.random();
-      if(r<0.28&&s.aff>=35&&c.state==='pet'&&!lessonOn()&&W.stat.bellyTip){ setState(c,'flop',7); c.offer=true; c.petT=3; }
+      if(r<0.28&&s.aff>=35&&c.state==='pet'&&!c.loafPet&&!lessonOn()&&W.stat.bellyTip){ setState(c,'flop',7); c.offer=true; c.petT=3; }
       else if(r<0.55&&c.hbCD<=0){ c.hb=0.55; c.hbCD=rand(1.5,3); handFx('bump'); Snd.chirp(); }
       else if(r<0.7){ c.elev=1.2; }
       else if(r<0.85&&c.slowBlink<=0){ c.slowBlink=1.9; }
@@ -1256,7 +1257,7 @@ function updateCat(c,dt){
       else if(d<want-0.04){ const bx=p.x-op.x, bz=p.z-op.z, n=Math.hypot(bx,bz)||1, ux=n>0.01?bx/n:Math.sin(c.heading+Math.PI), uz=n>0.01?bz/n:Math.cos(c.heading+Math.PI); p.x+=ux*0.8*dt; p.z+=uz*0.8*dt; c.speed=0.2; c.stT=Math.max(c.stT,1.5); }
       else c.speed=lerp(c.speed,0,Math.min(1,dt*8));
       if(c.stT<=0)setState(c,'idle',2); break; }
-    case 'pet': c.petT-=dt; if(c.petT>2)c.sessT=(c.sessT||0)+dt; if(c.turnTo!==undefined){ c.heading=angLerp(c.heading,c.turnTo,dt*1.5); if(Math.abs(angDiff(c.heading,c.turnTo))<0.05)c.turnTo=undefined; } if(c.petT<=0&&c.gaze<=0){ setState(c,'idle',rand(1.5,3)); if((c.sessT||0)>=8&&Math.random()<0.5)c.shake=SH_D; c.sessT=0; } break;
+    case 'pet': c.petT-=dt; if(c.petT>2)c.sessT=(c.sessT||0)+dt; if(c.turnTo!==undefined&&!c.loafPet){ c.heading=angLerp(c.heading,c.turnTo,dt*1.5); if(Math.abs(angDiff(c.heading,c.turnTo))<0.05)c.turnTo=undefined; } if(c.petT<=0&&c.gaze<=0){ setState(c,'idle',rand(1.5,3)); if((c.sessT||0)>=8&&Math.random()<0.5)c.shake=SH_D; c.sessT=0; } break;
     case 'flop': c.petT-=dt; if(c.stT<=0&&c.petT<=0)setState(c,'idle',1); break;
     case 'sleep': c.petT-=dt; s.health=Math.min(100,s.health+dt*(c.useItem?0.25*(c.useItem.tier||1):0.1)); if(c.stT<=0){ setState(c,'idle',2.5); c.stretch=1.8; c.stretchKind=pick(['bow','arch']); } break;
     case 'shelter': c.petT-=dt; if(c.dryT>0&&c.age>0.25&&!(c.shake>0)&&Math.random()<dt/5){ selfLick(c,true); break; } if(c.stT<=0){ if(weather.raining)c.stT=rand(3,6); else setState(c,'idle',1); } break;
@@ -1350,7 +1351,8 @@ function animateCat(c,dt,t){
   else if(st==='sleep'||st==='shelter'||(st==='hiding'&&!moving)){ coreY=0.3; hx=st==='sleep'?0.3:0.05; legA=[1.3,1.3,-1.3,-1.3]; tailUp=-0.9; swish=0.03; eye=st==='sleep'?0.06:(purring?0.4:0.9); }
   else if(st==='flop'){ rz=2.45; coreY=0.36; legA=[Math.sin(t*2)*0.3,Math.sin(t*2+1)*0.3,0.3,0.3]; tailUp=0; swish=0.25; eye=purring?0.4:0.8; hz=-0.6; if(c.trap>0){ legA=[-1.2,-1.2,1.0,1.0]; } }
   else if(st==='pet'){ const j=c.joy||0; hz=Math.sin(t*2.2)*(0.18+0.15*j); hy=purring?Math.sin(t*2.6)*(0.3+0.3*j):0; rz=Math.sin(t*1.6)*(0.08+0.14*j); hx=-0.15-0.2*j; tailUp=0.95+0.35*j; swish=0.06+0.06*j; swSpd=2.2+6*j; eye=purring?0.42-0.2*j:1; legA=[0,0,0,0];
-    if(c.lean>0){ c.lean-=dt; hx-=0.25*c.lean; rz+=0.12*c.lean; } if(c.purr>0.6||j>0.3){ const kn=0.35+0.25*j; legA=[Math.max(0,Math.sin(t*5))*-kn,Math.max(0,-Math.sin(t*5))*-kn,0,0]; } coreY=0.46-0.04*j; }
+    if(c.lean>0){ c.lean-=dt; hx-=0.25*c.lean; rz+=0.12*c.lean; } if(c.purr>0.6||j>0.3){ const kn=0.35+0.25*j; legA=[Math.max(0,Math.sin(t*5))*-kn,Math.max(0,-Math.sin(t*5))*-kn,0,0]; } coreY=0.46-0.04*j;
+    if(c.loafPet){ coreY=0.3; rx=0; rz*=0.3; legA=[1.3,1.3,-1.3,-1.3]; tailUp=-0.9+0.3*j; swish=0.08; swSpd=2.2; baseY=c.loafPet.y; hx=Math.max(hx,-0.1); } }
   else if(st==='eat'){ hx=0.6; rx=0.12; coreY=0.43; legA=[0,0,0,0]; }
   else if(st==='greet'&&c.greetFlop===2){ rz=2.35+Math.sin(t*2.4)*0.1; coreY=0.36; legA=[Math.sin(t*4)*0.55-0.1,Math.sin(t*4+1.6)*0.55-0.1,0.35+Math.sin(t*3)*0.25,0.35+Math.sin(t*3+1)*0.25]; tailUp=0; swish=0.35; swSpd=4; eye=0.45; hz=-0.6; hx=-0.2; }
   else if(st==='greet'&&c.greetFlop){ rz=1.55+Math.sin(t*2.4)*0.12; coreY=0.34; legA=[Math.sin(t*4)*0.5-0.3,Math.sin(t*4+1.6)*0.5-0.3,0.4,0.4]; tailUp=0.1; swish=0.35; swSpd=4; eye=0.45; hz=-0.5; hx=-0.2; }
@@ -1825,7 +1827,7 @@ function petMove(c,len,zone){
   if(c.state==='hiding'){ foundCat(c); return; }
   if(c.away>0||c.carried||c.leaveT>0||c.outside||c.leaving||['boop','path','greet','bye'].includes(c.state))return;
   c.petT=3; tagFor(c,3); if(!['flop','sleep','pet','eat','litter','perch','shelter'].includes(c.state))setState(c,'pet');
-  if(c.state==='sleep'){ setState(c,'pet'); c.slowBlink=1.9; c.purr=Math.max(c.purr,0.4); }
+  if(c.state==='sleep'){ const ly=c.useItem&&c.useItem.kind==='bed'?0.08:0; setState(c,'pet'); c.loafPet={y:ly}; c.slowBlink=1.9; c.purr=Math.max(c.purr,0.4); }
   if(zone==='tail'){ c.over+=len/260; c.flick=0.6; if(c.over>=1.5)showIcon(c,'angry',1.2); return; }
   const D=2.5*Math.max(60,Math.min(400,catScreenH(c))), vP=D*tempoOf(c), v=S.v==null?vP:S.v, now=W.time, tol=tempoTol(c), x=Math.log(Math.max(1,v)/vP);
   let gain=0; const gap=Math.min(0.12,Math.max(0,performance.now()/1000-(c.pmT||0))); c.pmT=performance.now()/1000;

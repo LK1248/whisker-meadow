@@ -1195,7 +1195,8 @@ function updateCat(c,dt){
   if(s.aff>30)s.aff-=dt*0.015;
   const ct=clamp(100-avgDirt()*14-(crowded?20:0),0,100); s.clean+=(ct-s.clean)*dt*0.03;
   if(c.nourT>0)c.nourT-=dt;
-  const ht=s.full*0.35+s.fun*0.25+s.groom*0.2+s.clean*0.2+(W.tier.bowl>=3?6:0)+(c.nourT>0?6:0)-(c.fleas?10:0); s.health=clamp(s.health+(ht-s.health)*dt*0.04,0,100);
+  const ht=s.full*0.35+s.fun*0.25+s.groom*0.2+s.clean*0.2+(W.tier.bowl>=3?6:0)+(c.nourT>0?6:0); { const d=(ht-s.health)*dt*0.04; s.health=clamp(s.health+(c.fleas?Math.min(0,d):d),0,100); }
+  if(c.fleas&&s.health>FLEA_FLOOR)s.health=Math.max(FLEA_FLOOR,s.health-dt*FLEA_DRAIN); // fleas: a slow drain, never below the adoption line
   if(!adult){ c.age=Math.min(1,c.age+dt/200); applyAge(c); if(c.age>=1)floatWorld(c.g.position.clone().setY(1.2),'Grown up!'); }
   c.litterNeed+=dt; c.breedCD-=dt; c.showCD-=dt; c.pounceT-=dt; c.hbCD-=dt; c.over=Math.max(0,c.over-dt*(c.trait==='calm'?0.6:0.35)); c.boopCD-=dt; c.blinkBackT-=dt; c.leaveT=(c.leaveT||0)-dt;
   if(c.hopT>0){ c.hopT-=dt; c.jump=Math.sin(clamp(1-c.hopT/c.hopDur,0,1)*Math.PI)*c.hopH; } else { c.jump=0; c.leap=false; }
@@ -2403,6 +2404,7 @@ function updateDropoff(dt){ const D=W.dropoff; if(!D)return; const h=LV().half;
 function hasKits(c){ return W.cats.some(k=>k!==c&&k.age<1&&k.parents&&k.parents.includes(c.id)&&!k.leaving); } // kittens still growing up here
 function readyHome(c){ return c.age>=1&&!hasKits(c)&&!c.forever&&c.away<=0&&!c.outside&&!c.carried&&!c.leaving&&c.s.aff>=50&&c.s.health>=55&&W.time-c.arrivedAt>=150; }
 function canBoop(c){ return !c.carried&&!c.outside&&!c.leaving&&c.away<=0&&(c.boopCD||0)<=0&&c.petT<=0&&['idle','walk','watch'].includes(c.state); }
+const FLEA_DRAIN=0.05, FLEA_FLOOR=55; // health lost per second with fleas, and the floor it stops at
 const SH_D=0.95, BUTT_HOLD=2.5; // butt-tap pose holds this long after the last tap (s)
  // head shake length (s)
 const LICK_GAIN=0.15, LICKED_GAIN=0.12, LICKED_KIT=0.2, RAIN_GROOM=0.08, DRY_T=20;

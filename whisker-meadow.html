@@ -1432,9 +1432,10 @@ function animateCat(c,dt,t){
     x+=Math.sin(side)*sp*0.6; y+=Math.sin(th)*sp; z-=Math.cos(th)*sp; m.position.set(x,y,z); });
   let gOp=0; if(c.petT>0&&handOn(c)&&!c.carried&&W.tool!=='brush'){ gOp=W.time-c.lastStroke<0.45?0.75:0.08+0.4*clamp(c.petProg||0,0,1); }
   c.glow.material.opacity=lerp(c.glow.material.opacity,gOp,Math.min(1,dt*8)); c.glow.position.y=c.state==='flop'?0.35:0.55;
-  { const far=c.iconKind==='house'?clamp(1+(camera.position.distanceTo(c.g.position)-10)*0.055,1,1.5):1; c.icon.scale.setScalar(0.42*far); } // house icons stay readable when zoomed out
-  if(c.iconT>0){ c.iconT-=dt; c.icon.material.opacity=Math.min(1,c.iconT/0.4); if(c.iconT<=0)c.icon.visible=false; }
-  else if(W.pickHome&&readyHome(c))showIcon(c,'house',0.4);
+  { const far=c.iconKind==='house'?clamp(1+(camera.position.distanceTo(c.g.position)-10)*0.055,1,1.5):1; c.icon.scale.setScalar(0.42*far*(c.iconKind==='house'?1.25:1)); } // house icons stay readable when zoomed out
+  if(W.pickHome&&readyHome(c)&&(c.iconKind==='house'||!(c.iconT>0))){ if(!(c.iconKind==='house'&&c.icon.visible))showIcon(c,'house',0.5);
+    if(c.iconKind==='house'&&c.icon.visible){ c.iconT=0.5; c.icon.material.opacity=0.75+0.25*Math.cos(W.time*Math.PI*2/0.8); } } // steady slow pulse while picking
+  else if(c.iconT>0){ c.iconT-=dt; c.icon.material.opacity=Math.min(c.icon.material.opacity,c.iconT/0.4,1); if(c.iconT<=0)c.icon.visible=false; }
   else if(purring&&Math.random()<dt*0.5)showIcon(c,'purr',1.2);
   else if(st==='sleep'&&Math.random()<dt*0.3)showIcon(c,'zzz',1.6);
   else if(showReady(c)&&Math.random()<dt*0.15)showIcon(c,'star',2);

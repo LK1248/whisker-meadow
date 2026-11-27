@@ -2189,7 +2189,6 @@ const SHOP=[
   {id:'bowl',name:()=>TIERS.bowl[W.tier.bowl-1],desc:'More dinner seats',cost:()=>20,max:()=>W.level+1,buy(){addItem('bowl');}},
   {id:'litter',name:()=>TIERS.litter[W.tier.litter-1],desc:'Fresher meadow',cost:()=>20,max:()=>W.level+1,buy(){addItem('litter');}},
   {id:'expand',name:()=>LEVELS[W.level+1]?.name||'Bigger meadow',desc:'',cost:()=>LEVELS[W.level+1]?.cost||0,avail:()=>W.level<LEVELS.length-1,need:()=>W.level===1?1:Math.min(5,W.level+1),homes:()=>LEVELS[W.level+1]?.homes||0,buy(){expand();}},
-  {id:'fire',name:()=>'Fewer helpers',desc:'Saves wages',cost:()=>0,buy(){ const hp=[...helpers].reverse().find(h=>!h.vol); if(hp){ helpers.splice(helpers.indexOf(hp),1); if(hp.task&&hp.task.cat)hp.task.cat.helped=null; scene.remove(hp.g); if(hp.bub)scene.remove(hp.bub); } }},
   {id:'helper',name:()=>'Helper',desc:'Feeds, scoops, pets \u00b7 $6/min wage',cost:()=>150,max:()=>W.level,buy(){makeHelper();}},
 ];
 function guidePick(why){ const can=id=>{ const it=SHOP.find(x=>x.id===id); if(!it)return false; const av=it.avail?it.avail():true, mx=it.max?it.max():Infinity; return av&&countItems(id)<mx&&W.money>=it.cost(); };
@@ -2220,8 +2219,8 @@ function shopRefresh(){ if($('#modal').hidden)return; const bs=document.querySel
   for(const b of bs){ let can; if(b.dataset.buy){ const it=SHOP.find(x=>x.id===b.dataset.buy); if(!it)continue; can=shopCan(it)&&shopOk(it.id); } else can=upCan(b.dataset.up)&&!shopForce();
     if(b.disabled===can){ b.disabled=!can; if(can){ b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); } } } }
 function openShop(guide){ guide=guide||rainGuide();
-  const cards=SHOP.filter(it=>it.id!=='fire'||paidN()).map(it=>{ const avail=it.avail?it.avail():true, max=it.max?it.max():Infinity, have=it.id==='helper'?paidN():it.max?countItems(it.id):0, cost=it.cost(), need=it.need?it.need():0, starOk=W.stars>=need;
-    const hn=it.homes?it.homes():0, hOk=W.homes.length>=hn; const can=shopCan(it)&&shopOk(it.id); const lbl=!avail?(it.id==='laser'?'Owned':'Maxed'):have>=max?'Full':!starOk?`★${need} needed`:!hOk?`${hn} homes needed`:it.id==='fire'?'Let one go':`$${cost}`;
+  const cards=SHOP.map(it=>{ const avail=it.avail?it.avail():true, max=it.max?it.max():Infinity, have=it.id==='helper'?paidN():it.max?countItems(it.id):0, cost=it.cost(), need=it.need?it.need():0, starOk=W.stars>=need;
+    const hn=it.homes?it.homes():0, hOk=W.homes.length>=hn; const can=shopCan(it)&&shopOk(it.id); const lbl=!avail?(it.id==='laser'?'Owned':'Maxed'):have>=max?'Full':!starOk?`★${need} needed`:!hOk?`${hn} homes needed`:`$${cost}`;
     const desc=it.id==='expand'?(LEVELS[W.level+1]?`Room for ${LEVELS[W.level+1].cap} cats${LEVELS[W.level+1].ponds?' \u00b7 new pond':''}`:'Biggest already'):it.desc;
     const gd=it.id===guide, gd2=!gd&&!!guide&&sameGuide(it.id,guide)&&can;
     return `<div class="item${gd||gd2?' guide':''}"${gd?' data-guide':''}><div class="ico"><svg viewBox="0 0 24 24">${IC[it.id]}</svg></div><b>${it.name()}</b><span>${desc}${it.max&&max<99?` · ${have}/${max}`:''}</span><button data-buy="${it.id}" ${can?'':'disabled'}>${lbl}</button>${gd?`<svg class="gHand" viewBox="0 0 64 64">${HAND_SVG.replace(/id="h(Scr|Aid)"/g,'')}</svg>`:''}</div>`; }).join('');

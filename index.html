@@ -675,7 +675,7 @@ function cardBoardMesh(){ const g=new THREE.Group(); g.position.set(2.65,0,0.5);
   g.add(mesh(G.box,0x8a5a3b,{p:[0,1.5,0],s:[1.56,1.18,0.04]}));
   cardBoard=b; boardSig=''; boardSync(true); return g; }
 function tapBoard(e){ if(!cardBoard)return false; setRay(e); if(!ray.intersectObject(cardBoard,false).length)return false; Snd.ding(); openWall(); return true; }
-function cardHTML(hm){ return `<div class="postcard">${hm.thanks?`<b class="ty">Thank you!</b>`:''}${hm.img?`<img src="${hm.img}" alt="${hm.name} in a new home">`:''}<p>${hm.thanks?`Thank you for ${hm.name}! `:''}${hm.line}</p><small>Love, the ${hm.fam} family</small></div>`; }
+function cardHTML(hm){ return `<div class="postcard">${hm.thanks?`<b class="ty">Thank you!</b>`:''}${hm.img?`<img src="${hm.img}" alt="${hm.name} in a new home">`:''}<p>${hm.thanks?`Thank you for ${hm.who||hm.name}! `:''}${hm.line}</p><small>Love, the ${hm.fam} family</small></div>`; }
 function openCard(i,back){ const hm=W.homes[i]; if(!hm)return; openModal(cardHTML(hm)+`<button class="big" id="pcBack" aria-label="Back to the card wall">↩</button>`,true); $('#pcBack').onclick=back||closeModal; }
 function bindCards(back){ document.querySelectorAll('#mbox [data-hi]').forEach(b=>b.onclick=()=>{ Snd.ding(); openCard(+b.dataset.hi,back); }); }
 function openWall(){ const L=wallCards();
@@ -2671,7 +2671,7 @@ function familyLeave(msg){ const f=W.family; if(!f||f.state==='leaving'||f.state
   f.members.forEach((m,i)=>{ m.kneel=false; m.g.visible=true; m.route=routeOut(h,i); }); if(f.cat&&!f.cat.leaving&&['path','greet'].includes(f.cat.state))backFromGate(f.cat); }
 function removeFamily(){ const f=W.family; if(!f)return; for(const m of f.members)scene.remove(m.g); if(f.first&&f.car)f.car.first=true; carLeave(f.car); W.family=null; W.pickHome=false; $('#family').hidden=true; visitT=rand(110,160); }
 function finishAdoption(c){ const f=W.family; scene.remove(c.g); const i=W.cats.indexOf(c); if(i>=0)W.cats.splice(i,1); if(tag.c===c)tag.c=null; if(cam.focus===c)cam.focus=null;
-  const pc=c.card; W.homes.push({name:c.name,coat:coatName(c.coat),img:c.img||null,fam:f?f.name:'',line:pc?pc.line:pick(LINES)(c.name),scene:pc&&pc.scene,thanks:pc&&pc.thanks,noCard:!!(pc&&pc.noCard)||!!c.cardDup}); if(c.love0<15)W.stat.patient++;
+  const pc=c.card; W.homes.push({name:c.name,coat:coatName(c.coat),img:c.img||null,fam:f?f.name:'',line:pc?pc.line:pick(LINES)(c.name),scene:pc&&pc.scene,thanks:pc&&pc.thanks,who:pc&&pc.who,noCard:!!(pc&&pc.noCard)||!!c.cardDup}); if(c.love0<15)W.stat.patient++;
   for(const o of W.cats)if(getBond(o,c)>=30&&o.away<=0&&!o.outside){ spawnFx('h',o.g.position.clone().setY(1),1); if(o.state==='walk')setState(o,'idle',4); }
   if(!W.homes[W.homes.length-1].noCard)W.postQ.push({i:W.homes.length-1,t:W.time+35}); strayT=Math.min(strayT,rand(30,50)); hud(); saveGame(); }
 function updateFamilyMeshes(dt,t){ updateCars(dt); const f=W.family; if(f)f.members.forEach((m,i)=>stepPerson(m,dt,t,i===1&&(f.state==='arrive'||f.state==='bye'))); if(W.dropoff)stepPerson(W.dropoff.p,dt,t,false); }
@@ -2766,8 +2766,8 @@ function postcard(cats){ try{
   { x.fillStyle='rgba(255,214,160,.07)'; x.fillRect(0,0,320,240); const vg=x.createRadialGradient(160,120,90,160,120,215); vg.addColorStop(0,'rgba(40,25,15,0)'); vg.addColorStop(1,'rgba(40,25,15,.28)'); x.fillStyle=vg; x.fillRect(0,0,320,240);
     for(let i=0;i<900;i++){ x.fillStyle=Math.random()<0.5?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)'; x.fillRect(Math.random()*320,Math.random()*240,1,1); } }
   const n=W.homes.length, first=n<3, grumpy=!first&&cats.every(c=>c.s.clean<35||c.s.aff<30)&&Math.random()<0.5;
-  const nm=cats.map(c=>c.name), line=CARD_SCENES[scene].line(nm[0],nm[1]);
-  return {img:cv.toDataURL('image/jpeg',0.8),scene,line,thanks:first,noCard:grumpy}; }catch(e){ console.warn(e); return null; } }
+  const nm=cats.map(c=>c.name), pair=nm.length>1, line=first&&pair?'They have been playing all day since they arrived.':CARD_SCENES[scene].line(nm[0],nm[1]);
+  return {img:cv.toDataURL('image/jpeg',0.8),scene,line,thanks:first,who:pair?nm[0]+' and '+nm[1]:null,noCard:grumpy}; }catch(e){ console.warn(e); return null; } }
 // ---- saving ----
 const SAVE='wm_save_v3';
 function saveGame(){ if(!W.started)return; try{

@@ -1680,9 +1680,9 @@ function updateWeather(dt){
 /* ================= CAMERA & INPUT ================= */
 const cam={theta:0.55,phi:0.98,dist:8.5,want:8.5,target:new V3(0,0.3,0),shake:0,meet:null};
 const PZ={c:null,t:0}, PZ_PLANE=new THREE.Plane(new V3(0,1,0),-0.3), PZ_V=new V3();
-function petWin(c){ return !!c&&W.tool==='hand'&&!c.carried&&!c.leaving&&!c.outside&&!(c.away>0)&&W.time-(PZ.touch??-99)<Math.max(1.5,2*strokeT(c)); } // finger up, but still in the petting rhythm
+function petWin(c){ return !!c&&(W.tool==='hand'||W.tool==='brush')&&!c.carried&&!c.leaving&&!c.outside&&!(c.away>0)&&W.time-(PZ.touch??-99)<Math.max(1.5,2*strokeT(c)); } // finger up, but still in the petting rhythm
 function petZoom(dt){ if(!dt||W.paused)return; const up=!P.mode||P.mode==='none';
-  const c=P.mode==='stroke'&&W.tool==='hand'?S.cat:(up||(P.mode==='catPending'&&P.cat===PZ.c))&&petWin(PZ.c)?PZ.c:petGrace(PG.c)?PG.c:null;
+  const c=P.mode==='stroke'&&(W.tool==='hand'||W.tool==='brush')?S.cat:(up||(P.mode==='catPending'&&P.cat===PZ.c))&&petWin(PZ.c)?PZ.c:petGrace(PG.c)?PG.c:null;
   if(P.mode==='stroke')PZ.touch=W.time; if(!c||c!==PZ.c){ PZ.c=c; PZ.t=0; return; } PZ.t+=dt;
   if(PZ.t<3||!(P.mode==='stroke'||up||P.mode==='catPending')||camUser()||lessonOn()||cam.meet||cam.close)return;
   const goal=4.4; if(cam.want<=goal)return; const nw=Math.max(goal,cam.want*(1-0.08*dt)), k=1-nw/cam.want;
